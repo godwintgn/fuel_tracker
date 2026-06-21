@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FuelTrack Pro - Add Vehicle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#40493d",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#fbf9f9",
+                    "surface-container-highest": "#e3e2e2",
+                    "inverse-surface": "#303031",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "surface-container-high": "#e9e8e7",
+                    "on-tertiary-container": "#ffeee6",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "surface": "#fbf9f9",
+                    "tertiary": "#884200",
+                    "tertiary-fixed": "#ffdcc6",
+                    "on-surface": "#1b1c1c",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bfcaba",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-fixed": "#001c3a",
+                    "primary-fixed": "#a3f69c",
+                    "on-secondary-container": "#003567",
+                    "surface-container": "#efeded",
+                    "on-primary-fixed": "#002204",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-background": "#1b1c1c",
+                    "surface-tint": "#1b6d24",
+                    "inverse-primary": "#88d982",
+                    "primary-fixed-dim": "#88d982",
+                    "primary": "#0d631b",
+                    "surface-container-low": "#f5f3f3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#311300",
+                    "secondary": "#005faf",
+                    "inverse-on-surface": "#f2f0f0",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e3e2e2",
+                    "on-primary-fixed-variant": "#005312",
+                    "background": "#fbf9f9",
+                    "primary-container": "#2e7d32",
+                    "secondary-container": "#54a0fe",
+                    "on-primary-container": "#cbffc2",
+                    "tertiary-container": "#ad5600"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "stack-md": "12px",
+                    "stack-lg": "24px",
+                    "base": "8px",
+                    "margin-tablet": "24px",
+                    "gutter": "16px",
+                    "stack-sm": "4px",
+                    "component-padding-x": "16px",
+                    "component-padding-y": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Roboto Flex"],
+                    "body-lg": ["Roboto Flex"],
+                    "headline-md": ["Roboto Flex"],
+                    "title-lg": ["Roboto Flex"],
+                    "display-lg": ["Roboto Flex"],
+                    "label-sm": ["Roboto Flex"],
+                    "headline-lg-mobile": ["Roboto Flex"],
+                    "label-lg": ["Roboto Flex"],
+                    "title-md": ["Roboto Flex"],
+                    "headline-lg": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                    "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Roboto Flex', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .m3-field-container:focus-within label {
+            color: var(--tw-color-primary);
+            transform: translateY(-24px) scale(0.85);
+        }
+        .m3-input:focus {
+            outline: none;
+            border-bottom-width: 2px;
+            border-bottom-color: #0d631b;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #bfcaba;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- Top App Bar (Shared Component Logic) -->
+<header class="bg-surface dark:bg-surface-dim flex justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<button class="hover:bg-surface-container-low transition-colors rounded-full p-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-title-lg text-title-lg text-primary">Add Vehicle</h1>
+</div>
+<button class="hover:bg-surface-container-low transition-colors rounded-full p-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="help_outline">help_outline</span>
+</button>
+</header>
+<main class="flex-grow px-margin-mobile pt-stack-lg pb-32 max-w-2xl mx-auto w-full">
+<!-- Visual Accent/Hero Section -->
+<div class="mb-stack-lg relative h-48 rounded-24 overflow-hidden shadow-sm bg-surface-container-low border border-outline-variant/30">
+<div class="absolute inset-0 z-0 bg-cover bg-center opacity-80" data-alt="A clean, professional close-up of a modern electric vehicle's dashboard and sleek hood, captured in soft morning light. The color palette features whites, metallic silvers, and subtle green accents, reflecting a high-efficiency and reliable corporate aesthetic. The depth of field is shallow, emphasizing the quality and precision of the vehicle's manufacturing." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCQM2ghMZnWmbOiDuMokW2wNakyR0dkYhUKW6paFg6x5cmdffhl34EIECyYz7bBBwOX2KLHqAlqInNz60y2E7UBei0HRD_iaxxaAC1EJzhqjgdlYSypoRX_kCm3LE2cUthEPHfTfdWG4ikM9V5K4Vr51ErnmXHmsiZV_d-oms8GpFOgKpTLeoB7RgWIo4j2BzLwZmSmLRdRjIyubWFTg0dcqSHTbOFxC944UyxlYB2j0SO5JPbdxtH52rYuPXMf7B42X2ioxPYsew')">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
+<div class="absolute bottom-4 left-4 z-20">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-lg text-label-lg shadow-sm">Vehicle Profile</span>
+</div>
+</div>
+<div class="space-y-6">
+<!-- Form Header -->
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Vehicle Details</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Provide accurate information to track fuel efficiency precisely.</p>
+</div>
+<!-- Material 3 Form Fields -->
+<form class="space-y-gutter">
+<!-- Vehicle Name -->
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-primary transition-all">Vehicle Name</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="e.g. My Daily Driver" type="text"/>
+</div>
+</div>
+<!-- Dual Column for Manufacturer and Model -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-on-surface-variant transition-all">Manufacturer</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="e.g. Toyota" type="text"/>
+</div>
+</div>
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-on-surface-variant transition-all">Model</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="e.g. Corolla" type="text"/>
+</div>
+</div>
+</div>
+<!-- Dual Column for Year and Registration -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-on-surface-variant transition-all">Year</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="2024" type="number"/>
+</div>
+</div>
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-on-surface-variant transition-all">Registration</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="ABC-1234" type="text"/>
+</div>
+</div>
+</div>
+<!-- Fuel Type Selector -->
+<div class="space-y-stack-sm">
+<span class="font-label-lg text-label-lg text-on-surface-variant px-1">Fuel Type</span>
+<div class="flex flex-wrap gap-2">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant bg-secondary-container text-on-secondary-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="local_gas_station">local_gas_station</span>
+<span class="font-label-lg text-label-lg">Petrol</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant hover:bg-surface-container-high active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="electric_car">electric_car</span>
+<span class="font-label-lg text-label-lg">Electric</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant hover:bg-surface-container-high active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="factory">factory</span>
+<span class="font-label-lg text-label-lg">Diesel</span>
+</button>
+</div>
+</div>
+<!-- Tank Capacity with Unit -->
+<div class="relative bg-surface-container-low rounded-t-xl border-b border-outline">
+<div class="px-4 pt-6 pb-2 flex justify-between items-center">
+<div class="flex-grow">
+<label class="absolute left-4 top-2 text-label-sm font-label-sm text-on-surface-variant transition-all">Tank Capacity</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" placeholder="50" type="number"/>
+</div>
+<span class="text-on-surface-variant font-label-lg text-label-lg bg-surface-variant px-3 py-1 rounded-lg">Liters</span>
+</div>
+</div>
+<!-- Additional Options (Bento Style Item) -->
+<div class="bg-tertiary-fixed text-on-tertiary-fixed p-4 rounded-2xl flex items-center justify-between border border-tertiary/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<div>
+<p class="font-title-md text-title-md">Maintenance Alerts</p>
+<p class="font-body-md text-body-md opacity-80">Notify me for oil changes</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-tertiary-container rounded-full relative flex items-center px-1">
+<div class="w-4 h-4 bg-on-tertiary rounded-full shadow-sm translate-x-6"></div>
+</div>
+</div>
+</form>
+</div>
+</main>
+<!-- Sticky Bottom Navigation/Action (Shared Component Structure) -->
+<footer class="fixed bottom-0 left-0 w-full z-50 bg-surface-container dark:bg-surface-container-lowest border-t border-outline-variant px-margin-mobile pb-6 pt-4 h-auto">
+<div class="max-w-2xl mx-auto flex flex-col gap-4">
+<!-- Hint Text -->
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant px-4">
+                You can change these details later in your vehicle settings.
+            </p>
+<!-- Save Button -->
+<button class="w-full h-14 bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 shadow-lg hover:bg-opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="save">save</span>
+<span class="font-label-lg text-label-lg font-bold">Save Vehicle</span>
+</button>
+</div>
+</footer>
+<!-- Subtle Background Shader for Atmosphere -->
+<div class="fixed inset-0 pointer-events-none -z-10 opacity-50">
+
+</div>
+<script>
+        // Micro-interactions for inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                const parent = input.closest('.relative');
+                parent.classList.add('border-primary');
+                parent.classList.remove('border-outline');
+            });
+            input.addEventListener('blur', () => {
+                const parent = input.closest('.relative');
+                parent.classList.remove('border-primary');
+                parent.classList.add('border-outline');
+            });
+        });
+
+        // Toggle simulation
+        const toggle = document.querySelector('.w-12.h-6');
+        toggle?.addEventListener('click', () => {
+            const circle = toggle.querySelector('div');
+            circle.classList.toggle('translate-x-6');
+            circle.classList.toggle('translate-x-0');
+            toggle.classList.toggle('bg-tertiary-container');
+            toggle.classList.toggle('bg-on-surface-variant');
+        });
+    </script>
+</body></html>

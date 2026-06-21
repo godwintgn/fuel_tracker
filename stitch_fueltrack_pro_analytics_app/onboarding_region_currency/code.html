@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FuelTrack Pro - Onboarding Step 3</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Roboto Flex', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .custom-toggle:checked + .toggle-bg {
+            background-color: #0d631b;
+        }
+        .custom-toggle:checked + .toggle-bg .toggle-dot {
+            transform: translateX(20px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#a5c8ff",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#40493d",
+                        "outline": "#707a6c",
+                        "on-secondary-fixed-variant": "#004786",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#fbf9f9",
+                        "surface-container-highest": "#e3e2e2",
+                        "inverse-surface": "#303031",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-container-high": "#e9e8e7",
+                        "on-tertiary-container": "#ffeee6",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "surface": "#fbf9f9",
+                        "tertiary": "#884200",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-surface": "#1b1c1c",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#bfcaba",
+                        "surface-dim": "#dbdad9",
+                        "on-secondary-fixed": "#001c3a",
+                        "primary-fixed": "#a3f69c",
+                        "on-secondary-container": "#003567",
+                        "surface-container": "#efeded",
+                        "on-primary-fixed": "#002204",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-background": "#1b1c1c",
+                        "surface-tint": "#1b6d24",
+                        "inverse-primary": "#88d982",
+                        "primary-fixed-dim": "#88d982",
+                        "primary": "#0d631b",
+                        "surface-container-low": "#f5f3f3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#311300",
+                        "secondary": "#005faf",
+                        "inverse-on-surface": "#f2f0f0",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e3e2e2",
+                        "on-primary-fixed-variant": "#005312",
+                        "background": "#fbf9f9",
+                        "primary-container": "#2e7d32",
+                        "secondary-container": "#54a0fe",
+                        "on-primary-container": "#cbffc2",
+                        "tertiary-container": "#ad5600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px",
+                        "base": "8px",
+                        "margin-tablet": "24px",
+                        "gutter": "16px",
+                        "stack-sm": "4px",
+                        "component-padding-x": "16px",
+                        "component-padding-y": "12px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Roboto Flex"],
+                        "body-lg": ["Roboto Flex"],
+                        "headline-md": ["Roboto Flex"],
+                        "title-lg": ["Roboto Flex"],
+                        "display-lg": ["Roboto Flex"],
+                        "label-sm": ["Roboto Flex"],
+                        "headline-lg-mobile": ["Roboto Flex"],
+                        "label-lg": ["Roboto Flex"],
+                        "title-md": ["Roboto Flex"],
+                        "headline-lg": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                        "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                        "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                        "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "400"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                        "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col items-center">
+<!-- Top Navigation Header (Suppressed standard TopAppBar for focus) -->
+<header class="w-full h-16 flex items-center justify-between px-margin-mobile fixed top-0 left-0 z-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
+<span class="font-bold text-title-md text-primary">FuelTrack Pro</span>
+</div>
+<button class="text-on-surface-variant font-label-lg text-label-lg px-4 py-2 hover:bg-surface-container-high rounded-full transition-colors active:scale-95">
+            Skip
+        </button>
+</header>
+<main class="flex-1 w-full max-w-lg mt-16 px-margin-mobile flex flex-col pt-stack-lg pb-10">
+<!-- Progress Bar -->
+<div class="w-full flex gap-2 mb-stack-lg">
+<div class="h-1 flex-1 bg-primary rounded-full"></div>
+<div class="h-1 flex-1 bg-primary rounded-full"></div>
+<div class="h-1 flex-1 bg-primary rounded-full"></div>
+<div class="h-1 flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+<section class="mb-10">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Region &amp; Currency</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure your local settings so we can provide accurate cost analysis and efficiency data.</p>
+</section>
+<!-- Configuration Card Area -->
+<div class="flex flex-col gap-gutter">
+<!-- Region & Currency Section -->
+<div class="bg-surface-container-low rounded-[24px] p-6 space-y-6">
+<!-- Country Selector -->
+<div class="space-y-2">
+<label class="font-label-lg text-label-lg text-primary block">Country / Region</label>
+<div class="relative group">
+<select class="w-full bg-surface-container-highest border-none rounded-xl h-14 px-4 font-body-lg text-body-lg appearance-none cursor-pointer focus:ring-2 focus:ring-primary">
+<option selected="" value="OM">Oman</option>
+<option value="AE">United Arab Emirates</option>
+<option value="SA">Saudi Arabia</option>
+<option value="QA">Qatar</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-4 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Currency Selection -->
+<div class="space-y-2">
+<label class="font-label-lg text-label-lg text-primary block">Currency</label>
+<div class="flex items-center gap-3 bg-surface-container-highest p-4 rounded-xl">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">
+                            OMR
+                        </div>
+<div class="flex-1">
+<p class="font-title-md text-title-md">Omani Rial</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Default for your region</p>
+</div>
+<span class="material-symbols-outlined text-outline">lock</span>
+</div>
+</div>
+</div>
+<!-- Measurement Units Section -->
+<div class="bg-surface-container-low rounded-[24px] p-6">
+<h3 class="font-title-md text-title-md text-on-surface mb-6">Measurement Units</h3>
+<div class="space-y-8">
+<!-- Distance Switch -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">distance</span>
+<div>
+<p class="font-title-md text-title-md">Distance</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Kilometers (km)</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer custom-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest rounded-full peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+</label>
+</div>
+<!-- Fuel Volume Switch -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">ev_station</span>
+<div>
+<p class="font-title-md text-title-md">Fuel Volume</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Liters (L)</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer custom-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest rounded-full peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+</label>
+</div>
+<!-- Consumption Format Dropdown -->
+<div class="pt-4 border-t border-outline-variant space-y-3">
+<label class="font-label-lg text-label-lg text-on-surface-variant">Efficiency Format</label>
+<div class="flex gap-2">
+<button class="flex-1 h-12 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg active:scale-95 transition-transform">L/100km</button>
+<button class="flex-1 h-12 rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg active:scale-95 transition-transform">km/L</button>
+<button class="flex-1 h-12 rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg active:scale-95 transition-transform">MPG</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Visualization Info Card -->
+<div class="relative overflow-hidden h-32 rounded-[24px] bg-primary-container p-6 flex items-center">
+
+<div class="relative z-10 flex items-center gap-4">
+<div class="p-2 bg-on-primary-container/20 rounded-full">
+<span class="material-symbols-outlined text-on-primary-container">info</span>
+</div>
+<p class="font-body-md text-body-md text-on-primary-container">You can change these units anytime in the Settings menu.</p>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="mt-auto pt-10 flex flex-col gap-4">
+<button class="w-full bg-primary h-14 rounded-full flex items-center justify-center gap-2 text-on-primary font-title-md text-title-md shadow-lg active:scale-95 transition-transform group" onclick="window.location.reload()">
+                Next Step
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant px-6">
+                By continuing, you agree to our local data handling policies for the Oman region.
+            </p>
+</div>
+</main>
+<!-- Visual Background Element -->
+<div class="fixed bottom-0 left-0 w-full h-[265px] bg-gradient-to-t from-surface-container-low to-transparent -z-10 opacity-50"></div>
+<script>
+        // Simple Interaction logic
+        document.querySelectorAll('select').forEach(el => {
+            el.addEventListener('change', (e) => {
+                console.log('Selected Region:', e.target.value);
+            });
+        });
+
+        // Haptic feedback simulation
+        document.querySelectorAll('button, input').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.navigator.vibrate) window.navigator.vibrate(5);
+            });
+        });
+    </script>
+</body></html>
