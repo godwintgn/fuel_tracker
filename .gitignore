@@ -1,0 +1,15 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.iml
+.idea/
+.vscode/
+
+# Flutter (fueltrack_pro)
+fueltrack_pro/.dart_tool/
+fueltrack_pro/build/
+fueltrack_pro/.flutter-plugins-dependencies
+fueltrack_pro/.pub/
+fueltrack_pro/coverage/
+fueltrack_pro/android/local.properties
+fueltrack_pro/android/**/GeneratedPluginRegistrant.java

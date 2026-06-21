@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FuelTrack Pro - Vehicle Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,GRAD@8..144,25..151,100..1000,-200..150&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#40493d",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#fbf9f9",
+                    "surface-container-highest": "#e3e2e2",
+                    "inverse-surface": "#303031",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "surface-container-high": "#e9e8e7",
+                    "on-tertiary-container": "#ffeee6",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "surface": "#fbf9f9",
+                    "tertiary": "#884200",
+                    "tertiary-fixed": "#ffdcc6",
+                    "on-surface": "#1b1c1c",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bfcaba",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-fixed": "#001c3a",
+                    "primary-fixed": "#a3f69c",
+                    "on-secondary-container": "#003567",
+                    "surface-container": "#efeded",
+                    "on-primary-fixed": "#002204",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-background": "#1b1c1c",
+                    "surface-tint": "#1b6d24",
+                    "inverse-primary": "#88d982",
+                    "primary-fixed-dim": "#88d982",
+                    "primary": "#0d631b",
+                    "surface-container-low": "#f5f3f3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#311300",
+                    "secondary": "#005faf",
+                    "inverse-on-surface": "#f2f0f0",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e3e2e2",
+                    "on-primary-fixed-variant": "#005312",
+                    "background": "#fbf9f9",
+                    "primary-container": "#2e7d32",
+                    "secondary-container": "#54a0fe",
+                    "on-primary-container": "#cbffc2",
+                    "tertiary-container": "#ad5600"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "stack-md": "12px",
+                    "stack-lg": "24px",
+                    "base": "8px",
+                    "margin-tablet": "24px",
+                    "gutter": "16px",
+                    "stack-sm": "4px",
+                    "component-padding-x": "16px",
+                    "component-padding-y": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Roboto Flex"],
+                    "body-lg": ["Roboto Flex"],
+                    "headline-md": ["Roboto Flex"],
+                    "title-lg": ["Roboto Flex"],
+                    "display-lg": ["Roboto Flex"],
+                    "label-sm": ["Roboto Flex"],
+                    "headline-lg-mobile": ["Roboto Flex"],
+                    "label-lg": ["Roboto Flex"],
+                    "title-md": ["Roboto Flex"],
+                    "headline-lg": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "400"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                    "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Roboto Flex', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim flex justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-40">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary dark:text-primary-fixed hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 transition-transform">
+                menu
+            </button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">FuelTrack Pro</h1>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant dark:text-outline hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 transition-transform">
+            settings
+        </button>
+</header>
+<main class="px-margin-mobile pt-stack-lg max-w-5xl mx-auto">
+<!-- Screen Title -->
+<div class="flex justify-between items-end mb-stack-lg">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1">Vehicle Garage</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your fleet and track fuel efficiency.</p>
+</div>
+<!-- Desktop Add Button -->
+<button class="hidden md:flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-lg text-label-lg">Add Vehicle</span>
+</button>
+</div>
+<!-- Bento Grid / Cards Container -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Card 1: Mitsubishi Montero Sport -->
+<div class="bg-surface-container-low rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-outline-variant">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A professional studio photograph of a modern white Mitsubishi Montero Sport SUV parked in a clean, minimalist garage with soft cinematic lighting. The atmosphere is upscale and corporate, featuring sleek reflections on the vehicle's body. The background is a blurred architectural space with neutral tones, emphasizing the reliable and high-end nature of the 4WD luxury vehicle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw3NBjnv8V3v4Geo3JsqLbklOgi1Hgu-QzK63djpDCXsownBNyHSkXpTFCqrsWybU-7OKbM3XnrP6-dew8OEQaggTzGKvehZqGnFBPOGqsBdOIpbqdhUG_Fouj59t7iEFTAS5QafRVCJuN2lfm8w1IkDnSAezAJDgIZcotYekFn9C220r8baahJ21NJhArkxrgTDb7LAgQ-8vp95-uycmiUG6p6Wf09ExYcoSdZ3gqF8xey1CdUiYQlDaojyK-ArZxGIe1LukxYQ"/>
+<div class="absolute top-4 right-4 bg-primary text-on-primary font-label-sm text-label-sm px-3 py-1 rounded-full shadow-md">
+                        Luxury 4WD
+                    </div>
+</div>
+<div class="p-component-padding-x py-component-padding-y flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Montero Sport</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Mitsubishi</p>
+</div>
+<div class="bg-surface-container-highest p-2 rounded-xl">
+<span class="material-symbols-outlined text-primary">airport_shuttle</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md mt-4 border-t border-outline-variant/30 pt-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">calendar_today</span>
+<span class="font-label-lg text-label-lg">2023</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">local_gas_station</span>
+<span class="font-label-lg text-label-lg">Diesel</span>
+</div>
+<div class="flex items-center gap-2 col-span-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">app_registration</span>
+<span class="font-label-lg text-label-lg tracking-wider">ABC-1234</span>
+</div>
+</div>
+<div class="mt-auto pt-6 flex gap-2">
+<button class="flex-1 border border-outline text-primary font-label-lg text-label-lg py-2.5 rounded-xl hover:bg-primary/5 transition-colors">Details</button>
+<button class="flex-1 bg-secondary-container text-on-secondary-container font-label-lg text-label-lg py-2.5 rounded-xl hover:shadow-md transition-shadow">Fuel Log</button>
+</div>
+</div>
+</div>
+<!-- Card 2: Executive Sedan -->
+<div class="bg-surface-container-low rounded-[24px] overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border border-transparent hover:border-outline-variant">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sleek black executive sedan, similar to a high-end Toyota Camry or Honda Accord, driving along a clean urban highway during the golden hour. The lighting is warm and professional, highlighting the car's aerodynamic lines. The style is modern corporate, focusing on efficiency and professional utility, with a soft-focus city skyline in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuANN2hlfRWi9n1edFHsXFf6heW8oyv21Kp_Dvt2_V8DtJzyyOPW7rWnz4dtHsLo9FjfuJ31iVGh28H9Y1Qe3HYH2xMcHw5wDHHQ-opboILdc1owQchezlwRoAHUHb384wIgrwkOQBuIyMOV2kvVkC2iFllmXBu0Ev7j0TCPA2Sx9YS9UitiB2u069nPUvhrWH1STQg09d7YclMwhBSSuZxR_fUbWGty8qrLvKWXQkNbgQD__rAvfnuan3swp0_k4Dgv84GCoSLUHw"/>
+<div class="absolute top-4 right-4 bg-secondary text-on-secondary font-label-sm text-label-sm px-3 py-1 rounded-full shadow-md">
+                        Daily Commuter
+                    </div>
+</div>
+<div class="p-component-padding-x py-component-padding-y flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Executive Sedan</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Corporate Fleet</p>
+</div>
+<div class="bg-surface-container-highest p-2 rounded-xl">
+<span class="material-symbols-outlined text-secondary">directions_car</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md mt-4 border-t border-outline-variant/30 pt-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">calendar_today</span>
+<span class="font-label-lg text-label-lg">2022</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">local_gas_station</span>
+<span class="font-label-lg text-label-lg">Petrol</span>
+</div>
+<div class="flex items-center gap-2 col-span-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">app_registration</span>
+<span class="font-label-lg text-label-lg tracking-wider">XYZ-9876</span>
+</div>
+</div>
+<div class="mt-auto pt-6 flex gap-2">
+<button class="flex-1 border border-outline text-primary font-label-lg text-label-lg py-2.5 rounded-xl hover:bg-primary/5 transition-colors">Details</button>
+<button class="flex-1 bg-secondary-container text-on-secondary-container font-label-lg text-label-lg py-2.5 rounded-xl hover:shadow-md transition-shadow">Fuel Log</button>
+</div>
+</div>
+</div>
+<!-- Stats Mini Card (Bento Style) -->
+<div class="bg-primary-container p-6 rounded-[24px] md:col-span-2 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-on-primary-container/10 rounded-full blur-3xl group-hover:bg-on-primary-container/20 transition-all duration-700"></div>
+<div class="z-10">
+<h4 class="font-title-lg text-title-lg text-on-primary-container mb-2">Efficiency Overview</h4>
+<p class="font-body-md text-body-md text-on-primary-container/80 max-w-md">Your fleet efficiency has improved by 12% this month. Keep logging to get more accurate insights.</p>
+</div>
+<div class="flex gap-8 z-10 w-full md:w-auto">
+<div class="text-center">
+<p class="font-label-sm text-label-sm text-on-primary-container/70 uppercase">Avg L/100km</p>
+<p class="font-headline-md text-headline-md text-on-primary-container font-bold">8.4</p>
+</div>
+<div class="text-center">
+<p class="font-label-sm text-label-sm text-on-primary-container/70 uppercase">Total Distance</p>
+<p class="font-headline-md text-headline-md text-on-primary-container font-bold">12.2k</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State / Add New Placeholder -->
+<div class="mt-gutter border-2 border-dashed border-outline-variant rounded-[24px] p-12 flex flex-col items-center justify-center text-center hover:bg-surface-container transition-colors cursor-pointer group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">add</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface">Add another vehicle</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Ready to track a new ride? Click here to register it.</p>
+</div>
+</main>
+<!-- FAB for mobile -->
+<button class="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center active:scale-90 transition-all z-50">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-base pb-safe h-20 bg-surface-container dark:bg-surface-container-lowest border-t border-outline-variant shadow-md">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-5 py-1 hover:bg-surface-container-high transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-lg text-label-lg">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed rounded-full px-5 py-1 active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined">directions_car</span>
+<span class="font-label-lg text-label-lg">Vehicles</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-5 py-1 hover:bg-surface-container-high transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-lg text-label-lg">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-5 py-1 hover:bg-surface-container-high transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-label-lg text-label-lg">Analytics</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Ripple effect or simple feedback could go here
+            });
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-8');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.grid > div').forEach(card => {
+            card.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-500');
+            observer.observe(card);
+        });
+    </script>
+</body></html>
