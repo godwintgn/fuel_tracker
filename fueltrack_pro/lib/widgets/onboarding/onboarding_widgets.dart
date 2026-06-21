@@ -1,0 +1,252 @@
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+class OnboardingGradientBackground extends StatelessWidget {
+  const OnboardingGradientBackground({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).scaffoldBackgroundColor,
+                  AppColors.primary.withValues(alpha: 0.08),
+                  AppColors.secondary.withValues(alpha: 0.12),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        ),
+        child,
+        const Positioned(
+          bottom: -50,
+          left: -50,
+          child: _BlurOrb(color: AppColors.secondaryContainer, size: 200),
+        ),
+        const Positioned(
+          bottom: -20,
+          right: -20,
+          child: _BlurOrb(color: AppColors.primaryContainer, size: 150),
+        ),
+      ],
+    );
+  }
+}
+
+class _BlurOrb extends StatelessWidget {
+  const _BlurOrb({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: 0.2),
+        ),
+      ),
+    );
+  }
+}
+
+class OnboardingProgressBar extends StatelessWidget {
+  const OnboardingProgressBar({
+    super.key,
+    required this.currentStep,
+    required this.totalSteps,
+    this.segmented = false,
+  });
+
+  final int currentStep;
+  final int totalSteps;
+  final bool segmented;
+
+  @override
+  Widget build(BuildContext context) {
+    if (segmented) {
+      return Row(
+        children: List.generate(totalSteps, (index) {
+          final active = index <= currentStep;
+          return Expanded(
+            child: Container(
+              height: 4,
+              margin: EdgeInsets.only(right: index < totalSteps - 1 ? 8 : 0),
+              decoration: BoxDecoration(
+                color: active
+                    ? AppColors.primary
+                    : AppColors.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          );
+        }),
+      );
+    }
+
+    final progress = (currentStep + 1) / totalSteps;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(2),
+      child: LinearProgressIndicator(
+        value: progress,
+        minHeight: 4,
+        backgroundColor: AppColors.surfaceContainerHighest,
+        color: AppColors.primary,
+      ),
+    );
+  }
+}
+
+class SelectionChip extends StatelessWidget {
+  const SelectionChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+    this.compact = false,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: selected ? AppColors.primaryContainer : Colors.transparent,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: selected ? AppColors.primaryContainer : AppColors.outlineVariant,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 16 : 20,
+            vertical: compact ? 8 : 10,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 20,
+                  color: selected
+                      ? AppColors.onPrimaryContainer
+                      : AppColors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? AppColors.onPrimaryContainer
+                      : AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OnboardingPrimaryButton extends StatelessWidget {
+  const OnboardingPrimaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.loading = false,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: FilledButton(
+        onPressed: loading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          shape: const StadiumBorder(),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(label),
+                  if (icon != null) ...[
+                    const SizedBox(width: 8),
+                    Icon(icon, size: 20),
+                  ],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class AppLogoMark extends StatelessWidget {
+  const AppLogoMark({super.key, this.size = 96});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Icon(
+        Icons.local_gas_station_rounded,
+        size: size * 0.5,
+        color: AppColors.onPrimary,
+      ),
+    );
+  }
+}

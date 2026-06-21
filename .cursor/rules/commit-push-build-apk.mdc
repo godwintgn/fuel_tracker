@@ -1,0 +1,32 @@
+---
+description: After every substantive update — commit, push, and build a clean signed release APK.
+alwaysApply: true
+---
+
+# Git, push, and release APK (fuel_tracker)
+
+After **implementing or modifying** project code (not for drive-by typo-only edits unless the user asks):
+
+1. **Version** — Bump `fueltrack_pro/pubspec.yaml` `version:` before each shipped build:
+   - **+build** (last number): Android **`versionCode`**. Must **always increase** for every release that updates an existing install. Never lower **+build** when publishing updates.
+   - **PATCH**: bug fixes. **MINOR**: new features. **MAJOR**: breaking changes.
+   - When bumping PATCH/MINOR/MAJOR, set **+build** to one more than the last shipped `versionCode`.
+
+2. **Quality** — Run `flutter analyze` (and tests when logic changed) before commit when practical.
+
+3. **Commit** — One logical commit per coherent change. Conventional Commits:
+   - `feat:`, `fix:`, `refactor:`, `perf:`, `chore:`, `docs:` + short imperative summary.
+
+4. **Push** — `git push origin` (current branch). Resolve conflicts before pushing.
+
+5. **Clean release APK** — After push, from `fueltrack_pro/`:
+   ```bash
+   flutter clean
+   flutter pub get
+   flutter build apk --release
+   ```
+   Report the output path: `build/app/outputs/flutter-apk/app-release.apk`.
+
+6. **Never commit** signing keys, keystores (`.jks`, `.p12`), `key.properties`, passwords, or tokens. Respect `.gitignore`.
+
+If the user explicitly says not to commit, push, or build, skip those steps for that turn.
