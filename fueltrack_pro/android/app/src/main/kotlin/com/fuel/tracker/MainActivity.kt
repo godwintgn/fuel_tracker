@@ -1,4 +1,4 @@
-package com.fueltrack.fueltrack_pro
+package com.fuel.tracker
 
 import io.flutter.embedding.android.FlutterActivity
 
