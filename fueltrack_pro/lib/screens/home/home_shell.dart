@@ -1,124 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../vehicles/vehicle_list_screen.dart';
 
-class HomeShell extends ConsumerWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settingsAsync = ref.watch(settingsProvider);
+  ConsumerState<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends ConsumerState<HomeShell> {
+  var _index = 1;
+
+  @override
+  Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
-    final theme = Theme.of(context);
+    final hasVehicles = vehiclesAsync.maybeWhen(
+      data: (v) => v.isNotEmpty,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FuelTrack Pro'),
+        title: const Text(
+          'FuelTrack Pro',
+          style: TextStyle(color: AppColors.primary),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Settings coming in Step 8')),
+              );
+            },
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
-      body: settingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (settings) {
-          return Padding(
-            padding: const EdgeInsets.all(AppSpacing.marginMobile),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dashboard coming soon',
-                  style: theme.textTheme.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.stackMd),
-                Text(
-                  'Onboarding complete. Next up: vehicle management, dashboard charts, and refuel entry.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.stackLg),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.gutter),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Your settings', style: theme.textTheme.titleMedium),
-                        const SizedBox(height: AppSpacing.stackMd),
-                        _InfoRow(
-                          label: 'Currency',
-                          value:
-                              '${settings.currencySymbol} (${settings.currencyCode})',
-                        ),
-                        _InfoRow(
-                          label: 'Distance',
-                          value: settings.distanceUnit.abbreviation,
-                        ),
-                        _InfoRow(
-                          label: 'Fuel unit',
-                          value: settings.fuelUnit.abbreviation,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.gutter),
-                vehiclesAsync.when(
-                  loading: () => const LinearProgressIndicator(),
-                  error: (e, _) => Text('Vehicles error: $e'),
-                  data: (vehicles) {
-                    if (vehicles.isEmpty) {
-                      return const Text('No vehicles added yet.');
-                    }
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.gutter),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Vehicles', style: theme.textTheme.titleMedium),
-                            ...vehicles.map(
-                              (v) => ListTile(
-                                leading: const Icon(Icons.directions_car,
-                                    color: AppColors.primary),
-                                title: Text(v.displayName),
-                                subtitle: Text(v.fuelType.label),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          _PlaceholderTab(
+            icon: Icons.dashboard_outlined,
+            title: 'Dashboard',
+            message: 'Charts and stats coming in Step 4.',
+          ),
+          VehicleListScreen(),
+          _PlaceholderTab(
+            icon: Icons.history,
+            title: 'History',
+            message: 'Refuel history coming in Step 6.',
+          ),
+          _PlaceholderTab(
+            icon: Icons.insights_outlined,
+            title: 'Analytics',
+            message: 'Efficiency analytics coming in Step 7.',
+          ),
+        ],
+      ),
+      floatingActionButton: _index == 1 && hasVehicles
+          ? FloatingActionButton(
+              onPressed: () => VehicleListScreen.openAddVehicle(context),
+              child: const Icon(Icons.add),
+            )
+          : null,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_car_outlined),
+            selectedIcon: Icon(Icons.directions_car),
+            label: 'Vehicles',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history),
+            selectedIcon: Icon(Icons.history),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights),
+            label: 'Analytics',
+          ),
+        ],
       ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
+class _PlaceholderTab extends StatelessWidget {
+  const _PlaceholderTab({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
 
-  final String label;
-  final String value;
+  final IconData icon;
+  final String title;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.stackLg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 64, color: AppColors.primary),
+            const SizedBox(height: AppSpacing.stackLg),
+            Text(title, style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: AppSpacing.stackSm),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
