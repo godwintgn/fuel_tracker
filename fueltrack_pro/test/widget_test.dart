@@ -7,11 +7,12 @@ import 'package:fueltrack_pro/providers/settings_provider.dart';
 
 class _TestSettingsNotifier extends SettingsNotifier {
   @override
-  Future<AppSettings> build() async => AppSettings.defaults();
+  Future<AppSettings> build() async =>
+      AppSettings.defaults().copyWith(onboardingCompleted: false);
 }
 
 void main() {
-  testWidgets('App loads bootstrap screen', (WidgetTester tester) async {
+  testWidgets('App loads onboarding welcome screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -20,9 +21,10 @@ void main() {
         child: const FuelTrackApp(),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('FuelTrack Pro'), findsOneWidget);
-    expect(find.textContaining('Project scaffold ready'), findsOneWidget);
+    expect(find.text('FuelTrack Pro'), findsWidgets);
+    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
   });
 }

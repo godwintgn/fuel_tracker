@@ -12,4 +12,8 @@ fueltrack_pro/.flutter-plugins-dependencies
 fueltrack_pro/.pub/
 fueltrack_pro/coverage/
 fueltrack_pro/android/local.properties
+fueltrack_pro/android/key.properties
+fueltrack_pro/android/app/*.jks
+fueltrack_pro/android/**/*.keystore
+fueltrack_pro/android/**/*.p12
 fueltrack_pro/android/**/GeneratedPluginRegistrant.java
