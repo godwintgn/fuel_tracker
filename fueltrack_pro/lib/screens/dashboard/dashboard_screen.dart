@@ -11,6 +11,7 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../settings/settings_screen.dart';
 import '../../widgets/common/empty_state.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -96,11 +97,7 @@ class DashboardScreen extends ConsumerWidget {
                   onVehicleTap: data.allVehicles.length > 1
                       ? () => _showVehiclePicker(context, ref, data)
                       : null,
-                  onSettingsTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Settings coming in Step 8')),
-                    );
-                  },
+                  onSettingsTap: () => SettingsScreen.open(context),
                 ),
               ),
               SliverPadding(

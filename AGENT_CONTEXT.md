@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.6.0+10` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.7.0+11` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -54,8 +54,9 @@ fuel_tracker/                          # Git repo root
     │   ├── data/                      # regions, onboarding draft types
     │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, DashboardStats
     │   ├── providers/                 # Riverpod
-    │   ├── screens/                   # onboarding, home, dashboard, refuel, history, analytics, vehicles
-    │   ├── services/                  # db, calculations, analytics, refuel calc, seed data
+    │   ├── screens/                   # … settings, analytics, vehicles
+    │   ├── services/                  # db, backup, drive, analytics, calculations
+    │   ├── config/                    # google_oauth_config.dart
     │   ├── theme/                     # M3 colors from DESIGN.md
     │   └── widgets/                   # onboarding, vehicles, dashboard, common
     └── android/
@@ -81,8 +82,8 @@ Incremental build per original prompt. **Do not generate everything at once.**
 | 5 | ✅ Done | Refuel Entry + smart quantity/price/total calculation |
 | 6 | ✅ Done | History (search, filters, swipe edit/delete) |
 | 7 | ✅ Done | Analytics (charts, insight cards, period selector) |
-| 8 | ⏳ Next | Settings + Google Drive backup |
-| 9 | Pending | Wire end-to-end, **remove seed data** |
+| 8 | ✅ Done | Settings + Google Drive backup + CSV export |
+| 9 | ⏳ Next | Wire end-to-end, **remove seed data** |
 
 ---
 
@@ -160,7 +161,17 @@ Bottom nav (4 tabs):
 - Per-vehicle profile cards (avg km/L)  
 - `AnalyticsService` + `analyticsProvider`; empty states when no refuels  
 
-### 5.9 Dev seed data (`lib/services/seed_data_service.dart`)
+### 5.9 Settings (`lib/screens/settings/settings_screen.dart`)
+
+- Currency, distance/fuel units, theme mode  
+- Manage vehicles shortcut  
+- Export refuel history CSV (unencrypted)  
+- Local encrypted `.ftbak` backup / restore (PBKDF2 + AES-GCM)  
+- Google Drive: sign in, manual backup/restore to app data folder  
+- OAuth: `--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=...` + release SHA-1  
+- Opened from Dashboard / Vehicles gear icons  
+
+### 5.10 Dev seed data (`lib/services/seed_data_service.dart`)
 
 **Important:** Runs only when **no refuel entries** exist in DB.
 
@@ -169,7 +180,7 @@ Bottom nav (4 tabs):
 - 8 refuels over ~3 months, odometer 41,200 → 45,230  
 - **Must be removed in Step 9** before final release wiring.
 
-### 5.10 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
+### 5.11 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
 
 - **km/L** = distance between consecutive refuels (odometer delta) ÷ liters at later refuel  
 - **L/100km** = (liters ÷ km) × 100  
@@ -269,6 +280,7 @@ After substantive code changes:
 | `b2a3c59` | Refuel entry screen + smart calculation |
 | `cd04522` | History list, filters, swipe edit/delete |
 | `7dd8e09` | Analytics screen + charts + insight cards |
+| (pending) | Settings, CSV export, Drive backup |
 
 ---
 
@@ -285,6 +297,9 @@ After substantive code changes:
 | `dashboardProvider` | Seed if empty + stats for selected vehicle |
 | `analyticsProvider` | Fleet analytics for period (weekly/monthly/yearly) |
 | `analyticsPeriodProvider` | Selected analytics timeframe |
+| `backupServiceProvider` | Encrypted backup + CSV export |
+| `driveBackupServiceProvider` | Google Sign-In + Drive app-data upload/download |
+| `driveBackupPrefsProvider` | Drive backup metadata (initialized in `main.dart`) |
 
 ---
 
@@ -304,23 +319,19 @@ main.dart → ProviderScope → FuelTrackApp (app.dart)
 
 Add/Edit vehicle: pushed route from list or speed-dial.  
 Add refuel: `AddRefuelScreen` from speed-dial or vehicle **Fuel Log**.  
-Edit refuel: swipe right or tap card in History.
+Edit refuel: swipe right or tap card in History.  
+Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
 
 ---
 
-## 12. Next work (Step 8+)
+## 12. Next work (Step 9)
 
-### Step 8 — Settings + Google Drive (immediate next)
-
-- Mirror Wealth Journal backup pattern  
-- OAuth client for `com.fuel.tracker` + release SHA-1  
-- CSV export  
-
-### Step 9 — Final wiring
+### Step 9 — Final wiring (immediate next)
 
 - Remove `SeedDataService` / stop calling `seedIfEmpty()`  
 - Remove `adi-registration.properties` if Play verified  
 - Real data only; polish mockup gaps  
+- Register Google OAuth client for `com.fuel.tracker` if using Drive on release builds  
 
 ---
 
@@ -331,6 +342,7 @@ Edit refuel: swipe right or tap card in History.
 - `test/refuel_calculation_test.dart` — unit tests for smart refuel math (all 3 derive paths).  
 - `test/refuel_history_filter_test.dart` — filter/search/date-range unit tests.  
 - `test/analytics_service_test.dart` — period filter, fuel share, monthly spend.  
+- `test/backup_crypto_test.dart` — encrypt/decrypt roundtrip.  
 - Use `pump()` + short delay, not always `pumpAndSettle()` (can timeout on async DB).
 
 ---
@@ -381,4 +393,4 @@ Or attach:
 
 ---
 
-*Last updated: Step 7 analytics with charts and insight cards. Version `1.6.0+10`.*
+*Last updated: Step 8 settings, CSV export, Google Drive backup. Version `1.7.0+11`.*
