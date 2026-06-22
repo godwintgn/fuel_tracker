@@ -245,7 +245,7 @@ After substantive code changes:
 | `f18a120` | Play ownership `adi-registration.properties` |
 | `55fd3c0` | Dashboard, charts, seed data, FAB speed-dial |
 | `c304c33` | AGENT_CONTEXT rule + handoff doc |
-| (pending) | Refuel entry screen + smart calculation |
+| `b2a3c59` | Refuel entry screen + smart calculation |
 
 ---
 
