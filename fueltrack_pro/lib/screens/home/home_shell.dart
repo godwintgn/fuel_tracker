@@ -6,8 +6,10 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/dashboard/speed_dial_fab.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../refuel/add_refuel_screen.dart';
 import '../vehicles/add_edit_vehicle_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
+import '../../providers/settings_provider.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -21,10 +23,26 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   bool get _showSpeedDial => _index == 0 || _index == 2;
 
-  void _onNewRefuel() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Refuel entry coming in Step 5')),
-    );
+  Future<void> _onNewRefuel() async {
+    final vehicles = ref.read(vehiclesProvider).valueOrNull;
+    if (vehicles == null || vehicles.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add a vehicle before logging a refuel')),
+      );
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const AddEditVehicleScreen(),
+        ),
+      );
+      return;
+    }
+
+    final settings = ref.read(settingsProvider).valueOrNull;
+    final vehicleId =
+        settings?.selectedVehicleId ?? vehicles.first.id;
+    if (!mounted) return;
+    await AddRefuelScreen.open(context, vehicleId: vehicleId);
   }
 
   void _onNewVehicle() {
