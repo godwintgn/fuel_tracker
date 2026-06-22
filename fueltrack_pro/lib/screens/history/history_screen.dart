@@ -16,7 +16,6 @@ import '../../widgets/history/refuel_history_card.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../refuel/refuel_detail_screen.dart';
 import '../../widgets/common/active_vehicle_bar.dart';
-import '../../widgets/common/app_card.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -174,59 +173,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           vehicles: vehicles,
                           embedded: true,
                         ),
-                        AppCard(
-                          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 12),
-                                child: Icon(
-                                  Icons.search_rounded,
-                                  size: 22,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                        TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search stations or types...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: IconButton(
+                              onPressed: () => _openFilters(vehicles),
+                              icon: Badge(
+                                isLabelVisible: _filters.hasActiveFilters,
+                                child: const Icon(Icons.tune),
                               ),
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  style: theme.textTheme.bodyLarge,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search stations or types…',
-                                    hintStyle:
-                                        theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                              ),
-                              Container(
-                                width: 1,
-                                height: 28,
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                color: theme.colorScheme.outlineVariant
-                                    .withValues(alpha: 0.5),
-                              ),
-                              IconButton(
-                                tooltip: 'Filters',
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => _openFilters(vehicles),
-                                icon: Badge(
-                                  isLabelVisible: _filters.hasActiveFilters,
-                                  child: Icon(
-                                    Icons.tune_rounded,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
+                          onChanged: (_) => setState(() {}),
                         ),
                       ],
                     ),

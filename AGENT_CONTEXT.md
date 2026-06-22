@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.11.1+16` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.11.3+18` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -115,7 +115,7 @@ Bottom nav (4 tabs):
 | 2 | History | ✅ Live |
 | 3 | Analytics | ✅ Live |
 
-- **FAB speed-dial** on Dashboard (0) and History (2): New Refuel / New Vehicle + scrim.  
+- **FAB** on Dashboard (0) and History (2): single tap → **New Refuel** (no speed-dial).  
 - Vehicles tab uses simple `+` FAB to add vehicle.
 
 ### 5.4 Dashboard (`lib/screens/dashboard/dashboard_screen.dart`)
@@ -130,19 +130,25 @@ Bottom nav (4 tabs):
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
 
 - List with `VehicleCard`, empty state, add-another dashed card  
+- **Details** → `VehicleDetailScreen` (read-only profile + photo); **Edit** in app bar → `AddEditVehicleScreen`  
 - Add/Edit form; delete blocked if refuel history exists  
-- **Fuel Log** opens `AddRefuelScreen` for that vehicle  
+- **Fuel Log** opens `AddRefuelScreen` for that vehicle (vehicle + fuel type locked)  
 
 ### 5.6 Refuel entry (`lib/screens/refuel/add_refuel_screen.dart`)
 
 - Form: date/time, vehicle, odometer, quantity, price/L, total, station, notes  
 - **Smart calc:** any 2 of quantity / price-per-liter / total → derives third (`refuel_calculation.dart`)  
 - Auto-calc fields highlighted with green tint + “AUTO” badge on total  
-- Prefills price/L from last refuel; odometer hint from last reading  
-- Soft warning if odometer &lt; previous refuel  
-- Wired: speed-dial **New Refuel**, vehicle **Fuel Log**; invalidates `dashboardProvider` on save  
-- `refuelsProvider.updateEntry` added for Step 6 edit flow  
-- `refuelsProvider.deleteEntry` for history swipe-delete  
+- Prefills price/L from last refuel; odometer hint shows valid range from timeline neighbors  
+- **Timeline validation** (`refuel_timeline_validation.dart`): date not in future; odometer must sit between chronological neighbors (supports backdated history inserts)  
+- Vehicle + fuel type **locked** when opened from vehicle Fuel Log or when editing an entry  
+- Wired: FAB **New Refuel**, vehicle **Fuel Log**; invalidates `dashboardProvider` on save  
+- `refuelsProvider.updateEntry` for edit flow; `refuelsProvider.deleteEntry` for history swipe-delete  
+
+### 5.6b Refuel detail (`lib/screens/refuel/refuel_detail_screen.dart`)
+
+- Read-only refuel view; **Edit** opens `AddRefuelScreen` in edit mode (vehicle/fuel locked)  
+- History tap → detail; swipe right → edit  
 
 ### 5.7 History (`lib/screens/history/history_screen.dart`)
 
@@ -151,8 +157,8 @@ Bottom nav (4 tabs):
 - Summary chip: entry count + total spend for active filters  
 - `RefuelHistoryCard` list matching mockup layout  
 - Swipe right → edit (`AddRefuelScreen` edit mode); swipe left → delete with confirm  
-- Tap card → edit; empty states for no data / no matches  
-- Speed-dial **New Refuel** still available on History tab  
+- Tap card → `RefuelDetailScreen` (view); empty states for no data / no matches  
+- FAB **New Refuel** on History tab  
 
 ### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
 
@@ -327,9 +333,10 @@ main.dart → ProviderScope → FuelTrackApp (app.dart)
             └─ [3] AnalyticsScreen
 ```
 
-Add/Edit vehicle: pushed route from list or speed-dial.  
-Add refuel: `AddRefuelScreen` from speed-dial or vehicle **Fuel Log**.  
-Edit refuel: swipe right or tap card in History.  
+Add vehicle: pushed route from Vehicles `+` FAB or onboarding.  
+Vehicle **Details** → `VehicleDetailScreen`; **Edit** from detail app bar.  
+Add refuel: `AddRefuelScreen` from FAB or vehicle **Fuel Log** (locks vehicle).  
+View refuel: tap card in History → `RefuelDetailScreen`; edit from app bar or swipe right.  
 Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
 
 ---
@@ -350,6 +357,7 @@ Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
 - `test/refuel_calculation_test.dart` — unit tests for smart refuel math (all 3 derive paths).  
 - `test/refuel_history_filter_test.dart` — filter/search/date-range unit tests.  
 - `test/analytics_service_test.dart` — period filter, fuel share, monthly spend.  
+- `test/refuel_timeline_validation_test.dart` — odometer/date neighbor bounds for new and historical refuels.  
 - `test/backup_crypto_test.dart` — encrypt/decrypt roundtrip.  
 - Use `pump()` + short delay, not always `pumpAndSettle()` (can timeout on async DB).
 
@@ -401,4 +409,4 @@ Or attach:
 
 ---
 
-*Last updated: FAB docked via Scaffold slot (above nav bar), History search bar restyled with AppCard. Version `1.11.1+16`.*
+*Last updated: Vehicle view-only detail + edit, refuel timeline validation, locked vehicle on Fuel Log. Version `1.11.3+18`.*

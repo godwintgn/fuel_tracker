@@ -10,6 +10,7 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/vehicles/vehicle_card.dart';
 import '../refuel/add_refuel_screen.dart';
 import 'add_edit_vehicle_screen.dart';
+import 'vehicle_detail_screen.dart';
 
 class VehicleListScreen extends ConsumerWidget {
   const VehicleListScreen({super.key});
@@ -18,14 +19,6 @@ class VehicleListScreen extends ConsumerWidget {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const AddEditVehicleScreen(),
-      ),
-    );
-  }
-
-  Future<void> _openEditVehicle(BuildContext context, Vehicle vehicle) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => AddEditVehicleScreen(vehicle: vehicle),
       ),
     );
   }
@@ -105,7 +98,8 @@ class VehicleListScreen extends ConsumerWidget {
                     onSetActive: isSelected
                         ? null
                         : () => _selectVehicle(ref, vehicle),
-                    onDetails: () => _openEditVehicle(context, vehicle),
+                    onDetails: () =>
+                        VehicleDetailScreen.open(context, vehicle: vehicle),
                     onFuelLog: () async {
                       await _selectVehicle(ref, vehicle);
                       if (context.mounted) {

@@ -12,6 +12,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../services/refuel_calculation.dart';
 import '../../services/fuel_type_metrics.dart';
+import '../../services/refuel_timeline_validation.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 import '../../widgets/common/app_card.dart';
@@ -30,6 +31,9 @@ class AddRefuelScreen extends ConsumerStatefulWidget {
   final RefuelEntry? entry;
 
   bool get isEditing => entry != null;
+
+  /// Vehicle and fuel type are fixed when logging for a vehicle or editing.
+  bool get locksVehicleFields => initialVehicleId != null || isEditing;
 
   static Future<void> open(
     BuildContext context, {
@@ -72,7 +76,10 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   RefuelPriceField? _derivedField;
   var _saving = false;
   var _suppressCalc = false;
-  double? _lastOdometer;
+  List<RefuelEntry> _vehicleRefuels = [];
+  RefuelNeighborBounds? _neighborBounds;
+
+  bool get _locksVehicleFields => widget.locksVehicleFields;
 
   @override
   void initState() {
@@ -99,6 +106,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     _quantityController.addListener(_onQuantityChanged);
     _pricePerLiterController.addListener(_onPriceChanged);
     _totalPriceController.addListener(_onTotalChanged);
+    _odometerController.addListener(_onOdometerChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
   }
 
@@ -113,7 +121,9 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     _totalPriceController
       ..removeListener(_onTotalChanged)
       ..dispose();
-    _odometerController.dispose();
+    _odometerController
+      ..removeListener(_onOdometerChanged)
+      ..dispose();
     _stationController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -147,26 +157,78 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
   Future<void> _loadVehicleHints(int vehicleId) async {
     final refuels = await ref.read(vehicleRefuelsProvider(vehicleId).future);
+    if (!mounted) return;
+
     final others = widget.entry?.id == null
         ? refuels
         : refuels.where((e) => e.id != widget.entry!.id).toList();
-    if (!mounted || others.isEmpty) return;
 
-    final last = others.first;
-    setState(() {
-      _lastOdometer = last.odometer;
-      if (widget.entry == null &&
-          last.pricePerLiter != null &&
-          _pricePerLiterController.text.isEmpty) {
+    setState(() => _vehicleRefuels = refuels);
+
+    if (others.isNotEmpty &&
+        widget.entry == null &&
+        others.first.pricePerLiter != null &&
+        _pricePerLiterController.text.isEmpty) {
+      setState(() {
         _pricePerLiterController.text =
-            RefuelCalculation.formatMoney(last.pricePerLiter!);
+            RefuelCalculation.formatMoney(others.first.pricePerLiter!);
         _manualOrder = RefuelCalculation.trackManualEdit(
           _manualOrder,
           RefuelPriceField.pricePerLiter,
         );
-      }
-    });
-    _recalculate();
+      });
+      _recalculate();
+    }
+
+    _refreshTimelineBounds();
+  }
+
+  void _onOdometerChanged() => _refreshTimelineBounds();
+
+  void _refreshTimelineBounds() {
+    if (!mounted) return;
+
+    final odometer = RefuelCalculation.parseValue(_odometerController.text);
+    final bounds = odometer != null && odometer > 0
+        ? RefuelTimelineValidation.neighbors(
+            entries: _vehicleRefuels,
+            excludeId: widget.entry?.id,
+            date: _refuelDate,
+            odometer: odometer,
+          )
+        : RefuelTimelineValidation.neighborsByDate(
+            entries: _vehicleRefuels,
+            excludeId: widget.entry?.id,
+            date: _refuelDate,
+          );
+
+    setState(() => _neighborBounds = bounds);
+  }
+
+  String? _odometerHint(String distanceUnit) {
+    final prev = _neighborBounds?.previous;
+    final next = _neighborBounds?.next;
+    if (prev != null && next != null) {
+      return 'Between ${prev.odometer.toStringAsFixed(0)} and '
+          '${next.odometer.toStringAsFixed(0)} $distanceUnit';
+    }
+    if (prev != null) {
+      return 'Above ${prev.odometer.toStringAsFixed(0)} $distanceUnit';
+    }
+    if (next != null) {
+      return 'Below ${next.odometer.toStringAsFixed(0)} $distanceUnit';
+    }
+    return null;
+  }
+
+  String? _timelineError(double odometer, String distanceUnit) {
+    return RefuelTimelineValidation.validate(
+      vehicleEntries: _vehicleRefuels,
+      excludeId: widget.entry?.id,
+      refuelDate: _refuelDate,
+      odometer: odometer,
+      distanceUnit: distanceUnit,
+    );
   }
 
   void _onQuantityChanged() => _onPriceFieldEdited(RefuelPriceField.quantity);
@@ -226,7 +288,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       context: context,
       initialDate: _refuelDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now(),
     );
     if (picked == null || !mounted) return;
     setState(() {
@@ -238,6 +300,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         _refuelDate.minute,
       );
     });
+    _refreshTimelineBounds();
   }
 
   Future<void> _pickTime() async {
@@ -255,9 +318,11 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         picked.minute,
       );
     });
+    _refreshTimelineBounds();
   }
 
   Future<void> _selectVehicle(Vehicle vehicle) async {
+    if (_locksVehicleFields) return;
     setState(() => _vehicle = vehicle);
     final settings = await ref.read(settingsProvider.future);
     await ref.read(settingsProvider.notifier).updateSettings(
@@ -266,33 +331,6 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     if (vehicle.id != null) {
       await _loadVehicleHints(vehicle.id!);
     }
-  }
-
-  Future<bool> _confirmOdometerWarning(double odometer) async {
-    if (_lastOdometer == null) return true;
-    if (odometer >= _lastOdometer!) return true;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Odometer lower than last refuel'),
-        content: Text(
-          'Last reading was ${_lastOdometer!.toStringAsFixed(0)} km. '
-          'Save ${odometer.toStringAsFixed(0)} km anyway?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save anyway'),
-          ),
-        ],
-      ),
-    );
-    return confirmed == true;
   }
 
   Future<void> _save() async {
@@ -331,7 +369,14 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       return;
     }
 
-    if (!await _confirmOdometerWarning(odometer)) return;
+    final distanceUnit = ref.read(settingsProvider).valueOrNull?.distanceUnit.abbreviation ?? 'km';
+    final timelineError = _timelineError(odometer, distanceUnit);
+    if (timelineError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(timelineError)),
+      );
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -497,7 +542,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
             Row(
               children: [
                 Expanded(
-                  child: vehicles.length > 1
+                  child: !_locksVehicleFields && vehicles.length > 1
                       ? RefuelFieldContainer(
                           label: 'Vehicle',
                           readOnly: true,
@@ -556,9 +601,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
                 ],
                 decoration: InputDecoration(
-                  hintText: _lastOdometer != null
-                      ? 'Last: ${_lastOdometer!.toStringAsFixed(0)}'
-                      : 'Enter reading',
+                  hintText: _odometerHint(distanceUnit) ?? 'Enter reading',
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
@@ -569,7 +612,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                   if (parsed == null || parsed <= 0) {
                     return 'Enter a valid odometer reading';
                   }
-                  return null;
+                  return _timelineError(parsed, distanceUnit);
                 },
               ),
             ),
