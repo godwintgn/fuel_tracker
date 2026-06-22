@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../widgets/dashboard/speed_dial_fab.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../vehicles/add_edit_vehicle_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
@@ -14,7 +17,23 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  var _index = 1;
+  var _index = 0;
+
+  bool get _showSpeedDial => _index == 0 || _index == 2;
+
+  void _onNewRefuel() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Refuel entry coming in Step 5')),
+    );
+  }
+
+  void _onNewVehicle() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AddEditVehicleScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,44 +44,57 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'FuelTrack Pro',
-          style: TextStyle(color: AppColors.primary),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings coming in Step 8')),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined),
+      appBar: _index == 0
+          ? null
+          : AppBar(
+              title: const Text(
+                'FuelTrack Pro',
+                style: TextStyle(color: AppColors.primary),
+              ),
+              actions: [
+                if (_index == 1)
+                  IconButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Settings coming in Step 8'),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.settings_outlined),
+                  ),
+              ],
+            ),
+      extendBody: true,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _index,
+            children: const [
+              DashboardScreen(),
+              VehicleListScreen(),
+              _PlaceholderTab(
+                icon: Icons.history,
+                title: 'History',
+                message: 'Refuel history coming in Step 6.',
+              ),
+              _PlaceholderTab(
+                icon: Icons.insights_outlined,
+                title: 'Analytics',
+                message: 'Efficiency analytics coming in Step 7.',
+              ),
+            ],
           ),
+          if (_showSpeedDial)
+            Positioned.fill(
+              child: SpeedDialFab(
+                onNewRefuel: _onNewRefuel,
+                onNewVehicle: _onNewVehicle,
+              ),
+            ),
         ],
       ),
-      body: IndexedStack(
-        index: _index,
-        children: const [
-          _PlaceholderTab(
-            icon: Icons.dashboard_outlined,
-            title: 'Dashboard',
-            message: 'Charts and stats coming in Step 4.',
-          ),
-          VehicleListScreen(),
-          _PlaceholderTab(
-            icon: Icons.history,
-            title: 'History',
-            message: 'Refuel history coming in Step 6.',
-          ),
-          _PlaceholderTab(
-            icon: Icons.insights_outlined,
-            title: 'Analytics',
-            message: 'Efficiency analytics coming in Step 7.',
-          ),
-        ],
-      ),
-      floatingActionButton: _index == 1 && hasVehicles
+      floatingActionButton: !_showSpeedDial && _index == 1 && hasVehicles
           ? FloatingActionButton(
               onPressed: () => VehicleListScreen.openAddVehicle(context),
               child: const Icon(Icons.add),
