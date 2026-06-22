@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.11.4+19` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.12.0+20` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -130,6 +130,7 @@ Bottom nav (4 tabs):
 
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
 
+- Add/Edit form requires **Manufacturer, Model, Vehicle Number** (mandatory); year optional  
 - List with `VehicleCard` (tap photo → Details; buttons trimmed to Set active + Fuel Log; no duplicate fuel-type chip), empty state, add-another dashed card  
 - **Details** → `VehicleDetailScreen` (read-only profile + photo, Hero transition from card): stats strip (distance tracked, total spend, avg efficiency, last odometer), recent activity list (last 5, tap → `RefuelDetailScreen`), bottom-docked **Log refuel** button; **Edit** in app bar → `AddEditVehicleScreen`  
 - Add/Edit form; delete blocked if refuel history exists  
@@ -143,6 +144,7 @@ Bottom nav (4 tabs):
 - Prefills price/L from last refuel; odometer hint shows valid range from timeline neighbors  
 - **Timeline validation** (`refuel_timeline_validation.dart`): date not in future; odometer must sit between chronological neighbors (supports backdated history inserts)  
 - Vehicle + fuel type **locked** when opened from vehicle Fuel Log or when editing an entry  
+- **Station name autocomplete** suggests previously-used stations (`RawAutocomplete` over distinct `refuelsProvider` station names)  
 - Wired: FAB **New Refuel**, vehicle **Fuel Log**; invalidates `dashboardProvider` on save  
 - `refuelsProvider.updateEntry` for edit flow; `refuelsProvider.deleteEntry` for history swipe-delete  
 
@@ -150,7 +152,7 @@ Bottom nav (4 tabs):
 
 - **Cost hero** card at top (large total + quantity/price subtitle)  
 - Spec rows incl. **Efficiency (this fill)** = distance since previous refuel ÷ quantity  
-- Read-only view; **Edit** opens `AddRefuelScreen` in edit mode (vehicle/fuel locked)  
+- Read-only view; bottom action bar with **Edit** + **Delete** (delete confirms, removes entry, invalidates dashboard + vehicle refuels)  
 - History tap → detail; swipe right → edit  
 - Shared `DetailRow` (`lib/widgets/common/detail_row.dart`) used here + vehicle detail  
 
@@ -303,6 +305,7 @@ After substantive code changes:
 | `625a705` | feat: WJ UI, active vehicle scoping, fuel-type metrics, FAB polish |
 | `a9ea23d` | feat: vehicle detail view, refuel timeline validation, single FAB (v1.11.3+18) |
 | `89bd5bd` | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
+| *(pending)* | feat: refuel edit/delete bar, active chip fuel+number, station autocomplete, mandatory vehicle fields (v1.12.0+20) |
 
 ---
 
@@ -415,4 +418,4 @@ Or attach:
 
 ---
 
-*Last updated: UI polish — vehicle card cleanup, refuel cost hero + per-fill efficiency, dashboard skeletons/empty states, shared DetailRow, haptics. Version `1.11.4+19`.*
+*Last updated: Refuel detail edit/delete bar, active vehicle chip shows fuel+number, station autocomplete, mandatory make/model/number. Version `1.12.0+20`.*

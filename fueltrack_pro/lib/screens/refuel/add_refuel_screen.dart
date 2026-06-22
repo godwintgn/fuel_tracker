@@ -68,6 +68,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   final _pricePerLiterController = TextEditingController();
   final _totalPriceController = TextEditingController();
   final _stationController = TextEditingController();
+  final _stationFocusNode = FocusNode();
   final _notesController = TextEditingController();
 
   late DateTime _refuelDate;
@@ -125,6 +126,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       ..removeListener(_onOdometerChanged)
       ..dispose();
     _stationController.dispose();
+    _stationFocusNode.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -425,6 +427,18 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     }
   }
 
+  List<String> _stationSuggestions() {
+    final all = ref.watch(refuelsProvider).valueOrNull ?? const <RefuelEntry>[];
+    final names = <String>{};
+    for (final r in all) {
+      final name = r.stationName?.trim();
+      if (name != null && name.isNotEmpty) names.add(name);
+    }
+    final list = names.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return list;
+  }
+
   Future<void> _promptAddVehicle() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -447,6 +461,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     final vehicle = _vehicle;
     final fuelType = vehicle?.fuelType ?? FuelType.petrol;
     final priceLabel = FuelTypeMetrics.pricePerQuantityLabel(fuelType);
+    final stationNames = _stationSuggestions();
 
     if (vehicles.isEmpty) {
       return Scaffold(
@@ -733,15 +748,65 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
             RefuelFieldContainer(
               label: 'Station Name',
               icon: Icons.location_on_outlined,
-              child: TextFormField(
-                controller: _stationController,
-                decoration: const InputDecoration(
-                  hintText: 'e.g. Shell Al Khuwair',
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                style: theme.textTheme.bodyLarge,
+              child: RawAutocomplete<String>(
+                textEditingController: _stationController,
+                focusNode: _stationFocusNode,
+                optionsBuilder: (value) {
+                  final query = value.text.trim().toLowerCase();
+                  if (query.isEmpty) return const Iterable<String>.empty();
+                  return stationNames.where((s) {
+                    final lower = s.toLowerCase();
+                    return lower.contains(query) && lower != query;
+                  });
+                },
+                fieldViewBuilder:
+                    (context, controller, focusNode, onFieldSubmitted) {
+                  return TextFormField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    onFieldSubmitted: (_) => onFieldSubmitted(),
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. Shell Al Khuwair',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: theme.textTheme.bodyLarge,
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: 220,
+                          maxWidth: MediaQuery.of(context).size.width -
+                              (AppSpacing.marginMobile * 2),
+                        ),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final option = options.elementAt(index);
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(
+                                Icons.local_gas_station_outlined,
+                                size: 20,
+                              ),
+                              title: Text(option),
+                              onTap: () => onSelected(option),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: AppSpacing.stackMd),
