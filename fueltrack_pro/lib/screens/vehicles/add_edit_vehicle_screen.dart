@@ -1,14 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/enums.dart';
 import '../../models/vehicle.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
+import '../../services/vehicle_image_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
+import '../../widgets/vehicles/vehicle_photo_crop_screen.dart';
+import '../../widgets/vehicles/vehicle_photo_view.dart';
 
 class AddEditVehicleScreen extends ConsumerStatefulWidget {
   const AddEditVehicleScreen({super.key, this.vehicle});
@@ -32,6 +38,8 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
 
   late FuelType _fuelType;
   var _saving = false;
+  Uint8List? _pendingPhotoBytes;
+  String? _photoPath;
 
   @override
   void initState() {
@@ -45,6 +53,52 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
     );
     _plateController = TextEditingController(text: v?.licensePlate ?? '');
     _fuelType = v?.fuelType ?? FuelType.petrol;
+    _photoPath = v?.photoPath;
+  }
+
+  Future<void> _pickAndCropPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2048,
+      imageQuality: 92,
+    );
+    if (picked == null || !mounted) return;
+
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+
+    final cropped = await VehiclePhotoCropScreen.open(
+      context,
+      imageBytes: bytes,
+    );
+    if (cropped != null && mounted) {
+      setState(() {
+        _pendingPhotoBytes = cropped;
+      });
+    }
+  }
+
+  Vehicle _draftVehicle({int? id, required DateTime now, String? photoPath}) {
+    final year = int.tryParse(_yearController.text.trim());
+    return Vehicle(
+      id: id ?? widget.vehicle?.id,
+      name: _resolveName(),
+      make: _makeController.text.trim().isEmpty
+          ? null
+          : _makeController.text.trim(),
+      model: _modelController.text.trim().isEmpty
+          ? null
+          : _modelController.text.trim(),
+      year: year,
+      fuelType: _fuelType,
+      licensePlate: _plateController.text.trim().isEmpty
+          ? null
+          : _plateController.text.trim(),
+      photoPath: photoPath ?? _photoPath ?? widget.vehicle?.photoPath,
+      createdAt: widget.vehicle?.createdAt ?? now,
+      updatedAt: now,
+    );
   }
 
   @override
@@ -74,29 +128,27 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
     setState(() => _saving = true);
     try {
       final now = DateTime.now();
-      final year = int.tryParse(_yearController.text.trim());
-      final vehicle = Vehicle(
-        id: widget.vehicle?.id,
-        name: _resolveName(),
-        make: _makeController.text.trim().isEmpty
-            ? null
-            : _makeController.text.trim(),
-        model: _modelController.text.trim().isEmpty
-            ? null
-            : _modelController.text.trim(),
-        year: year,
-        fuelType: _fuelType,
-        licensePlate: _plateController.text.trim().isEmpty
-            ? null
-            : _plateController.text.trim(),
-        createdAt: widget.vehicle?.createdAt ?? now,
-        updatedAt: now,
-      );
+      var vehicle = _draftVehicle(now: now);
 
       if (widget.isEditing) {
+        if (_pendingPhotoBytes != null && vehicle.id != null) {
+          final path = await VehicleImageService.saveVehiclePhoto(
+            vehicleId: vehicle.id!,
+            bytes: _pendingPhotoBytes!,
+          );
+          vehicle = vehicle.copyWith(photoPath: path);
+        }
         await ref.read(vehiclesProvider.notifier).updateVehicle(vehicle);
       } else {
         final id = await ref.read(vehiclesProvider.notifier).addVehicle(vehicle);
+        if (_pendingPhotoBytes != null) {
+          final path = await VehicleImageService.saveVehiclePhoto(
+            vehicleId: id,
+            bytes: _pendingPhotoBytes!,
+          );
+          vehicle = vehicle.copyWith(id: id, photoPath: path);
+          await ref.read(vehiclesProvider.notifier).updateVehicle(vehicle);
+        }
         final settings = await ref.read(settingsProvider.future);
         if (settings.selectedVehicleId == null) {
           await ref.read(settingsProvider.notifier).updateSettings(
@@ -196,7 +248,11 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
             120,
           ),
           children: [
-            _HeroBanner(isEditing: widget.isEditing),
+            _VehiclePhotoSection(
+              previewVehicle: _draftVehicle(now: DateTime.now()),
+              pendingBytes: _pendingPhotoBytes,
+              onPickPhoto: _pickAndCropPhoto,
+            ),
             const SizedBox(height: AppSpacing.stackLg),
             Text('Vehicle Details', style: theme.textTheme.headlineSmall),
             const SizedBox(height: AppSpacing.stackSm),
@@ -314,59 +370,50 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
   }
 }
 
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.isEditing});
+class _VehiclePhotoSection extends StatelessWidget {
+  const _VehiclePhotoSection({
+    required this.previewVehicle,
+    required this.pendingBytes,
+    required this.onPickPhoto,
+  });
 
-  final bool isEditing;
+  final Vehicle previewVehicle;
+  final Uint8List? pendingBytes;
+  final VoidCallback onPickPhoto;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
 
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            cs.primary.withValues(alpha: 0.15),
-            cs.surfaceContainerLow,
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          child: pendingBytes != null
+              ? Image.memory(
+                  pendingBytes!,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : VehiclePhotoView(vehicle: previewVehicle, height: 160),
         ),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
+        const SizedBox(height: AppSpacing.stackSm),
+        OutlinedButton.icon(
+          onPressed: onPickPhoto,
+          icon: const Icon(Icons.photo_camera_outlined),
+          label: Text(
+            pendingBytes != null || previewVehicle.photoPath != null
+                ? 'Adjust vehicle photo'
+                : 'Add vehicle photo',
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: Icon(
-              Icons.directions_car_filled_outlined,
-              size: 72,
-              color: cs.primary,
-            ),
-          ),
-          Positioned(
-            left: 16,
-            bottom: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                isEditing ? 'Edit Profile' : 'Vehicle Profile',
-                style: context.tt.labelLarge?.copyWith(
-                  color: cs.onPrimaryContainer,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        Text(
+          'Position your vehicle inside the frame so it shows clearly in the garage.',
+          style: context.tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }

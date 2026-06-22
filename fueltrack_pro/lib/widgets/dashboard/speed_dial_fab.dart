@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 
+/// Speed-dial FAB — mount on [Scaffold.floatingActionButton] so Flutter
+/// positions it correctly above the bottom navigation bar.
 class SpeedDialFab extends StatefulWidget {
   const SpeedDialFab({
     super.key,
@@ -17,14 +18,49 @@ class SpeedDialFab extends StatefulWidget {
   State<SpeedDialFab> createState() => _SpeedDialFabState();
 }
 
-class _SpeedDialFabState extends State<SpeedDialFab>
-    with SingleTickerProviderStateMixin {
+class _SpeedDialFabState extends State<SpeedDialFab> {
   var _expanded = false;
+  OverlayEntry? _scrim;
 
-  void _toggle() => setState(() => _expanded = !_expanded);
+  @override
+  void dispose() {
+    _removeScrim();
+    super.dispose();
+  }
+
+  void _removeScrim() {
+    _scrim?.remove();
+    _scrim = null;
+  }
 
   void _close() {
+    _removeScrim();
     if (_expanded) setState(() => _expanded = false);
+  }
+
+  void _toggle() {
+    if (_expanded) {
+      _close();
+    } else {
+      _insertScrim();
+      setState(() => _expanded = true);
+    }
+  }
+
+  void _insertScrim() {
+    final overlay = Overlay.of(context);
+    _scrim = OverlayEntry(
+      builder: (context) => Positioned.fill(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _close,
+          child: ColoredBox(
+            color: Colors.black.withValues(alpha: 0.38),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_scrim!);
   }
 
   void _action(VoidCallback callback) {
@@ -36,55 +72,40 @@ class _SpeedDialFabState extends State<SpeedDialFab>
   Widget build(BuildContext context) {
     final cs = context.cs;
 
-    return Stack(
-      alignment: Alignment.bottomRight,
-      clipBehavior: Clip.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (_expanded)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _close,
-              child: Container(color: Colors.black.withValues(alpha: 0.4)),
-            ),
-          ),
         if (_expanded) ...[
-          Positioned(
-            right: AppSpacing.marginMobile,
-            bottom: 176,
-            child: _DialAction(
-              label: 'New Vehicle',
-              icon: Icons.directions_car_outlined,
-              backgroundColor: cs.tertiaryContainer,
-              foregroundColor: cs.onTertiaryContainer,
-              onTap: () => _action(widget.onNewVehicle),
-            ),
+          _DialAction(
+            label: 'New Refuel',
+            icon: Icons.local_gas_station_outlined,
+            backgroundColor: cs.secondaryContainer,
+            foregroundColor: cs.onSecondaryContainer,
+            onTap: () => _action(widget.onNewRefuel),
           ),
-          Positioned(
-            right: AppSpacing.marginMobile,
-            bottom: 240,
-            child: _DialAction(
-              label: 'New Refuel',
-              icon: Icons.local_gas_station_outlined,
-              backgroundColor: cs.secondaryContainer,
-              foregroundColor: cs.onSecondaryContainer,
-              onTap: () => _action(widget.onNewRefuel),
-            ),
+          const SizedBox(height: 12),
+          _DialAction(
+            label: 'New Vehicle',
+            icon: Icons.directions_car_outlined,
+            backgroundColor: cs.tertiaryContainer,
+            foregroundColor: cs.onTertiaryContainer,
+            onTap: () => _action(widget.onNewVehicle),
           ),
+          const SizedBox(height: 12),
         ],
-        Padding(
-          padding: const EdgeInsets.only(
-            right: AppSpacing.marginMobile,
-            bottom: 88,
+        FloatingActionButton(
+          onPressed: _toggle,
+          elevation: _expanded ? 4 : 6,
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: FloatingActionButton(
-            onPressed: _toggle,
-            backgroundColor: cs.primary,
-            foregroundColor: cs.onPrimary,
-            child: AnimatedRotation(
-              turns: _expanded ? 0.125 : 0,
-              duration: const Duration(milliseconds: 200),
-              child: const Icon(Icons.add, size: 32),
-            ),
+          child: AnimatedRotation(
+            turns: _expanded ? 0.125 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: const Icon(Icons.add, size: 28),
           ),
         ),
       ],
@@ -116,21 +137,21 @@ class _DialAction extends StatelessWidget {
       children: [
         Material(
           elevation: 2,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           color: cs.surfaceContainerHighest,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Text(label, style: context.tt.labelLarge),
           ),
         ),
         const SizedBox(width: 12),
         Material(
-          elevation: 2,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          elevation: 3,
+          borderRadius: BorderRadius.circular(14),
           color: backgroundColor,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            borderRadius: BorderRadius.circular(14),
             child: SizedBox(
               width: 48,
               height: 48,

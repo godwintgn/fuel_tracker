@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 
@@ -11,6 +10,8 @@ class OnboardingGradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Stack(
       children: [
         Positioned.fill(
@@ -21,8 +22,8 @@ class OnboardingGradientBackground extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Theme.of(context).scaffoldBackgroundColor,
-                  AppColors.primary.withValues(alpha: 0.08),
-                  AppColors.secondary.withValues(alpha: 0.12),
+                  cs.primary.withValues(alpha: 0.06),
+                  cs.secondary.withValues(alpha: 0.08),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -30,15 +31,15 @@ class OnboardingGradientBackground extends StatelessWidget {
           ),
         ),
         child,
-        const Positioned(
+        Positioned(
           bottom: -50,
           left: -50,
-          child: _BlurOrb(color: AppColors.secondaryContainer, size: 200),
+          child: _BlurOrb(color: cs.secondaryContainer, size: 200),
         ),
-        const Positioned(
+        Positioned(
           bottom: -20,
           right: -20,
-          child: _BlurOrb(color: AppColors.primaryContainer, size: 150),
+          child: _BlurOrb(color: cs.primaryContainer, size: 150),
         ),
       ],
     );
@@ -231,15 +232,17 @@ class AppLogoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: cs.primary,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.2),
+            color: cs.primary.withValues(alpha: 0.2),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -248,7 +251,7 @@ class AppLogoMark extends StatelessWidget {
       child: Icon(
         Icons.local_gas_station_rounded,
         size: size * 0.5,
-        color: AppColors.onPrimary,
+        color: cs.onPrimary,
       ),
     );
   }

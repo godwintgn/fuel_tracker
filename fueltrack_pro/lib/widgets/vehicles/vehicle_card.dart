@@ -4,6 +4,7 @@ import '../../models/enums.dart';
 import '../../models/vehicle.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
+import 'vehicle_photo_view.dart';
 
 class VehicleCard extends StatelessWidget {
   const VehicleCard({
@@ -11,12 +12,14 @@ class VehicleCard extends StatelessWidget {
     required this.vehicle,
     required this.onDetails,
     required this.onFuelLog,
+    this.onSetActive,
     this.selected = false,
   });
 
   final Vehicle vehicle;
   final VoidCallback onDetails;
   final VoidCallback onFuelLog;
+  final VoidCallback? onSetActive;
   final bool selected;
 
   @override
@@ -40,9 +43,31 @@ class VehicleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _HeroBanner(
-            fuelType: vehicle.fuelType,
-            selected: selected,
+          Stack(
+            children: [
+              VehiclePhotoView(
+                vehicle: vehicle,
+                fallbackIcon: _iconForFuelType(vehicle.fuelType),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: selected ? cs.primary : cs.secondary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    selected ? 'Active' : vehicle.fuelType.label,
+                    style: context.tt.labelSmall?.copyWith(
+                      color: selected ? cs.onPrimary : cs.onSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -106,6 +131,15 @@ class VehicleCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.gutter),
                 Row(
                   children: [
+                    if (!selected && onSetActive != null) ...[
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: onSetActive,
+                          child: const Text('Set active'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.stackMd),
+                    ],
                     Expanded(
                       child: OutlinedButton(
                         onPressed: onDetails,
@@ -139,62 +173,6 @@ class VehicleCard extends StatelessWidget {
       FuelType.hybrid => Icons.electric_car_outlined,
       _ => Icons.directions_car_filled_outlined,
     };
-  }
-}
-
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.fuelType, required this.selected});
-
-  final FuelType fuelType;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.cs;
-
-    return Stack(
-      children: [
-        Container(
-          height: 140,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                cs.primary.withValues(alpha: 0.2),
-                cs.secondary.withValues(alpha: 0.12),
-                cs.surfaceContainer,
-              ],
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              VehicleCard._iconForFuelType(fuelType),
-              size: 64,
-              color: cs.primary.withValues(alpha: 0.5),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: selected ? cs.primary : cs.secondary,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              selected ? 'Active' : fuelType.label,
-              style: context.tt.labelSmall?.copyWith(
-                color: selected ? cs.onPrimary : cs.onSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 

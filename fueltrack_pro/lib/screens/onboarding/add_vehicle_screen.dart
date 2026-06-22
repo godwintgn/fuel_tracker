@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/regions.dart';
 import '../../models/enums.dart';
 import '../../providers/onboarding_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 
 class OnboardingAddVehicleScreen extends ConsumerStatefulWidget {
@@ -222,33 +222,47 @@ class _OnboardingAddVehicleScreenState
 class _HeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primaryContainer,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+    final cs = context.cs;
+    final pal = context.palette;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.gutter),
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: pal.fuel.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            child: Icon(
+              Icons.directions_car_filled_outlined,
+              size: 40,
+              color: pal.fuel,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.gutter),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your vehicle',
+                  style: context.tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  'Add details to start tracking fuel',
+                  style: context.tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      child: Center(
-        child: Icon(
-          Icons.directions_car_filled_outlined,
-          size: 72,
-          color: Colors.white.withValues(alpha: 0.6),
-        ),
       ),
     );
   }

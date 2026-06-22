@@ -2,6 +2,7 @@ import '../models/enums.dart';
 import '../models/refuel_entry.dart';
 import '../models/vehicle.dart';
 import 'fuel_calculations.dart';
+import 'fuel_type_metrics.dart';
 
 enum AnalyticsPeriod {
   weekly('Weekly', 7),
@@ -67,6 +68,7 @@ class AnalyticsStats {
     required this.vehicleProfiles,
     required this.totalLiters,
     required this.totalSpent,
+    this.fuelType = FuelType.petrol,
   });
 
   final AnalyticsPeriod period;
@@ -83,6 +85,7 @@ class AnalyticsStats {
   final List<VehicleAnalytics> vehicleProfiles;
   final double totalLiters;
   final double totalSpent;
+  final FuelType fuelType;
 
   static const empty = AnalyticsStats(
     period: AnalyticsPeriod.monthly,
@@ -116,6 +119,7 @@ abstract final class AnalyticsService {
     required List<RefuelEntry> allEntries,
     required List<Vehicle> vehicles,
     required AnalyticsPeriod period,
+    FuelType? fuelType,
     DateTime? now,
   }) {
     final clock = now ?? DateTime.now();
@@ -141,12 +145,16 @@ abstract final class AnalyticsService {
         if (v.id != null) v.id!: v,
     };
 
+    final metricsType = fuelType ?? entries.first.fuelType;
+
     return AnalyticsStats(
       period: period,
       entries: entries,
       trips: trips,
       avgKmPerLiter: avg,
-      litersPer100Km: avg != null ? FuelCalculations.litersPer100Km(avg) : null,
+      litersPer100Km: avg != null
+          ? FuelTypeMetrics.consumptionPer100(avg)
+          : null,
       costPerKm: costPerKm,
       efficiencyChangePercent: _efficiencyChangePercent(trips),
       peakKmPerLiter: peak,
@@ -156,6 +164,7 @@ abstract final class AnalyticsService {
       vehicleProfiles: _vehicleProfiles(allEntries, vehicles),
       totalLiters: entries.fold<double>(0, (s, e) => s + e.quantity),
       totalSpent: entries.fold<double>(0, (s, e) => s + e.totalPrice),
+      fuelType: metricsType,
     );
   }
 
@@ -286,6 +295,7 @@ extension on AnalyticsStats {
       vehicleProfiles: vehicleProfiles,
       totalLiters: totalLiters,
       totalSpent: totalSpent,
+      fuelType: fuelType,
     );
   }
 }

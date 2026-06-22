@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/refuel_entry.dart';
 import '../../models/vehicle.dart';
+import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 
@@ -12,7 +13,6 @@ class RefuelHistoryCard extends StatelessWidget {
     required this.entry,
     required this.vehicle,
     required this.currency,
-    required this.fuelUnit,
     required this.distanceUnit,
     this.alternateAccent = false,
     this.onTap,
@@ -21,7 +21,6 @@ class RefuelHistoryCard extends StatelessWidget {
   final RefuelEntry entry;
   final Vehicle? vehicle;
   final String currency;
-  final String fuelUnit;
   final String distanceUnit;
   final bool alternateAccent;
   final VoidCallback? onTap;
@@ -39,6 +38,9 @@ class RefuelHistoryCard extends StatelessWidget {
         alternateAccent ? cs.secondaryContainer : cs.primaryContainer;
     final iconFg =
         alternateAccent ? cs.onSecondaryContainer : cs.onPrimaryContainer;
+    final qtyUnit = FuelTypeMetrics.quantityUnit(
+      vehicle?.fuelType ?? entry.fuelType,
+    );
 
     return Material(
       color: cs.surfaceContainerLow,
@@ -108,7 +110,7 @@ class RefuelHistoryCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${entry.quantity.toStringAsFixed(2)}$fuelUnit • ${entry.fuelType.label}',
+                        '${entry.quantity.toStringAsFixed(2)} $qtyUnit • ${entry.fuelType.label}',
                         style: tt.labelSmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

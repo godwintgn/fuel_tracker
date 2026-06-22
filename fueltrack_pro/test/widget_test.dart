@@ -103,6 +103,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Quick Overview'), findsOneWidget);
-    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.text('FuelTrack Pro'), findsOneWidget);
   });
 }

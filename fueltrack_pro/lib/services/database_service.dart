@@ -23,11 +23,12 @@ class DatabaseService {
 
     return openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -42,6 +43,11 @@ class DatabaseService {
         fuel_type TEXT NOT NULL,
         license_plate TEXT,
         notes TEXT,
+        photo_path TEXT,
+        photo_crop_left REAL,
+        photo_crop_top REAL,
+        photo_crop_width REAL,
+        photo_crop_height REAL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -91,6 +97,18 @@ class DatabaseService {
       'selected_vehicle_id': null,
       'updated_at': now,
     });
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE vehicles ADD COLUMN photo_path TEXT');
+      await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_left REAL');
+      await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_top REAL');
+      await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_width REAL');
+      await db.execute(
+        'ALTER TABLE vehicles ADD COLUMN photo_crop_height REAL',
+      );
+    }
   }
 
   Future<AppSettings> getSettings() async {

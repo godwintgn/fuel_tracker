@@ -3,71 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../models/dashboard_stats.dart';
+import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
-import '../../models/vehicle.dart';
-import '../../services/fuel_calculations.dart';
+import '../../models/dashboard_stats.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../theme/app_colors.dart';
+import '../../services/fuel_calculations.dart';
+import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/fuel_chart_style.dart';
 import '../../theme/theme_x.dart';
-import '../refuel/add_refuel_screen.dart';
-import '../settings/settings_screen.dart';
+import '../refuel/refuel_detail_screen.dart';
+import '../../widgets/common/active_vehicle_bar.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/section_header.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
-
-  Future<void> _selectVehicle(
-    WidgetRef ref,
-    BuildContext context,
-    Vehicle vehicle,
-  ) async {
-    final settings = await ref.read(settingsProvider.future);
-    await ref.read(settingsProvider.notifier).updateSettings(
-          settings.copyWith(selectedVehicleId: vehicle.id),
-        );
-    ref.invalidate(dashboardProvider);
-  }
-
-  void _showVehiclePicker(
-    BuildContext context,
-    WidgetRef ref,
-    DashboardViewModel data,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.gutter),
-                child: Text(
-                  'Select vehicle',
-                  style: context.tt.titleMedium,
-                ),
-              ),
-              ...data.allVehicles.map(
-                (v) => ListTile(
-                  leading: const Icon(Icons.directions_car_outlined),
-                  title: Text(v.displayName),
-                  subtitle: Text(v.fuelType.label),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _selectVehicle(ref, context, v);
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.stackMd),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -95,12 +48,28 @@ class DashboardScreen extends ConsumerWidget {
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                child: _DashboardHeader(
-                  vehicleName: vehicle.displayName,
-                  onVehicleTap: data.allVehicles.length > 1
-                      ? () => _showVehiclePicker(context, ref, data)
-                      : null,
-                  onSettingsTap: () => SettingsScreen.open(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.marginMobile,
+                        AppSpacing.stackSm,
+                        AppSpacing.marginMobile,
+                        0,
+                      ),
+                      child: Text(
+                        'Dashboard',
+                        style: context.tt.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    ActiveVehicleBar(
+                      vehicles: data.allVehicles,
+                      embedded: true,
+                    ),
+                  ],
                 ),
               ),
               SliverPadding(
@@ -112,20 +81,22 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _HeroCards(stats: stats),
+                    _HeroCards(stats: stats, fuelType: vehicle.fuelType),
                     const SizedBox(height: AppSpacing.stackLg),
                     _QuickOverview(
                       stats: stats,
                       currency: currency,
+                      fuelType: vehicle.fuelType,
                     ),
                     const SizedBox(height: AppSpacing.stackLg),
                     if (stats.lastRefuel != null)
                       _LastRefuelCard(
                         entry: stats.lastRefuel!,
                         currency: currency,
-                        onDetails: () => AddRefuelScreen.openForEdit(
+                        onDetails: () => RefuelDetailScreen.open(
                           context,
                           entry: stats.lastRefuel!,
+                          vehicle: vehicle,
                         ),
                       ),
                     const SizedBox(height: AppSpacing.stackLg),
@@ -134,7 +105,10 @@ class DashboardScreen extends ConsumerWidget {
                       currency: currency,
                     ),
                     const SizedBox(height: AppSpacing.gutter),
-                    _EfficiencyTrendChart(trips: stats.efficiencyTrend),
+                    _EfficiencyTrendChart(
+                      trips: stats.efficiencyTrend,
+                      fuelType: vehicle.fuelType,
+                    ),
                   ]),
                 ),
               ),
@@ -146,226 +120,97 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({
-    required this.vehicleName,
-    this.onVehicleTap,
-    required this.onSettingsTap,
-  });
+class _HeroCards extends StatelessWidget {
+  const _HeroCards({required this.stats, required this.fuelType});
 
-  final String vehicleName;
-  final VoidCallback? onVehicleTap;
-  final VoidCallback onSettingsTap;
+  final DashboardStats stats;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.marginMobile,
-        AppSpacing.stackMd,
-        AppSpacing.marginMobile,
-        0,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: onVehicleTap,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                      ),
-                      child: Icon(Icons.directions_car, color: cs.primary),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  vehicleName,
-                                  style: tt.titleLarge,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (onVehicleTap != null)
-                                Icon(
-                                  Icons.expand_more,
-                                  size: 18,
-                                  color: cs.onSurfaceVariant,
-                                ),
-                            ],
-                          ),
-                          Text(
-                            'FuelTrack Pro',
-                            style: tt.labelSmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: onSettingsTap,
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroCards extends StatelessWidget {
-  const _HeroCards({required this.stats});
-
-  final DashboardStats stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = context.tt;
+    final pal = context.palette;
     final odometer = stats.currentOdometer;
     final avg = stats.avgKmPerLiter;
     final trend = stats.efficiencyTrendPercent;
+    final trendUp = (trend ?? 0) >= 0;
+    final trendColor = trendUp ? pal.gain : pal.loss;
 
     return Row(
       children: [
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.gutter),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.primaryContainer, AppColors.primaryFixedDim],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryContainer.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
+          child: AppCard(
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CURRENT ODOMETER',
-                  style: tt.labelSmall?.copyWith(
-                    color: AppColors.onPrimaryFixed.withValues(alpha: 0.85),
+                  'Current odometer',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   odometer != null
                       ? NumberFormat('#,###').format(odometer.round())
                       : '—',
-                  style: tt.headlineSmall?.copyWith(
-                    color: AppColors.onPrimaryFixed,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 Text(
                   'km',
-                  style: tt.titleMedium?.copyWith(
-                    color: AppColors.onPrimaryFixed.withValues(alpha: 0.75),
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.gutter),
+        const SizedBox(width: 10),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.gutter),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.secondary, AppColors.secondaryContainer],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.secondary.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
+          child: AppCard(
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'AVG EFFICIENCY',
-                  style: tt.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                  'Avg efficiency',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      avg != null ? avg.toStringAsFixed(1) : '—',
-                      style: tt.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'km/L',
-                      style: tt.titleMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 6),
+                Text(
+                  FuelTypeMetrics.formatEfficiency(avg, fuelType),
+                  style: tt.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: pal.efficiency,
+                  ),
                 ),
                 if (trend != null)
                   Container(
                     margin: const EdgeInsets.only(top: 6),
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(999),
+                      color: trendColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          trend >= 0
-                              ? Icons.trending_up
-                              : Icons.trending_down,
+                          trendUp ? Icons.trending_up : Icons.trending_down,
                           size: 14,
-                          color: Colors.white,
+                          color: trendColor,
                         ),
                         Text(
                           '${trend.abs().toStringAsFixed(0)}%',
                           style: tt.labelSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            color: trendColor,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -381,10 +226,15 @@ class _HeroCards extends StatelessWidget {
 }
 
 class _QuickOverview extends StatelessWidget {
-  const _QuickOverview({required this.stats, required this.currency});
+  const _QuickOverview({
+    required this.stats,
+    required this.currency,
+    required this.fuelType,
+  });
 
   final DashboardStats stats;
   final String currency;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
@@ -394,11 +244,9 @@ class _QuickOverview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Overview',
-          style: tt.titleMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-          ),
+        const SectionHeader(
+          title: 'Quick Overview',
+          subtitle: 'Last 30 days',
         ),
         const SizedBox(height: AppSpacing.stackMd),
         Row(
@@ -408,36 +256,30 @@ class _QuickOverview extends StatelessWidget {
                 label: 'Total Spent',
                 value: '$currency ${stats.totalSpent30Days.toStringAsFixed(3)}',
                 subtitle: 'Last 30 days',
-                valueColor: cs.primary,
+                valueColor: context.palette.spend,
               ),
             ),
             const SizedBox(width: AppSpacing.gutter),
             Expanded(
               child: _StatTile(
-                label: 'Total Liters',
-                value: '${stats.totalLiters30Days.toStringAsFixed(0)} L',
+                label: 'Total ${FuelTypeMetrics.quantityUnit(fuelType)}',
+                value:
+                    '${stats.totalLiters30Days.toStringAsFixed(0)} ${FuelTypeMetrics.quantityUnit(fuelType)}',
                 subtitle: '${stats.fillUps30Days} fill-ups',
               ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.gutter),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.gutter),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: cs.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
+        AppCard(
+          onTap: null,
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: cs.tertiaryContainer,
+                backgroundColor: context.palette.fuel.withValues(alpha: 0.15),
                 child: Icon(
                   Icons.payments_outlined,
-                  color: cs.onTertiaryContainer,
+                  color: context.palette.fuel,
                 ),
               ),
               const SizedBox(width: AppSpacing.stackMd),
@@ -455,7 +297,7 @@ class _QuickOverview extends StatelessWidget {
                       stats.costPerKm30Days != null
                           ? '${stats.costPerKm30Days!.toStringAsFixed(3)} $currency'
                           : '—',
-                      style: tt.titleMedium,
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -487,43 +329,40 @@ class _StatTile extends StatelessWidget {
     final cs = context.cs;
     final tt = context.tt;
 
-    return Container(
-      height: 120,
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: tt.titleLarge?.copyWith(color: valueColor),
-              ),
-              Text(
-                subtitle,
-                style: tt.labelSmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 10,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: tt.titleMedium?.copyWith(
+                    color: valueColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                Text(
+                  subtitle,
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -554,23 +393,15 @@ class _LastRefuelCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Last Refuel',
-              style: tt.titleMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
-            ),
-            TextButton(onPressed: onDetails, child: const Text('Details')),
-          ],
+        SectionHeader(
+          title: 'Last Refuel',
+          actionLabel: 'Details',
+          onActionTap: onDetails,
         ),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onDetails,
-            child: Row(
+        AppCard(
+          onTap: onDetails,
+          padding: EdgeInsets.zero,
+          child: Row(
               children: [
                 Container(
                   width: 96,
@@ -615,7 +446,7 @@ class _LastRefuelCard extends StatelessWidget {
                             Text(
                               '$currency ${entry.totalPrice.toStringAsFixed(3)}',
                               style: tt.titleMedium?.copyWith(
-                                color: cs.primary,
+                                color: context.palette.spend,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -632,7 +463,6 @@ class _LastRefuelCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
           ),
         ),
       ],
@@ -652,11 +482,13 @@ class _MonthlySpendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final tt = context.tt;
+    final pal = context.palette;
 
     if (monthly.isEmpty) {
       return _ChartCard(
         title: 'Monthly Spend',
-        icon: Icons.bar_chart,
+        subtitle: 'Fuel spending by month',
         child: const SizedBox(
           height: 120,
           child: Center(child: Text('No spending data yet')),
@@ -668,13 +500,14 @@ class _MonthlySpendChart extends StatelessWidget {
 
     return _ChartCard(
       title: 'Monthly Spend',
-      icon: Icons.bar_chart,
+      subtitle: 'Fuel spending by month',
       child: SizedBox(
-        height: 160,
+        height: 168,
         child: BarChart(
           BarChartData(
-            maxY: maxY * 1.2,
-            gridData: const FlGridData(show: false),
+            alignment: BarChartAlignment.spaceBetween,
+            maxY: maxY * 1.15,
+            gridData: FuelChartStyle.horizontalGrid(cs),
             borderData: FlBorderData(show: false),
             titlesData: FlTitlesData(
               topTitles: const AxisTitles(),
@@ -683,6 +516,7 @@ class _MonthlySpendChart extends StatelessWidget {
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
+                  reservedSize: 22,
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
                     if (index < 0 || index >= monthly.length) {
@@ -690,14 +524,13 @@ class _MonthlySpendChart extends StatelessWidget {
                     }
                     final isLast = index == monthly.length - 1;
                     return Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         monthly[index].label,
-                        style: TextStyle(
-                          fontSize: 10,
+                        style: tt.labelSmall?.copyWith(
                           color: isLast ? cs.onSurface : cs.onSurfaceVariant,
                           fontWeight:
-                              isLast ? FontWeight.bold : FontWeight.normal,
+                              isLast ? FontWeight.w700 : FontWeight.normal,
                         ),
                       ),
                     );
@@ -712,13 +545,13 @@ class _MonthlySpendChart extends StatelessWidget {
                   barRods: [
                     BarChartRodData(
                       toY: monthly[i].amount,
-                      width: 20,
+                      width: 12,
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(6),
+                        top: Radius.circular(2),
                       ),
                       color: i == monthly.length - 1
-                          ? cs.primary
-                          : cs.primary.withValues(alpha: 0.35),
+                          ? pal.spend
+                          : pal.spend.withValues(alpha: 0.35),
                     ),
                   ],
                 ),
@@ -731,18 +564,21 @@ class _MonthlySpendChart extends StatelessWidget {
 }
 
 class _EfficiencyTrendChart extends StatelessWidget {
-  const _EfficiencyTrendChart({required this.trips});
+  const _EfficiencyTrendChart({required this.trips, required this.fuelType});
 
   final List<TripEfficiency> trips;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final pal = context.palette;
+    final unit = FuelTypeMetrics.efficiencyUnit(fuelType);
 
     if (trips.isEmpty) {
       return _ChartCard(
         title: 'Efficiency Trend',
-        icon: Icons.show_chart,
+        subtitle: '$unit over recent fill-ups',
         child: const SizedBox(
           height: 120,
           child: Center(child: Text('Need 2+ refuels for trends')),
@@ -757,24 +593,18 @@ class _EfficiencyTrendChart extends StatelessWidget {
 
     final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
     final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final lineColor = pal.efficiency;
 
     return _ChartCard(
       title: 'Efficiency Trend',
-      icon: Icons.show_chart,
+      subtitle: '$unit over recent fill-ups',
       child: SizedBox(
-        height: 160,
+        height: 168,
         child: LineChart(
           LineChartData(
             minY: (minY * 0.9).floorToDouble(),
             maxY: (maxY * 1.1).ceilToDouble(),
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              getDrawingHorizontalLine: (_) => FlLine(
-                color: cs.outlineVariant.withValues(alpha: 0.4),
-                strokeWidth: 1,
-              ),
-            ),
+            gridData: FuelChartStyle.horizontalGrid(cs),
             borderData: FlBorderData(show: false),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(),
@@ -783,16 +613,10 @@ class _EfficiencyTrendChart extends StatelessWidget {
               bottomTitles: AxisTitles(),
             ),
             lineBarsData: [
-              LineChartBarData(
+              FuelChartStyle.primarySeries(
                 spots: spots,
-                isCurved: true,
-                color: cs.primary,
-                barWidth: 3,
-                dotData: const FlDotData(show: true),
-                belowBarData: BarAreaData(
-                  show: true,
-                  color: cs.primary.withValues(alpha: 0.10),
-                ),
+                color: lineColor,
+                barWidth: FuelChartStyle.barWidthFull,
               ),
             ],
           ),
@@ -805,37 +629,21 @@ class _EfficiencyTrendChart extends StatelessWidget {
 class _ChartCard extends StatelessWidget {
   const _ChartCard({
     required this.title,
-    required this.icon,
+    this.subtitle,
     required this.child,
   });
 
   final String title;
-  final IconData icon;
+  final String? subtitle;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.cs;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: context.tt.titleMedium),
-              Icon(icon, size: 18, color: cs.onSurfaceVariant),
-            ],
-          ),
+          SectionHeader(title: title, subtitle: subtitle),
           const SizedBox(height: AppSpacing.stackMd),
           child,
         ],

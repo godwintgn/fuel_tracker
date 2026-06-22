@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/vehicle.dart';
+import '../../providers/selected_vehicle_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../theme/app_spacing.dart';
@@ -30,10 +31,7 @@ class VehicleListScreen extends ConsumerWidget {
   }
 
   Future<void> _selectVehicle(WidgetRef ref, Vehicle vehicle) async {
-    final settings = await ref.read(settingsProvider.future);
-    await ref.read(settingsProvider.notifier).updateSettings(
-          settings.copyWith(selectedVehicleId: vehicle.id),
-        );
+    await setActiveVehicle(ref, vehicle);
   }
 
   @override
@@ -64,7 +62,7 @@ class VehicleListScreen extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.marginMobile,
-                AppSpacing.stackLg,
+                AppSpacing.stackSm,
                 AppSpacing.marginMobile,
                 AppSpacing.stackMd,
               ),
@@ -73,8 +71,10 @@ class VehicleListScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Vehicle Garage',
-                      style: theme.textTheme.headlineMedium,
+                      'Vehicles',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -102,6 +102,9 @@ class VehicleListScreen extends ConsumerWidget {
                   return VehicleCard(
                     vehicle: vehicle,
                     selected: isSelected,
+                    onSetActive: isSelected
+                        ? null
+                        : () => _selectVehicle(ref, vehicle),
                     onDetails: () => _openEditVehicle(context, vehicle),
                     onFuelLog: () async {
                       await _selectVehicle(ref, vehicle);
@@ -136,7 +139,7 @@ class VehicleListScreen extends ConsumerWidget {
                   child: _EfficiencyOverviewCard(count: vehicles.length),
                 ),
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         );
       },

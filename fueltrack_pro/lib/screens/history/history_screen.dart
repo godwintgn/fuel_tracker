@@ -8,12 +8,15 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/refuels_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/history/history_filters_sheet.dart';
 import '../../widgets/history/refuel_history_card.dart';
 import '../refuel/add_refuel_screen.dart';
+import '../refuel/refuel_detail_screen.dart';
+import '../../widgets/common/active_vehicle_bar.dart';
+import '../../widgets/common/app_card.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -25,6 +28,7 @@ class HistoryScreen extends ConsumerStatefulWidget {
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   final _searchController = TextEditingController();
   var _filters = HistoryFilters.defaults;
+  var _filterSynced = false;
 
   @override
   void dispose() {
@@ -45,6 +49,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     if (result != null) {
       setState(() => _filters = result);
     }
+  }
+
+  Future<void> _viewEntry(RefuelEntry entry, Vehicle? vehicle) async {
+    await RefuelDetailScreen.open(context, entry: entry, vehicle: vehicle);
   }
 
   Future<void> _editEntry(RefuelEntry entry) async {
@@ -96,8 +104,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final settings = ref.watch(settingsProvider).valueOrNull;
     final currency = settings?.currencyCode ?? 'OMR';
-    final fuelUnit = settings?.fuelUnit.abbreviation ?? 'L';
     final distanceUnit = settings?.distanceUnit.abbreviation ?? 'km';
+
+    ref.listen(settingsProvider, (previous, next) {
+      final id = next.valueOrNull?.selectedVehicleId;
+      if (id != null && _filters.vehicleId != id) {
+        setState(() => _filters = _filters.copyWith(vehicleId: id));
+      }
+    });
+
+    if (!_filterSynced && settings?.selectedVehicleId != null) {
+      _filterSynced = true;
+      _filters = _filters.copyWith(vehicleId: settings!.selectedVehicleId);
+    }
 
     return vehiclesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -138,7 +157,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.marginMobile,
-                      AppSpacing.stackLg,
+                      AppSpacing.stackSm,
                       AppSpacing.marginMobile,
                       AppSpacing.stackMd,
                     ),
@@ -146,43 +165,67 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FuelTrack Pro',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                          'History',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.stackMd),
-                        Material(
-                          color: theme.colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(999),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.search,
+                        ActiveVehicleBar(
+                          vehicles: vehicles,
+                          embedded: true,
+                        ),
+                        AppCard(
+                          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: Icon(
+                                  Icons.search_rounded,
+                                  size: 22,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Search stations or types...',
-                                      border: InputBorder.none,
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  style: theme.textTheme.bodyLarge,
+                                  decoration: InputDecoration(
+                                    hintText: 'Search stations or types…',
+                                    hintStyle:
+                                        theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
-                                    onChanged: (_) => setState(() {}),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                  onChanged: (_) => setState(() {}),
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 28,
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.5),
+                              ),
+                              IconButton(
+                                tooltip: 'Filters',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => _openFilters(vehicles),
+                                icon: Badge(
+                                  isLabelVisible: _filters.hasActiveFilters,
+                                  child: Icon(
+                                    Icons.tune_rounded,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () => _openFilters(vehicles),
-                                  icon: Badge(
-                                    isLabelVisible: _filters.hasActiveFilters,
-                                    child: const Icon(Icons.tune),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -223,13 +266,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryFixed,
+                            color: context.palette.spend.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             'Total: ${summary.totalSpent.toStringAsFixed(3)} $currency',
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: AppColors.onPrimaryFixed,
+                              color: context.palette.spend,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -311,10 +355,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             entry: entry,
                             vehicle: vehicle,
                             currency: currency,
-                            fuelUnit: fuelUnit,
                             distanceUnit: distanceUnit,
                             alternateAccent: index.isOdd,
-                            onTap: () => _editEntry(entry),
+                            onTap: () => _viewEntry(entry, vehicle),
                           ),
                         );
                       },

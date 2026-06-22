@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'enums.dart';
 
 class Vehicle {
@@ -10,6 +12,8 @@ class Vehicle {
     required this.fuelType,
     this.licensePlate,
     this.notes,
+    this.photoPath,
+    this.photoCropRect,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -22,6 +26,9 @@ class Vehicle {
   final FuelType fuelType;
   final String? licensePlate;
   final String? notes;
+  final String? photoPath;
+  /// Normalized crop rect (0–1) relative to the original image.
+  final Rect? photoCropRect;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -41,6 +48,10 @@ class Vehicle {
     FuelType? fuelType,
     String? licensePlate,
     String? notes,
+    String? photoPath,
+    Rect? photoCropRect,
+    bool clearPhoto = false,
+    bool clearCrop = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -53,12 +64,15 @@ class Vehicle {
       fuelType: fuelType ?? this.fuelType,
       licensePlate: licensePlate ?? this.licensePlate,
       notes: notes ?? this.notes,
+      photoPath: clearPhoto ? null : (photoPath ?? this.photoPath),
+      photoCropRect: clearCrop ? null : (photoCropRect ?? this.photoCropRect),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   Map<String, dynamic> toMap() {
+    final crop = photoCropRect;
     return {
       'id': id,
       'name': name,
@@ -68,12 +82,31 @@ class Vehicle {
       'fuel_type': fuelType.name,
       'license_plate': licensePlate,
       'notes': notes,
+      'photo_path': photoPath,
+      'photo_crop_left': crop?.left,
+      'photo_crop_top': crop?.top,
+      'photo_crop_width': crop?.width,
+      'photo_crop_height': crop?.height,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
+    Rect? crop;
+    final cl = map['photo_crop_left'];
+    final ct = map['photo_crop_top'];
+    final cw = map['photo_crop_width'];
+    final ch = map['photo_crop_height'];
+    if (cl != null && ct != null && cw != null && ch != null) {
+      crop = Rect.fromLTWH(
+        (cl as num).toDouble(),
+        (ct as num).toDouble(),
+        (cw as num).toDouble(),
+        (ch as num).toDouble(),
+      );
+    }
+
     return Vehicle(
       id: map['id'] as int?,
       name: map['name'] as String,
@@ -83,6 +116,8 @@ class Vehicle {
       fuelType: FuelType.fromString(map['fuel_type'] as String),
       licensePlate: map['license_plate'] as String?,
       notes: map['notes'] as String?,
+      photoPath: map['photo_path'] as String?,
+      photoCropRect: crop,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );

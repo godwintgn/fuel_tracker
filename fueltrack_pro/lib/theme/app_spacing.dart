@@ -14,4 +14,6 @@ abstract final class AppSpacing {
   static const double radiusMd = 8;
   static const double radiusLg = 12;
   static const double radiusXl = 24;
+  static const double cardRadius = 20;
+  static const double cardPadding = 20;
 }
