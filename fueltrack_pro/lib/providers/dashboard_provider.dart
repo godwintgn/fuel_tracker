@@ -3,21 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/dashboard_stats.dart';
 import '../models/refuel_entry.dart';
 import '../models/vehicle.dart';
-import '../services/seed_data_service.dart';
 import 'database_provider.dart';
-import 'refuels_provider.dart';
 import 'settings_provider.dart';
 import 'vehicles_provider.dart';
 
 final dashboardProvider = FutureProvider<DashboardViewModel>((ref) async {
   await ref.watch(databaseInitProvider.future);
   final db = ref.read(databaseServiceProvider);
-
-  await SeedDataService(db).seedIfEmpty();
-
-  ref.invalidate(vehiclesProvider);
-  ref.invalidate(refuelsProvider);
-  ref.invalidate(settingsProvider);
 
   final vehicles = await ref.watch(vehiclesProvider.future);
   final settings = await ref.watch(settingsProvider.future);
