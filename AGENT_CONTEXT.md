@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.9.0+13` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.11.1+16` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -31,7 +31,7 @@
 | State | `flutter_riverpod` |
 | Database | `sqflite` (SQLite on-device) |
 | Charts | `fl_chart` |
-| Fonts | `google_fonts` (Roboto Flex) |
+| Fonts | `google_fonts` — **Manrope** (headings) + **Inter** (body), aligned with Wealth Journal |
 | Intl | `intl` |
 
 **Not chosen / deferred:** drift, Provider-only, mandatory backend.
@@ -58,7 +58,8 @@ fuel_tracker/                          # Git repo root
     │   ├── screens/                   # … settings, analytics, vehicles
     │   ├── services/                  # db, backup, drive, analytics, calculations
     │   ├── config/                    # google_oauth_config.dart
-    │   ├── theme/                     # M3 colors from DESIGN.md
+    │   ├── theme/                     # WJ-aligned theme (app_theme, app_palette, fuel_chart_style, theme_x)
+    │   ├── widgets/common/            # AppCard, SectionHeader, EmptyState
     └── android/
         ├── app/build.gradle.kts
         ├── key.properties             # GITIGNORED
@@ -120,10 +121,10 @@ Bottom nav (4 tabs):
 ### 5.4 Dashboard (`lib/screens/dashboard/dashboard_screen.dart`)
 
 - Vehicle selector in header  
-- Hero: odometer, avg km/L + trend %  
-- Quick overview: spend/liters/fill-ups (30d), cost/km  
+- Hero metric tiles (`AppCard`), quick overview, cost/km row  
 - Last refuel card — tap **Details** or card → edit refuel  
-- Monthly spend bar chart, efficiency trend line chart (`fl_chart`)  
+- Monthly spend bar chart (`FuelChartStyle.horizontalGrid`, thin `spaceBetween` bars, `pal.spend`)  
+- Efficiency trend line chart (`FuelChartStyle.primarySeries`, `pal.efficiency`)  
 - Data via `dashboardProvider` → `DashboardStats` + `FuelCalculations`
 
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
@@ -156,11 +157,11 @@ Bottom nav (4 tabs):
 ### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
 
 - Period selector: weekly / monthly / yearly  
-- Efficiency line chart with peak km/L badge  
-- Insight cards: efficiency change %, cost per km  
-- Monthly spending bar chart (last 3 months)  
-- Vehicle fuel-share pie chart + period summary metrics  
-- Per-vehicle profile cards (avg km/L)  
+- Efficiency line chart (`FuelChartStyle.primarySeries`, peak km/L badge)  
+- Insight cards (`AppCard` + `pal.gain`/`pal.loss`/`pal.spend`)  
+- Monthly spending bar chart (WJ thin bars, `pal.spend`)  
+- Vehicle fuel-share pie chart (`AppPalette` semantic slice colours) + period summary  
+- Per-vehicle profile cards (`AppCard` + `pal.fuel` icon tile)  
 - `AnalyticsService` + `analyticsProvider`; empty states when no refuels  
 
 ### 5.9 Settings (`lib/screens/settings/settings_screen.dart`)
@@ -184,28 +185,37 @@ Bottom nav (4 tabs):
 
 ## 6. Design system
 
-Colors and typography from `stitch_fueltrack_pro_analytics_app/fueltrack_pro/DESIGN.md`:
+Visual language aligned with **Wealth Journal** (`Assets/wealth_journal/`). Stitch mockups remain reference for layout only; colours/typography/charts follow WJ.
 
-- **Green** (`#0D631B` primary) — efficiency  
-- **Blue** (`#005FAF` secondary) — financial  
-- Theme: `lib/theme/app_colors.dart`, `app_theme.dart`, `app_spacing.dart`, `theme_x.dart`  
-- App icon: `assets/icon/app_icon.png` + `flutter_launcher_icons`  
+### Colour & theme (v1.10.0)
 
-### Dark/light theming rule (v1.9.0)
+| Mode | Scaffold | Primary | Secondary |
+|------|----------|---------|-----------|
+| Light | `#f4f6fa` | Blue `#1e40af` | Teal `#0d9488` |
+| Dark | `#0f1117` | Amber `#d97706` | Teal `#0d9488` |
 
-- **All screens must source theme-variant colors from `ColorScheme`** (via `context.cs` / `context.tt` from `theme_x.dart` or `Theme.of(context)`), **not** directly from static `AppColors` light constants. `AppColors` is now reserved for **brand/fixed** colors only (gradients, white-on-color, fixed tonal palette for pie slices, hero banners).
-- Both `ColorScheme`s define the full `surfaceContainer*` ladder; dark adds `darkOutline`/`darkOutlineVariant` + container constants in `app_colors.dart`.
-- Shared component themes (cards, inputs, nav bar, bottom sheets, dialogs, snackbars, chips, list tiles) are styled centrally in `app_theme.dart` so widgets stay minimal.
-- `context.cs` / `context.tt` / `context.isDark` extension lives in `lib/theme/theme_x.dart`.
+- **Theme:** `lib/theme/app_theme.dart` — Manrope + Inter, M3 `ColorScheme`, `AppPalette` extension  
+- **Semantic palette:** `lib/theme/app_palette.dart` — `gain`/`loss`/`efficiency`/`spend`/`fuel`/`neutral`; access via `context.palette`  
+- **Charts:** `lib/theme/fuel_chart_style.dart` — curved lines, gradient area fill, line glow, horizontal grid (mirrors WJ `PortfolioLineChartStyle`)  
+- **Cards:** `lib/widgets/common/app_card.dart` — 20px radius, blended border, dark primary glow shadow  
+- **Section titles:** `lib/widgets/common/section_header.dart` — w800 Manrope  
+- **Spacing:** `app_spacing.dart` — `cardRadius = 20`, `cardPadding = 20`  
+- **Extensions:** `theme_x.dart` — `context.cs`, `context.tt`, `context.isDark`, `context.palette`  
+- **Legacy:** `app_colors.dart` retained but unused in UI; all screens use `ColorScheme` + `AppPalette`
+
+### Dark/light theming rule
+
+- **All screens must source theme-variant colours from `ColorScheme` and `AppPalette`**, not static light constants.
+- Shared component themes (cards, inputs, nav bar, bottom sheets, dialogs, snackbars, chips, list tiles) styled centrally in `app_theme.dart`.
 
 ### Known mockup fallbacks (user accepted)
 
 | Mockup | Flutter fallback |
 |--------|------------------|
-| Roboto Flex variable axes | Standard Google Fonts weights |
+| Roboto Flex variable axes | Manrope + Inter (WJ pattern) |
 | Material Symbols | `Icons.*` |
-| Vehicle/station photos | Gradient + icon placeholders |
-| Dark card gradients | Flat M3 surfaces |
+| Vehicle/station photos | `AppCard` + icon placeholders (no green gradient heroes) |
+| Dark card gradients | Flat WJ-style `surfaceContainer` cards |
 | Confetti on onboarding done | Static success illustration |
 | Tank capacity / maintenance alerts on add vehicle | Omitted (not in DB) |
 | Efficiency format picker (L/100km, km/L, MPG) on region screen | Omitted for now |
@@ -279,7 +289,8 @@ After substantive code changes:
 | `cd04522` | History list, filters, swipe edit/delete |
 | `7dd8e09` | Analytics screen + charts + insight cards |
 | `c2ece6c` | Settings, CSV export, Drive backup |
-| `5030b0b` | Step 9: remove seed data, Play ownership file, polish |
+| `9b1eea4` | feat: theme-aware dark/light UI overhaul |
+| *(pending)* | feat: Wealth Journal UI alignment — WJ colours, Manrope/Inter, AppPalette, FuelChartStyle, AppCard across dashboard/analytics/history/refuel/onboarding |
 
 ---
 
@@ -325,6 +336,7 @@ Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
 
 ## 12. Post-v1 maintenance (optional)
 
+- Commit + push + release APK for v1.10.0 WJ UI alignment (when user requests)  
 - Register Google OAuth web client + Android client for Drive on release builds (`GOOGLE_OAUTH_SERVER_CLIENT_ID` dart-define)  
 - Scheduled Drive backups (Wealth Journal has daily auto-upload)  
 - Efficiency format picker (km/L vs L/100km vs MPG) in settings  
@@ -389,4 +401,4 @@ Or attach:
 
 ---
 
-*Last updated: Dark/light theme overhaul — all screens made theme-aware via `ColorScheme`/`theme_x.dart`, surface-container ladder wired into both schemes, component themes polished (cards, inputs, nav bar, sheets, dialogs, snackbars). Version `1.9.0+13`.*
+*Last updated: FAB docked via Scaffold slot (above nav bar), History search bar restyled with AppCard. Version `1.11.1+16`.*

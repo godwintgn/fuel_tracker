@@ -2,15 +2,21 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../models/enums.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/refuels_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/fuel_calculations.dart';
-import '../../theme/app_colors.dart';
+import '../../providers/vehicles_provider.dart';
+import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/fuel_chart_style.dart';
 import '../../theme/theme_x.dart';
+import '../../widgets/common/active_vehicle_bar.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/section_header.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 import '../refuel/add_refuel_screen.dart';
 
@@ -23,8 +29,8 @@ class AnalyticsScreen extends ConsumerWidget {
     final refuelsAsync = ref.watch(refuelsProvider);
     final settings = ref.watch(settingsProvider).valueOrNull;
     final currency = settings?.currencyCode ?? 'OMR';
-    final fuelUnit = settings?.fuelUnit.abbreviation ?? 'L';
     final period = ref.watch(analyticsPeriodProvider);
+    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
 
     return refuelsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -79,17 +85,23 @@ class AnalyticsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Performance Analytics',
-                            style: context.tt.headlineMedium,
+                            'Analytics',
+                            style: context.tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Real-time breakdown of efficiency and spending for ${period.label.toLowerCase()} view.',
+                            'Efficiency and spending for ${period.label.toLowerCase()} view.',
                             style: context.tt.bodyMedium?.copyWith(
                               color: context.cs.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.stackLg),
+                          ActiveVehicleBar(
+                            vehicles: vehicles,
+                            embedded: true,
+                          ),
+                          const SizedBox(height: AppSpacing.stackMd),
                           _PeriodSelector(
                             selected: period,
                             onChanged: (p) {
@@ -113,6 +125,7 @@ class AnalyticsScreen extends ConsumerWidget {
                         _EfficiencyTrendCard(
                           trips: stats.trips,
                           peakKmPerLiter: stats.peakKmPerLiter,
+                          fuelType: stats.fuelType,
                         ),
                         const SizedBox(height: AppSpacing.gutter),
                         Row(
@@ -122,6 +135,7 @@ class AnalyticsScreen extends ConsumerWidget {
                               child: _EfficiencyInsightCard(
                                 changePercent: stats.efficiencyChangePercent,
                                 avgKmPerLiter: stats.avgKmPerLiter,
+                                fuelType: stats.fuelType,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.gutter),
@@ -146,7 +160,7 @@ class AnalyticsScreen extends ConsumerWidget {
                               child: _FuelSharePieCard(
                                 vehicleShares: stats.vehicleShares,
                                 totalLiters: stats.totalLiters,
-                                fuelUnit: fuelUnit,
+                                fuelType: stats.fuelType,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.gutter),
@@ -157,7 +171,7 @@ class AnalyticsScreen extends ConsumerWidget {
                                 totalLiters: stats.totalLiters,
                                 totalSpent: stats.totalSpent,
                                 currency: currency,
-                                fuelUnit: fuelUnit,
+                                fuelType: stats.fuelType,
                               ),
                             ),
                           ],
@@ -166,7 +180,9 @@ class AnalyticsScreen extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.stackLg),
                           Text(
                             'Vehicle Profiles',
-                            style: context.tt.titleLarge,
+                            style: context.tt.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.stackMd),
                           ...stats.vehicleProfiles.map(
@@ -235,23 +251,27 @@ class _PeriodSelector extends StatelessWidget {
   }
 }
 
-/// Shared shell for the surface-colored analytics cards.
+/// Shared shell for analytics cards (Wealth Journal AppCard).
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
+  const _SectionCard({required this.child, this.title, this.subtitle});
 
   final Widget child;
+  final String? title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.cs;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            SectionHeader(title: title!, subtitle: subtitle),
+            const SizedBox(height: AppSpacing.stackMd),
+          ],
+          child,
+        ],
       ),
-      child: child,
     );
   }
 }
@@ -260,54 +280,43 @@ class _EfficiencyTrendCard extends StatelessWidget {
   const _EfficiencyTrendCard({
     required this.trips,
     required this.peakKmPerLiter,
+    required this.fuelType,
   });
 
   final List<TripEfficiency> trips;
   final double? peakKmPerLiter;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
+    final pal = context.palette;
+    final lineColor = pal.efficiency;
+    final unit = FuelTypeMetrics.efficiencyUnit(fuelType);
 
     return _SectionCard(
+      title: 'Consumption Trends',
+      subtitle: 'Historical $unit performance',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fuel Consumption Trends',
-                      style: tt.titleMedium,
-                    ),
-                    Text(
-                      'Historical km/L performance',
-                      style: tt.labelLarge?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: lineColor.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                unit,
+                style: tt.labelSmall?.copyWith(
+                  color: lineColor,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'km/L',
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: AppSpacing.stackMd),
           if (trips.isEmpty)
@@ -324,14 +333,7 @@ class _EfficiencyTrendCard extends StatelessWidget {
                     LineChartData(
                       minY: _minY(trips),
                       maxY: _maxY(trips),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (_) => FlLine(
-                          color: cs.outlineVariant.withValues(alpha: 0.4),
-                          strokeWidth: 1,
-                        ),
-                      ),
+                      gridData: FuelChartStyle.horizontalGrid(cs),
                       borderData: FlBorderData(show: false),
                       titlesData: const FlTitlesData(
                         topTitles: AxisTitles(),
@@ -340,19 +342,13 @@ class _EfficiencyTrendCard extends StatelessWidget {
                         bottomTitles: AxisTitles(),
                       ),
                       lineBarsData: [
-                        LineChartBarData(
+                        FuelChartStyle.primarySeries(
                           spots: [
                             for (var i = 0; i < trips.length; i++)
                               FlSpot(i.toDouble(), trips[i].kmPerLiter),
                           ],
-                          isCurved: true,
-                          color: cs.primary,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: cs.primary.withValues(alpha: 0.12),
-                          ),
+                          color: lineColor,
+                          barWidth: FuelChartStyle.barWidthFull,
                         ),
                       ],
                     ),
@@ -367,13 +363,13 @@ class _EfficiencyTrendCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: cs.primary,
+                          color: lineColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Peak: ${peakKmPerLiter!.toStringAsFixed(1)} km/L',
+                          'Peak: ${peakKmPerLiter!.toStringAsFixed(1)} $unit',
                           style: tt.labelSmall?.copyWith(
-                            color: cs.onPrimary,
+                            color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -402,69 +398,69 @@ class _EfficiencyInsightCard extends StatelessWidget {
   const _EfficiencyInsightCard({
     required this.changePercent,
     required this.avgKmPerLiter,
+    required this.fuelType,
   });
 
   final double? changePercent;
   final double? avgKmPerLiter;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
+    final pal = context.palette;
     final improved = (changePercent ?? 0) >= 0;
+    final trendColor = improved ? pal.gain : pal.loss;
     final headline = changePercent != null
         ? '${improved ? 'Improved' : 'Down'} ${changePercent!.abs().toStringAsFixed(0)}%'
-        : avgKmPerLiter != null
-            ? '${avgKmPerLiter!.toStringAsFixed(1)} km/L'
-            : '—';
+        : FuelTypeMetrics.formatEfficiency(avgKmPerLiter, fuelType);
 
-    return Container(
-      height: 160,
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -8,
-            top: -8,
-            child: Icon(
-              improved ? Icons.trending_up : Icons.trending_down,
-              size: 72,
-              color: cs.onPrimaryContainer.withValues(alpha: 0.15),
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      child: SizedBox(
+        height: 132,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -8,
+              top: -8,
+              child: Icon(
+                improved ? Icons.trending_up : Icons.trending_down,
+                size: 72,
+                color: trendColor.withValues(alpha: 0.12),
+              ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.bolt, color: cs.onPrimaryContainer),
-              Text(
-                'Efficiency Gain',
-                style: tt.titleSmall?.copyWith(
-                  color: cs.onPrimaryContainer.withValues(alpha: 0.9),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.bolt, color: pal.efficiency, size: 20),
+                Text(
+                  'Efficiency Gain',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                headline,
-                style: tt.headlineSmall?.copyWith(
-                  color: cs.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
+                const Spacer(),
+                Text(
+                  headline,
+                  style: tt.titleLarge?.copyWith(
+                    color: trendColor,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              Text(
-                changePercent != null
-                    ? 'Earlier vs later trips in period'
-                    : 'Average efficiency',
-                style: tt.labelMedium?.copyWith(
-                  color: cs.onPrimaryContainer.withValues(alpha: 0.8),
+                Text(
+                  changePercent != null
+                      ? 'Earlier vs later trips in period'
+                      : 'Average efficiency',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -484,38 +480,38 @@ class _CostInsightCard extends StatelessWidget {
     final cs = context.cs;
     final tt = context.tt;
 
-    return Container(
-      height: 160,
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.secondaryContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.payments, color: cs.onSecondaryContainer),
-          Text(
-            'Cost Metric',
-            style: tt.titleSmall?.copyWith(
-              color: cs.onSecondaryContainer.withValues(alpha: 0.9),
+    final pal = context.palette;
+
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      child: SizedBox(
+        height: 132,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.payments, color: pal.spend, size: 20),
+            Text(
+              'Cost Metric',
+              style: tt.labelMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
-          ),
-          const Spacer(),
-          Text(
-            costPerKm != null ? costPerKm!.toStringAsFixed(3) : '—',
-            style: tt.headlineSmall?.copyWith(
-              color: cs.onSecondaryContainer,
-              fontWeight: FontWeight.bold,
+            const Spacer(),
+            Text(
+              costPerKm != null ? costPerKm!.toStringAsFixed(3) : '—',
+              style: tt.titleLarge?.copyWith(
+                color: pal.spend,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          Text(
-            'Average cost per km ($currency)',
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSecondaryContainer.withValues(alpha: 0.8),
+            Text(
+              'Average cost per km ($currency)',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -534,34 +530,26 @@ class _MonthlySpendingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
+    final pal = context.palette;
 
     return _SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Monthly Spending', style: tt.titleMedium),
-          Text(
-            'Last 3 months (fuel only)',
-            style: tt.labelLarge?.copyWith(
-              color: cs.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.stackLg),
-          if (monthly.isEmpty)
-            const SizedBox(
+      title: 'Monthly Spending',
+      subtitle: 'Last 3 months (fuel only)',
+      child: monthly.isEmpty
+          ? const SizedBox(
               height: 120,
               child: Center(child: Text('No spending data yet')),
             )
-          else
-            SizedBox(
+          : SizedBox(
               height: 180,
               child: BarChart(
                 BarChartData(
+                  alignment: BarChartAlignment.spaceBetween,
                   maxY: monthly
                           .map((m) => m.amount)
                           .reduce((a, b) => a > b ? a : b) *
-                      1.25,
-                  gridData: const FlGridData(show: false),
+                      1.15,
+                  gridData: FuelChartStyle.horizontalGrid(cs),
                   borderData: FlBorderData(show: false),
                   titlesData: FlTitlesData(
                     topTitles: const AxisTitles(),
@@ -570,19 +558,23 @@ class _MonthlySpendingCard extends StatelessWidget {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 22,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
                           if (index < 0 || index >= monthly.length) {
                             return const SizedBox.shrink();
                           }
+                          final isLast = index == monthly.length - 1;
                           return Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               monthly[index].label.toUpperCase(),
                               style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                fontWeight: index == monthly.length - 1
-                                    ? FontWeight.bold
+                                color: isLast
+                                    ? cs.onSurface
+                                    : cs.onSurfaceVariant,
+                                fontWeight: isLast
+                                    ? FontWeight.w700
                                     : FontWeight.normal,
                               ),
                             ),
@@ -598,13 +590,13 @@ class _MonthlySpendingCard extends StatelessWidget {
                         barRods: [
                           BarChartRodData(
                             toY: monthly[i].amount,
-                            width: 28,
+                            width: 12,
                             borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(8),
+                              top: Radius.circular(2),
                             ),
                             color: i == monthly.length - 1
-                                ? cs.secondary
-                                : cs.secondary.withValues(alpha: 0.4),
+                                ? pal.spend
+                                : pal.spend.withValues(alpha: 0.35),
                           ),
                         ],
                       ),
@@ -612,8 +604,6 @@ class _MonthlySpendingCard extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
     );
   }
 }
@@ -622,96 +612,99 @@ class _FuelSharePieCard extends StatelessWidget {
   const _FuelSharePieCard({
     required this.vehicleShares,
     required this.totalLiters,
-    required this.fuelUnit,
+    required this.fuelType,
   });
 
   final List<VehicleFuelShare> vehicleShares;
   final double totalLiters;
-  final String fuelUnit;
+  final FuelType fuelType;
 
-  static const _colors = [
-    AppColors.secondary,
-    AppColors.primaryFixedDim,
-    AppColors.tertiary,
-    AppColors.primaryContainer,
-  ];
+  List<Color> _pieColors(BuildContext context) {
+    final pal = context.palette;
+    final cs = context.cs;
+    return [
+      pal.spend,
+      pal.fuel,
+      pal.efficiency,
+      cs.primary,
+      pal.neutral,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final tt = context.tt;
+    final colors = _pieColors(context);
+    final qtyUnit = FuelTypeMetrics.quantityUnit(fuelType);
 
     return _SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Vehicle Fuel Share', style: tt.titleMedium),
-          const SizedBox(height: AppSpacing.stackMd),
-          if (vehicleShares.isEmpty)
-            const SizedBox(
+      title: 'Vehicle Fuel Share',
+      child: vehicleShares.isEmpty
+          ? const SizedBox(
               height: 140,
               child: Center(child: Text('No fuel data')),
             )
-          else ...[
-            SizedBox(
-              height: 140,
-              child: PieChart(
-                PieChartData(
-                  sectionsSpace: 2,
-                  centerSpaceRadius: 36,
-                  sections: [
-                    for (var i = 0; i < vehicleShares.length; i++)
-                      PieChartSectionData(
-                        value: vehicleShares[i].liters,
-                        color: _colors[i % _colors.length],
-                        radius: 28,
-                        showTitle: false,
-                      ),
-                  ],
+          : Column(
+              children: [
+                SizedBox(
+                  height: 140,
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 36,
+                      sections: [
+                        for (var i = 0; i < vehicleShares.length; i++)
+                          PieChartSectionData(
+                            value: vehicleShares[i].liters,
+                            color: colors[i % colors.length],
+                            radius: 28,
+                            showTitle: false,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Center(
-              child: Text(
-                '${totalLiters.toStringAsFixed(0)} $fuelUnit total',
-                style: tt.labelLarge,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.stackMd),
-            ...vehicleShares.take(3).map((share) {
-              final index = vehicleShares.indexOf(share);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: _colors[index % _colors.length],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        share.vehicle.displayName,
-                        style: tt.labelMedium,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      '${share.percent.toStringAsFixed(0)}%',
-                      style: tt.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Center(
+                  child: Text(
+                    '${totalLiters.toStringAsFixed(0)} $qtyUnit total',
+                    style: tt.labelLarge,
+                  ),
                 ),
-              );
-            }),
-          ],
-        ],
-      ),
+                const SizedBox(height: AppSpacing.stackMd),
+                ...vehicleShares.take(3).map((share) {
+                  final index = vehicleShares.indexOf(share);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: colors[index % colors.length],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            share.vehicle.displayName,
+                            style: tt.labelMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          '${share.percent.toStringAsFixed(0)}%',
+                          style: tt.labelMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
     );
   }
 }
@@ -723,7 +716,7 @@ class _EfficiencyMetricsCard extends StatelessWidget {
     required this.totalLiters,
     required this.totalSpent,
     required this.currency,
-    required this.fuelUnit,
+    required this.fuelType,
   });
 
   final double? avgKmPerLiter;
@@ -731,33 +724,31 @@ class _EfficiencyMetricsCard extends StatelessWidget {
   final double totalLiters;
   final double totalSpent;
   final String currency;
-  final String fuelUnit;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
-    final tt = context.tt;
+    final qtyUnit = FuelTypeMetrics.quantityUnit(fuelType);
+    final consUnit = FuelTypeMetrics.consumptionPer100Unit(fuelType);
 
     return _SectionCard(
+      title: 'Period Summary',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Period Summary', style: tt.titleMedium),
-          const SizedBox(height: AppSpacing.stackMd),
           _MetricRow(
             label: 'Avg efficiency',
-            value: avgKmPerLiter != null
-                ? '${avgKmPerLiter!.toStringAsFixed(1)} km/L'
-                : '—',
+            value: FuelTypeMetrics.formatEfficiency(avgKmPerLiter, fuelType),
           ),
           _MetricRow(
-            label: 'L/100km',
+            label: consUnit,
             value: litersPer100Km != null
                 ? litersPer100Km!.toStringAsFixed(1)
                 : '—',
           ),
           _MetricRow(
-            label: 'Fuel used',
-            value: '${totalLiters.toStringAsFixed(1)} $fuelUnit',
+            label: 'Energy used',
+            value: '${totalLiters.toStringAsFixed(1)} $qtyUnit',
           ),
           _MetricRow(
             label: 'Total spend',
@@ -810,29 +801,23 @@ class _VehicleProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
+    final pal = context.palette;
     final vehicle = profile.vehicle;
 
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
       child: Row(
         children: [
           Container(
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.12),
+              color: pal.fuel.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             ),
             child: Icon(
               Icons.directions_car_filled_outlined,
-              color: cs.primary,
+              color: pal.fuel,
               size: 36,
             ),
           ),
@@ -846,16 +831,21 @@ class _VehicleProfileCard extends StatelessWidget {
                   style: tt.labelSmall?.copyWith(
                     color: cs.primary,
                     letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(vehicle.displayName, style: tt.titleMedium),
+                Text(
+                  vehicle.displayName,
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   profile.avgKmPerLiter != null
-                      ? 'Avg. ${profile.avgKmPerLiter!.toStringAsFixed(1)} km/L'
+                      ? 'Avg. ${FuelTypeMetrics.formatEfficiency(profile.avgKmPerLiter, vehicle.fuelType)}'
                       : 'Need more refuels',
                   style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    color: pal.efficiency,
                   ),
                 ),
               ],

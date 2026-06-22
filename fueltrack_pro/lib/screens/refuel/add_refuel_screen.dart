@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
 import '../../models/vehicle.dart';
 import '../../providers/dashboard_provider.dart';
@@ -10,8 +11,10 @@ import '../../providers/refuels_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../services/refuel_calculation.dart';
-import '../../theme/app_colors.dart';
+import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 import '../../widgets/refuel/refuel_field_container.dart';
 import '../vehicles/add_edit_vehicle_screen.dart';
@@ -392,11 +395,12 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     final settings = ref.watch(settingsProvider).valueOrNull;
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     final currency = settings?.currencyCode ?? 'OMR';
-    final fuelUnit = settings?.fuelUnit.abbreviation ?? 'L';
     final distanceUnit = settings?.distanceUnit.abbreviation ?? 'km';
     final dateFormat = DateFormat.yMMMd();
     final timeFormat = DateFormat.Hm();
     final vehicle = _vehicle;
+    final fuelType = vehicle?.fuelType ?? FuelType.petrol;
+    final priceLabel = FuelTypeMetrics.pricePerQuantityLabel(fuelType);
 
     if (vehicles.isEmpty) {
       return Scaffold(
@@ -575,7 +579,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
               children: [
                 Expanded(
                   child: RefuelFieldContainer(
-                    label: 'Quantity ($fuelUnit)',
+                    label: FuelTypeMetrics.quantityFieldLabel(fuelType),
                     icon: Icons.local_gas_station_outlined,
                     autoCalculated: _isDerived(RefuelPriceField.quantity),
                     child: TextFormField(
@@ -598,7 +602,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                 const SizedBox(width: AppSpacing.gutter),
                 Expanded(
                   child: RefuelFieldContainer(
-                    label: 'Price/L ($currency)',
+                    label: '$priceLabel ($currency)',
                     icon: Icons.payments_outlined,
                     autoCalculated: _isDerived(RefuelPriceField.pricePerLiter),
                     child: TextFormField(
@@ -738,70 +742,46 @@ class _VehicleHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = context.cs;
+    final pal = context.palette;
     final subtitle = [
       vehicle.fuelType.label,
       if (vehicle.licensePlate?.isNotEmpty == true) vehicle.licensePlate,
     ].join(' • ');
 
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primaryContainer,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.gutter),
+      child: Row(
         children: [
-          Center(
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: pal.fuel.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
             child: Icon(
               Icons.directions_car_filled_outlined,
-              size: 72,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: pal.fuel,
+              size: 40,
             ),
           ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
+          const SizedBox(width: AppSpacing.gutter),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   vehicle.displayName,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black54,
-                        blurRadius: 8,
-                      ),
-                    ],
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 if (subtitle.isNotEmpty)
                   Text(
                     subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black45,
-                          blurRadius: 6,
-                        ),
-                      ],
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
               ],

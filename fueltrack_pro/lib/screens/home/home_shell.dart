@@ -23,8 +23,6 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   var _index = 0;
 
-  bool get _showSpeedDial => _index == 0 || _index == 2;
-
   Future<void> _onNewRefuel() async {
     final vehicles = ref.read(vehiclesProvider).valueOrNull;
     if (vehicles == null || vehicles.isEmpty) {
@@ -41,8 +39,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     }
 
     final settings = ref.read(settingsProvider).valueOrNull;
-    final vehicleId =
-        settings?.selectedVehicleId ?? vehicles.first.id;
+    final vehicleId = settings?.selectedVehicleId ?? vehicles.first.id;
     if (!mounted) return;
     await AddRefuelScreen.open(context, vehicleId: vehicleId);
   }
@@ -57,58 +54,38 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final vehiclesAsync = ref.watch(vehiclesProvider);
-    final hasVehicles = vehiclesAsync.maybeWhen(
-      data: (v) => v.isNotEmpty,
-      orElse: () => false,
-    );
-
     return Scaffold(
-      appBar: _index == 0 || _index == 2 || _index == 3
-          ? null
-          : AppBar(
-              title: Text(
-                'FuelTrack Pro',
-                style: TextStyle(
-                  color: context.cs.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              actions: [
-                if (_index == 1)
-                  IconButton(
-                    onPressed: () => SettingsScreen.open(context),
-                    icon: const Icon(Icons.settings_outlined),
-                  ),
-              ],
-            ),
-      extendBody: true,
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _index,
-            children: [
-              const DashboardScreen(),
-              const VehicleListScreen(),
-              const HistoryScreen(),
-              const AnalyticsScreen(),
-            ],
+      appBar: AppBar(
+        title: Text(
+          'FuelTrack Pro',
+          style: TextStyle(
+            color: context.cs.primary,
+            fontWeight: FontWeight.w700,
           ),
-          if (_showSpeedDial)
-            Positioned.fill(
-              child: SpeedDialFab(
-                onNewRefuel: _onNewRefuel,
-                onNewVehicle: _onNewVehicle,
-              ),
-            ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => SettingsScreen.open(context),
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+          ),
         ],
       ),
-      floatingActionButton: !_showSpeedDial && _index == 1 && hasVehicles
-          ? FloatingActionButton(
-              onPressed: () => VehicleListScreen.openAddVehicle(context),
-              child: const Icon(Icons.add),
-            )
-          : null,
+      extendBody: true,
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          DashboardScreen(),
+          VehicleListScreen(),
+          HistoryScreen(),
+          AnalyticsScreen(),
+        ],
+      ),
+      floatingActionButton: SpeedDialFab(
+        onNewRefuel: _onNewRefuel,
+        onNewVehicle: _onNewVehicle,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
