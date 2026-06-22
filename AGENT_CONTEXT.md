@@ -26,7 +26,8 @@
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Flutter (stable), Material 3 |
+| Framework | Flutter **3.44.2** (stable), Material 3 |
+| Dart SDK | **3.12.2** (`pubspec.yaml`: `sdk: ^3.12.2`) |
 | State | `flutter_riverpod` |
 | Database | `sqflite` (SQLite on-device) |
 | Charts | `fl_chart` |
@@ -381,4 +382,4 @@ Or attach:
 
 ---
 
-*Last updated: Step 9 complete — all build steps done; seed data removed. Version `1.8.0+12`.*
+*Last updated: Flutter SDK upgraded to 3.44.2 / Dart 3.12.2; project deps refreshed. Version `1.8.0+12`.*
