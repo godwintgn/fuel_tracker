@@ -268,7 +268,7 @@ After substantive code changes:
 | `c304c33` | AGENT_CONTEXT rule + handoff doc |
 | `b2a3c59` | Refuel entry screen + smart calculation |
 | `cd04522` | History list, filters, swipe edit/delete |
-| (pending) | Analytics screen + charts + insight cards |
+| `7dd8e09` | Analytics screen + charts + insight cards |
 
 ---
 
