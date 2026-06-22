@@ -42,8 +42,10 @@
 
 ```
 fuel_tracker/                          # Git repo root
+├── README.md                          # Public GitHub readme (features, build, CI)
 ├── AGENT_CONTEXT.md                   # This file
 ├── fueltrack-pro-cursor-prompt.md     # Original build spec & order
+├── .github/workflows/build-apk.yml    # CI: analyze + test + release APK artifact on push
 ├── .cursor/rules/
 │   ├── commit-push-build-apk.mdc      # Auto rule: commit → push → clean APK
 │   └── update-agent-context.mdc       # Auto rule: keep this file updated every change
@@ -418,4 +420,4 @@ Or attach:
 
 ---
 
-*Last updated: Refuel detail edit/delete bar, active vehicle chip shows fuel+number, station autocomplete, mandatory make/model/number. Version `1.12.0+20`.*
+*Last updated: Added GitHub README + CI workflow (analyze/test/build APK on push). Version `1.12.0+20`.*
