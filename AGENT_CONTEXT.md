@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.3.1+7` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.4.0+8` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -54,8 +54,8 @@ fuel_tracker/                          # Git repo root
     │   ├── data/                      # regions, onboarding draft types
     │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, DashboardStats
     │   ├── providers/                 # Riverpod
-    │   ├── screens/                   # onboarding, home, dashboard, vehicles
-    │   ├── services/                  # db, calculations, seed data
+    │   ├── screens/                   # onboarding, home, dashboard, refuel, vehicles
+    │   ├── services/                  # db, calculations, refuel calc, seed data
     │   ├── theme/                     # M3 colors from DESIGN.md
     │   └── widgets/                   # onboarding, vehicles, dashboard, common
     └── android/
@@ -78,8 +78,8 @@ Incremental build per original prompt. **Do not generate everything at once.**
 | 2 | ✅ Done | Onboarding (4 screens, Skip on each), persistence |
 | 3 | ✅ Done | Vehicle list, add/edit, empty state, selected vehicle in settings |
 | 4 | ✅ Done | Dashboard, charts, FAB speed-dial, **dev seed data** |
-| 5 | ⏳ Next | Refuel Entry + smart quantity/price/total calculation |
-| 6 | Pending | History (search, filters, swipe edit/delete) |
+| 5 | ✅ Done | Refuel Entry + smart quantity/price/total calculation |
+| 6 | ⏳ Next | History (search, filters, swipe edit/delete) |
 | 7 | Pending | Analytics (more charts, insight cards) |
 | 8 | Pending | Settings + Google Drive backup |
 | 9 | Pending | Wire end-to-end, **remove seed data** |
@@ -127,9 +127,19 @@ Bottom nav (4 tabs):
 
 - List with `VehicleCard`, empty state, add-another dashed card  
 - Add/Edit form; delete blocked if refuel history exists  
-- **Fuel Log** button selects vehicle + snackbar (“Step 5”) until refuel screen exists  
+- **Fuel Log** opens `AddRefuelScreen` for that vehicle  
 
-### 5.6 Dev seed data (`lib/services/seed_data_service.dart`)
+### 5.6 Refuel entry (`lib/screens/refuel/add_refuel_screen.dart`)
+
+- Form: date/time, vehicle, odometer, quantity, price/L, total, station, notes  
+- **Smart calc:** any 2 of quantity / price-per-liter / total → derives third (`refuel_calculation.dart`)  
+- Auto-calc fields highlighted with green tint + “AUTO” badge on total  
+- Prefills price/L from last refuel; odometer hint from last reading  
+- Soft warning if odometer &lt; previous refuel  
+- Wired: speed-dial **New Refuel**, vehicle **Fuel Log**; invalidates `dashboardProvider` on save  
+- `refuelsProvider.updateEntry` added for Step 6 edit flow  
+
+### 5.7 Dev seed data (`lib/services/seed_data_service.dart`)
 
 **Important:** Runs only when **no refuel entries** exist in DB.
 
@@ -138,7 +148,7 @@ Bottom nav (4 tabs):
 - 8 refuels over ~3 months, odometer 41,200 → 45,230  
 - **Must be removed in Step 9** before final release wiring.
 
-### 5.7 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
+### 5.8 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
 
 - **km/L** = distance between consecutive refuels (odometer delta) ÷ liters at later refuel  
 - **L/100km** = (liters ÷ km) × 100  
@@ -234,6 +244,8 @@ After substantive code changes:
 | `94cb08c` | Package `com.fuel.tracker` |
 | `f18a120` | Play ownership `adi-registration.properties` |
 | `55fd3c0` | Dashboard, charts, seed data, FAB speed-dial |
+| `c304c33` | AGENT_CONTEXT rule + handoff doc |
+| (pending) | Refuel entry screen + smart calculation |
 
 ---
 
@@ -265,21 +277,14 @@ main.dart → ProviderScope → FuelTrackApp (app.dart)
             └─ [3] Analytics placeholder
 ```
 
-Add/Edit vehicle: pushed route from list or speed-dial.
+Add/Edit vehicle: pushed route from list or speed-dial.  
+Add refuel: `AddRefuelScreen` from speed-dial or vehicle **Fuel Log**.
 
 ---
 
-## 12. Next work (Step 5+)
+## 12. Next work (Step 6+)
 
-### Step 5 — Refuel Entry (immediate next)
-
-- Screen from `stitch_fueltrack_pro_analytics_app/refuel_entry/`  
-- Auto-calc: any 2 of quantity, price/L, total → compute third  
-- Visual distinction for auto-filled vs manual fields  
-- Wire speed-dial **New Refuel**, vehicle card **Fuel Log**, save via `refuelsProvider`  
-- Invalidate `dashboardProvider` after save  
-
-### Step 6 — History
+### Step 6 — History (immediate next)
 
 - `history_list_view`, `history_filters_expanded` mockups  
 - Search, filters, swipe actions  
@@ -306,6 +311,7 @@ Add/Edit vehicle: pushed route from list or speed-dial.
 
 - Widget tests mock Riverpod providers (no SQLite in test env).  
 - `test/widget_test.dart` — expects Dashboard “Quick Overview” with overridden `dashboardProvider`.  
+- `test/refuel_calculation_test.dart` — unit tests for smart refuel math (all 3 derive paths).  
 - Use `pump()` + short delay, not always `pumpAndSettle()` (can timeout on async DB).
 
 ---
@@ -356,4 +362,4 @@ Or attach:
 
 ---
 
-*Last updated: Added `update-agent-context.mdc` rule; workflow now requires keeping this file in sync. Version `1.3.1+7`.*
+*Last updated: Step 5 refuel entry + smart calculation. Version `1.4.0+8`.*

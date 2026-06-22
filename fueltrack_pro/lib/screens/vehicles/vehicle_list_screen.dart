@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/vehicles/vehicle_card.dart';
+import '../refuel/add_refuel_screen.dart';
 import 'add_edit_vehicle_screen.dart';
 
 class VehicleListScreen extends ConsumerWidget {
@@ -103,13 +104,14 @@ class VehicleListScreen extends ConsumerWidget {
                     vehicle: vehicle,
                     selected: isSelected,
                     onDetails: () => _openEditVehicle(context, vehicle),
-                    onFuelLog: () {
-                      _selectVehicle(ref, vehicle);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Refuel entry coming in Step 5'),
-                        ),
-                      );
+                    onFuelLog: () async {
+                      await _selectVehicle(ref, vehicle);
+                      if (context.mounted) {
+                        await AddRefuelScreen.open(
+                          context,
+                          vehicleId: vehicle.id,
+                        );
+                      }
                     },
                   );
                 },
