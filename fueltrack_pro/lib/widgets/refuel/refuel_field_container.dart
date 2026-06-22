@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class RefuelFieldContainer extends StatelessWidget {
   const RefuelFieldContainer({
@@ -23,12 +23,13 @@ class RefuelFieldContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final background = highlighted
-        ? AppColors.primaryContainer.withValues(alpha: 0.15)
+        ? cs.primary.withValues(alpha: 0.10)
         : readOnly
-            ? AppColors.surfaceContainerLow
-            : AppColors.surfaceContainer;
+            ? cs.surfaceContainerLow
+            : cs.surfaceContainerHigh;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
@@ -38,16 +39,14 @@ class RefuelFieldContainer extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: autoCalculated
-            ? AppColors.primaryFixed.withValues(alpha: 0.2)
+            ? cs.primary.withValues(alpha: 0.12)
             : background,
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(AppSpacing.radiusLg),
         ),
         border: Border(
           bottom: BorderSide(
-            color: autoCalculated || highlighted
-                ? AppColors.primary
-                : AppColors.outline,
+            color: autoCalculated || highlighted ? cs.primary : cs.outline,
             width: autoCalculated || highlighted ? 2 : 1,
           ),
         ),
@@ -60,7 +59,7 @@ class RefuelFieldContainer extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Icon(
                 icon,
-                color: autoCalculated ? AppColors.primary : AppColors.outline,
+                color: autoCalculated ? cs.primary : cs.onSurfaceVariant,
               ),
             ),
             const SizedBox(width: AppSpacing.stackMd),
@@ -71,12 +70,10 @@ class RefuelFieldContainer extends StatelessWidget {
               children: [
                 Text(
                   label.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: autoCalculated
-                        ? AppColors.primary
-                        : readOnly
-                            ? AppColors.onSurfaceVariant
-                            : AppColors.primary,
+                  style: tt.labelSmall?.copyWith(
+                    color: readOnly && !autoCalculated
+                        ? cs.onSurfaceVariant
+                        : cs.primary,
                     letterSpacing: 0.5,
                   ),
                 ),

@@ -6,8 +6,8 @@ import '../../models/vehicle.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 
 class AddEditVehicleScreen extends ConsumerStatefulWidget {
@@ -142,7 +142,10 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.cs.error,
+              foregroundColor: context.cs.onError,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -179,7 +182,7 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
             IconButton(
               onPressed: _saving ? null : _delete,
               icon: const Icon(Icons.delete_outline),
-              color: AppColors.error,
+              color: theme.colorScheme.error,
             ),
         ],
       ),
@@ -200,7 +203,7 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
             Text(
               'Provide accurate information to track fuel efficiency precisely.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.stackLg),
@@ -264,7 +267,7 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
             Text(
               'Fuel Type',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.stackSm),
@@ -293,7 +296,7 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
                 'You can change these details later in vehicle settings.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.stackMd),
@@ -318,6 +321,8 @@ class _HeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Container(
       height: 160,
       decoration: BoxDecoration(
@@ -326,21 +331,21 @@ class _HeroBanner extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.surfaceContainerLow,
+            cs.primary.withValues(alpha: 0.15),
+            cs.surfaceContainerLow,
           ],
         ),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.3),
+          color: cs.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
       child: Stack(
         children: [
-          const Center(
+          Center(
             child: Icon(
               Icons.directions_car_filled_outlined,
               size: 72,
-              color: AppColors.primary,
+              color: cs.primary,
             ),
           ),
           Positioned(
@@ -349,14 +354,14 @@ class _HeroBanner extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
+                color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 isEditing ? 'Edit Profile' : 'Vehicle Profile',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.onPrimaryContainer,
-                    ),
+                style: context.tt.labelLarge?.copyWith(
+                  color: cs.onPrimaryContainer,
+                ),
               ),
             ),
           ),

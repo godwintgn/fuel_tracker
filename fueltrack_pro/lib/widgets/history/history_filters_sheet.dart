@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../data/history_filters.dart';
 import '../../models/enums.dart';
 import '../../models/vehicle.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../onboarding/onboarding_widgets.dart';
 
@@ -133,7 +132,7 @@ class _HistoryFiltersSheetState extends State<HistoryFiltersSheet> {
               width: 48,
               height: 6,
               decoration: BoxDecoration(
-                color: AppColors.outlineVariant,
+                color: theme.colorScheme.outlineVariant,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -240,7 +239,7 @@ class _HistoryFiltersSheetState extends State<HistoryFiltersSheet> {
                           '${_customStart!.toLocal().toString().split(' ').first} → '
                           '${_customEnd!.toLocal().toString().split(' ').first}',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

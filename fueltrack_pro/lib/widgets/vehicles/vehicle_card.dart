@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
 import '../../models/vehicle.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class VehicleCard extends StatelessWidget {
   const VehicleCard({
@@ -21,20 +21,21 @@ class VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final title = vehicle.model?.isNotEmpty == true
         ? vehicle.model!
         : vehicle.name;
     final subtitle = vehicle.make ?? vehicle.name;
 
     return Card(
-      color: AppColors.surfaceContainerLow,
+      color: cs.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         side: selected
-            ? const BorderSide(color: AppColors.primary, width: 2)
-            : BorderSide.none,
+            ? BorderSide(color: cs.primary, width: 2)
+            : BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,11 +56,11 @@ class VehicleCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: theme.textTheme.titleLarge),
+                          Text(title, style: tt.titleLarge),
                           Text(
                             subtitle,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            style: tt.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -68,13 +69,13 @@ class VehicleCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHighest,
+                        color: cs.primary.withValues(alpha: 0.12),
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusLg),
                       ),
                       child: Icon(
                         _iconForFuelType(vehicle.fuelType),
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                     ),
                   ],
@@ -116,8 +117,8 @@ class VehicleCard extends StatelessWidget {
                       child: FilledButton.tonal(
                         onPressed: onFuelLog,
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.secondaryContainer,
-                          foregroundColor: AppColors.onSecondaryContainer,
+                          backgroundColor: cs.secondaryContainer,
+                          foregroundColor: cs.onSecondaryContainer,
                         ),
                         child: const Text('Fuel Log'),
                       ),
@@ -149,6 +150,8 @@ class _HeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Stack(
       children: [
         Container(
@@ -158,9 +161,9 @@ class _HeroBanner extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.primary.withValues(alpha: 0.2),
-                AppColors.secondary.withValues(alpha: 0.12),
-                AppColors.surfaceContainer,
+                cs.primary.withValues(alpha: 0.2),
+                cs.secondary.withValues(alpha: 0.12),
+                cs.surfaceContainer,
               ],
             ),
           ),
@@ -168,7 +171,7 @@ class _HeroBanner extends StatelessWidget {
             child: Icon(
               VehicleCard._iconForFuelType(fuelType),
               size: 64,
-              color: AppColors.primary.withValues(alpha: 0.5),
+              color: cs.primary.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -178,16 +181,15 @@ class _HeroBanner extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: selected ? AppColors.primary : AppColors.secondary,
+              color: selected ? cs.primary : cs.secondary,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               selected ? 'Active' : fuelType.label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: selected
-                        ? AppColors.onPrimary
-                        : AppColors.onSecondary,
-                  ),
+              style: context.tt.labelSmall?.copyWith(
+                color: selected ? cs.onPrimary : cs.onSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -207,9 +209,9 @@ class _MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.onSurfaceVariant),
+        Icon(icon, size: 16, color: context.cs.onSurfaceVariant),
         const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.labelLarge),
+        Text(label, style: context.tt.labelLarge),
       ],
     );
   }

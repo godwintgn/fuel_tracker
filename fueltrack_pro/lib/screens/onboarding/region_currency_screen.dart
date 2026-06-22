@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/regions.dart';
 import '../../providers/onboarding_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 
 class OnboardingRegionCurrencyScreen extends ConsumerWidget {
@@ -20,6 +20,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final draft = ref.watch(onboardingDraftProvider);
     final region = draft.region;
 
@@ -33,12 +34,12 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.local_gas_station, color: AppColors.primary),
+                  Icon(Icons.local_gas_station, color: cs.primary),
                   const SizedBox(width: 8),
                   Text(
                     'FuelTrack Pro',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.primary,
+                      color: cs.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -72,7 +73,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                     Text(
                       'Configure your local settings so we can provide accurate cost analysis and efficiency data.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.stackLg),
@@ -81,7 +82,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                         Text(
                           'Country / Region',
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: AppColors.primary,
+                            color: cs.primary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -89,7 +90,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                           initialValue: draft.regionCode,
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: AppColors.surfaceContainerHighest,
+                            fillColor: cs.surfaceContainerHighest,
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusLg),
@@ -116,25 +117,25 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                         Text(
                           'Currency',
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: AppColors.primary,
+                            color: cs.primary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.gutter),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHighest,
+                            color: cs.surfaceContainerHighest,
                             borderRadius:
                                 BorderRadius.circular(AppSpacing.radiusLg),
                           ),
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: AppColors.secondaryContainer,
+                                backgroundColor: cs.secondaryContainer,
                                 child: Text(
                                   region.currencyCode,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: AppColors.onSecondaryContainer,
+                                    color: cs.onSecondaryContainer,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -151,14 +152,14 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                                     Text(
                                       'Default for your region',
                                       style: theme.textTheme.labelSmall?.copyWith(
-                                        color: AppColors.onSurfaceVariant,
+                                        color: cs.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.lock_outline,
-                                  color: AppColors.outline),
+                              Icon(Icons.lock_outline,
+                                  color: cs.onSurfaceVariant),
                             ],
                           ),
                         ),
@@ -198,7 +199,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppSpacing.gutter),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
+                        color: cs.primaryContainer,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusXl),
                       ),
@@ -206,10 +207,10 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                         children: [
                           CircleAvatar(
                             backgroundColor:
-                                AppColors.onPrimaryContainer.withValues(alpha: 0.2),
-                            child: const Icon(
+                                cs.onPrimaryContainer.withValues(alpha: 0.2),
+                            child: Icon(
                               Icons.info_outline,
-                              color: AppColors.onPrimaryContainer,
+                              color: cs.onPrimaryContainer,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.stackMd),
@@ -217,7 +218,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                             child: Text(
                               'You can change these units anytime in the Settings menu.',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.onPrimaryContainer,
+                                color: cs.onPrimaryContainer,
                               ),
                             ),
                           ),
@@ -247,7 +248,7 @@ class OnboardingRegionCurrencyScreen extends ConsumerWidget {
                 'By continuing, you agree to our local data handling policies.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -265,12 +266,14 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,20 +300,22 @@ class _UnitToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
     return Row(
       children: [
-        Icon(icon, color: AppColors.primary),
+        Icon(icon, color: cs.primary),
         const SizedBox(width: AppSpacing.gutter),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              Text(title, style: tt.titleMedium),
               Text(
                 subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -318,8 +323,6 @@ class _UnitToggleRow extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: AppColors.onPrimary,
-          activeTrackColor: AppColors.primary,
         ),
       ],
     );

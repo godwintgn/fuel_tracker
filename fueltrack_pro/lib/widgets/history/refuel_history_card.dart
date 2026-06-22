@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 
 import '../../models/refuel_entry.dart';
 import '../../models/vehicle.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class RefuelHistoryCard extends StatelessWidget {
   const RefuelHistoryCard({
@@ -28,26 +28,31 @@ class RefuelHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final dateFormat = DateFormat('MMM d, yyyy • h:mm a');
     final title = entry.stationName?.trim().isNotEmpty == true
         ? entry.stationName!
         : vehicle?.displayName ?? 'Refuel';
     final subtitle = dateFormat.format(entry.refuelDate);
-    final iconBg = alternateAccent
-        ? AppColors.secondaryContainer
-        : AppColors.primaryContainer;
-    final iconFg = alternateAccent
-        ? AppColors.onSecondaryContainer
-        : AppColors.onPrimaryContainer;
+    final iconBg =
+        alternateAccent ? cs.secondaryContainer : cs.primaryContainer;
+    final iconFg =
+        alternateAccent ? cs.onSecondaryContainer : cs.onPrimaryContainer;
 
     return Material(
-      color: AppColors.surfaceContainerLow,
+      color: cs.surfaceContainerLow,
       borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
           padding: const EdgeInsets.all(AppSpacing.gutter),
           child: Column(
             children: [
@@ -71,12 +76,12 @@ class RefuelHistoryCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: theme.textTheme.titleMedium),
+                        Text(title, style: tt.titleMedium),
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -84,8 +89,8 @@ class RefuelHistoryCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             vehicle!.displayName,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -97,15 +102,15 @@ class RefuelHistoryCard extends StatelessWidget {
                     children: [
                       Text(
                         '${entry.totalPrice.toStringAsFixed(3)} $currency',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: AppColors.primary,
+                        style: tt.titleLarge?.copyWith(
+                          color: cs.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         '${entry.quantity.toStringAsFixed(2)}$fuelUnit • ${entry.fuelType.label}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -115,7 +120,7 @@ class RefuelHistoryCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.stackMd),
               Divider(
                 height: 1,
-                color: AppColors.outlineVariant.withValues(alpha: 0.6),
+                color: cs.outlineVariant.withValues(alpha: 0.6),
               ),
               const SizedBox(height: AppSpacing.stackMd),
               Row(
@@ -123,24 +128,24 @@ class RefuelHistoryCard extends StatelessWidget {
                   Icon(
                     Icons.speed_outlined,
                     size: 18,
-                    color: AppColors.onSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '${NumberFormat('#,###').format(entry.odometer.round())} $distanceUnit',
-                    style: theme.textTheme.bodyMedium,
+                    style: tt.bodyMedium,
                   ),
                   const Spacer(),
                   if (entry.pricePerLiter != null) ...[
                     Icon(
                       Icons.sell_outlined,
                       size: 18,
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '${entry.pricePerLiter!.toStringAsFixed(3)} $currency/L',
-                      style: theme.textTheme.bodyMedium,
+                      style: tt.bodyMedium,
                     ),
                   ],
                 ],

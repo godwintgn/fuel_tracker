@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class SpeedDialFab extends StatefulWidget {
   const SpeedDialFab({
@@ -34,6 +34,8 @@ class _SpeedDialFabState extends State<SpeedDialFab>
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Stack(
       alignment: Alignment.bottomRight,
       clipBehavior: Clip.none,
@@ -52,8 +54,8 @@ class _SpeedDialFabState extends State<SpeedDialFab>
             child: _DialAction(
               label: 'New Vehicle',
               icon: Icons.directions_car_outlined,
-              backgroundColor: AppColors.surfaceContainerHigh,
-              foregroundColor: AppColors.primary,
+              backgroundColor: cs.tertiaryContainer,
+              foregroundColor: cs.onTertiaryContainer,
               onTap: () => _action(widget.onNewVehicle),
             ),
           ),
@@ -63,8 +65,8 @@ class _SpeedDialFabState extends State<SpeedDialFab>
             child: _DialAction(
               label: 'New Refuel',
               icon: Icons.local_gas_station_outlined,
-              backgroundColor: AppColors.secondaryContainer,
-              foregroundColor: AppColors.onSecondaryContainer,
+              backgroundColor: cs.secondaryContainer,
+              foregroundColor: cs.onSecondaryContainer,
               onTap: () => _action(widget.onNewRefuel),
             ),
           ),
@@ -76,8 +78,8 @@ class _SpeedDialFabState extends State<SpeedDialFab>
           ),
           child: FloatingActionButton(
             onPressed: _toggle,
-            backgroundColor: AppColors.primaryContainer,
-            foregroundColor: AppColors.onPrimaryContainer,
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
             child: AnimatedRotation(
               turns: _expanded ? 0.125 : 0,
               duration: const Duration(milliseconds: 200),
@@ -107,16 +109,18 @@ class _DialAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
           elevation: 2,
           borderRadius: BorderRadius.circular(8),
-          color: AppColors.surfaceContainerLowest,
+          color: cs.surfaceContainerHighest,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+            child: Text(label, style: context.tt.labelLarge),
           ),
         ),
         const SizedBox(width: 12),

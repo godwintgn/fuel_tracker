@@ -9,6 +9,7 @@ import '../../services/analytics_service.dart';
 import '../../services/fuel_calculations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 import '../refuel/add_refuel_screen.dart';
@@ -79,15 +80,14 @@ class AnalyticsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Performance Analytics',
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            style: context.tt.headlineMedium,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Real-time breakdown of efficiency and spending for ${period.label.toLowerCase()} view.',
-                            style:
-                                Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
+                            style: context.tt.bodyMedium?.copyWith(
+                              color: context.cs.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.stackLg),
                           _PeriodSelector(
@@ -166,7 +166,7 @@ class AnalyticsScreen extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.stackLg),
                           Text(
                             'Vehicle Profiles',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: context.tt.titleLarge,
                           ),
                           const SizedBox(height: AppSpacing.stackMd),
                           ...stats.vehicleProfiles.map(
@@ -235,6 +235,27 @@ class _PeriodSelector extends StatelessWidget {
   }
 }
 
+/// Shared shell for the surface-colored analytics cards.
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.gutter),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _EfficiencyTrendCard extends StatelessWidget {
   const _EfficiencyTrendCard({
     required this.trips,
@@ -246,17 +267,10 @@ class _EfficiencyTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-        ),
-      ),
+    return _SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -268,12 +282,12 @@ class _EfficiencyTrendCard extends StatelessWidget {
                   children: [
                     Text(
                       'Fuel Consumption Trends',
-                      style: theme.textTheme.titleMedium,
+                      style: tt.titleMedium,
                     ),
                     Text(
                       'Historical km/L performance',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                      style: tt.labelLarge?.copyWith(
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -282,13 +296,14 @@ class _EfficiencyTrendCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryContainer.withValues(alpha: 0.2),
+                  color: cs.primary.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   'km/L',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.primary,
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -313,7 +328,7 @@ class _EfficiencyTrendCard extends StatelessWidget {
                         show: true,
                         drawVerticalLine: false,
                         getDrawingHorizontalLine: (_) => FlLine(
-                          color: AppColors.outlineVariant.withValues(alpha: 0.4),
+                          color: cs.outlineVariant.withValues(alpha: 0.4),
                           strokeWidth: 1,
                         ),
                       ),
@@ -331,12 +346,12 @@ class _EfficiencyTrendCard extends StatelessWidget {
                               FlSpot(i.toDouble(), trips[i].kmPerLiter),
                           ],
                           isCurved: true,
-                          color: AppColors.primary,
+                          color: cs.primary,
                           barWidth: 3,
                           dotData: const FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: AppColors.primary.withValues(alpha: 0.12),
+                            color: cs.primary.withValues(alpha: 0.12),
                           ),
                         ),
                       ],
@@ -352,13 +367,14 @@ class _EfficiencyTrendCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: cs.primary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           'Peak: ${peakKmPerLiter!.toStringAsFixed(1)} km/L',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppColors.onPrimary,
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -393,7 +409,8 @@ class _EfficiencyInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final improved = (changePercent ?? 0) >= 0;
     final headline = changePercent != null
         ? '${improved ? 'Improved' : 'Down'} ${changePercent!.abs().toStringAsFixed(0)}%'
@@ -405,7 +422,7 @@ class _EfficiencyInsightCard extends StatelessWidget {
       height: 160,
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       ),
       child: Stack(
@@ -416,24 +433,24 @@ class _EfficiencyInsightCard extends StatelessWidget {
             child: Icon(
               improved ? Icons.trending_up : Icons.trending_down,
               size: 72,
-              color: AppColors.onPrimaryContainer.withValues(alpha: 0.15),
+              color: cs.onPrimaryContainer.withValues(alpha: 0.15),
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.bolt, color: AppColors.onPrimaryContainer),
+              Icon(Icons.bolt, color: cs.onPrimaryContainer),
               Text(
                 'Efficiency Gain',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: AppColors.onPrimaryContainer.withValues(alpha: 0.9),
+                style: tt.titleSmall?.copyWith(
+                  color: cs.onPrimaryContainer.withValues(alpha: 0.9),
                 ),
               ),
               const Spacer(),
               Text(
                 headline,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: AppColors.onPrimaryContainer,
+                style: tt.headlineSmall?.copyWith(
+                  color: cs.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -441,8 +458,8 @@ class _EfficiencyInsightCard extends StatelessWidget {
                 changePercent != null
                     ? 'Earlier vs later trips in period'
                     : 'Average efficiency',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onPrimaryContainer.withValues(alpha: 0.8),
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onPrimaryContainer.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -464,42 +481,38 @@ class _CostInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Container(
       height: 160,
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.secondaryContainer,
+        color: cs.secondaryContainer,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.2),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.payments, color: AppColors.onSecondaryContainer),
+          Icon(Icons.payments, color: cs.onSecondaryContainer),
           Text(
             'Cost Metric',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: AppColors.onSecondaryContainer.withValues(alpha: 0.9),
+            style: tt.titleSmall?.copyWith(
+              color: cs.onSecondaryContainer.withValues(alpha: 0.9),
             ),
           ),
           const Spacer(),
           Text(
-            costPerKm != null
-                ? costPerKm!.toStringAsFixed(3)
-                : '—',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: AppColors.onSecondaryContainer,
+            costPerKm != null ? costPerKm!.toStringAsFixed(3) : '—',
+            style: tt.headlineSmall?.copyWith(
+              color: cs.onSecondaryContainer,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             'Average cost per km ($currency)',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: AppColors.onSecondaryContainer.withValues(alpha: 0.8),
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSecondaryContainer.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -519,25 +532,18 @@ class _MonthlySpendingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-        ),
-      ),
+    return _SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Monthly Spending', style: theme.textTheme.titleMedium),
+          Text('Monthly Spending', style: tt.titleMedium),
           Text(
             'Last 3 months (fuel only)',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+            style: tt.labelLarge?.copyWith(
+              color: cs.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.stackLg),
@@ -573,7 +579,8 @@ class _MonthlySpendingCard extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               monthly[index].label.toUpperCase(),
-                              style: theme.textTheme.labelSmall?.copyWith(
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
                                 fontWeight: index == monthly.length - 1
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -596,8 +603,8 @@ class _MonthlySpendingCard extends StatelessWidget {
                               top: Radius.circular(8),
                             ),
                             color: i == monthly.length - 1
-                                ? AppColors.secondary
-                                : AppColors.secondaryFixedDim,
+                                ? cs.secondary
+                                : cs.secondary.withValues(alpha: 0.4),
                           ),
                         ],
                       ),
@@ -631,21 +638,13 @@ class _FuelSharePieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tt = context.tt;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-        ),
-      ),
+    return _SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Vehicle Fuel Share', style: theme.textTheme.titleMedium),
+          Text('Vehicle Fuel Share', style: tt.titleMedium),
           const SizedBox(height: AppSpacing.stackMd),
           if (vehicleShares.isEmpty)
             const SizedBox(
@@ -674,7 +673,7 @@ class _FuelSharePieCard extends StatelessWidget {
             Center(
               child: Text(
                 '${totalLiters.toStringAsFixed(0)} $fuelUnit total',
-                style: theme.textTheme.labelLarge,
+                style: tt.labelLarge,
               ),
             ),
             const SizedBox(height: AppSpacing.stackMd),
@@ -696,13 +695,13 @@ class _FuelSharePieCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         share.vehicle.displayName,
-                        style: theme.textTheme.labelMedium,
+                        style: tt.labelMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
                       '${share.percent.toStringAsFixed(0)}%',
-                      style: theme.textTheme.labelMedium?.copyWith(
+                      style: tt.labelMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -736,21 +735,13 @@ class _EfficiencyMetricsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tt = context.tt;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.3),
-        ),
-      ),
+    return _SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Period Summary', style: theme.textTheme.titleMedium),
+          Text('Period Summary', style: tt.titleMedium),
           const SizedBox(height: AppSpacing.stackMd),
           _MetricRow(
             label: 'Avg efficiency',
@@ -793,16 +784,16 @@ class _MetricRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
+              style: context.tt.bodySmall?.copyWith(
+                color: context.cs.onSurfaceVariant,
+              ),
             ),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: context.tt.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -817,16 +808,17 @@ class _VehicleProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final vehicle = profile.vehicle;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.4),
+          color: cs.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -835,12 +827,12 @@ class _VehicleProfileCard extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: cs.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.directions_car_filled_outlined,
-              color: AppColors.primary,
+              color: cs.primary,
               size: 36,
             ),
           ),
@@ -851,18 +843,18 @@ class _VehicleProfileCard extends StatelessWidget {
               children: [
                 Text(
                   vehicle.fuelType.label.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.primary,
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.primary,
                     letterSpacing: 0.5,
                   ),
                 ),
-                Text(vehicle.displayName, style: theme.textTheme.titleMedium),
+                Text(vehicle.displayName, style: tt.titleMedium),
                 const SizedBox(height: 4),
                 Text(
                   profile.avgKmPerLiter != null
                       ? 'Avg. ${profile.avgKmPerLiter!.toStringAsFixed(1)} km/L'
                       : 'Need more refuels',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: tt.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -58,11 +58,15 @@ abstract final class AppColors {
   static const onErrorContainer = Color(0xFF93000A);
 
   // Dark mode surfaces (derived from M3 dark + mockup inverse tokens)
-  static const darkBackground = Color(0xFF121212);
-  static const darkSurface = Color(0xFF1B1C1C);
-  static const darkSurfaceContainerLow = Color(0xFF242526);
-  static const darkSurfaceContainer = Color(0xFF2A2A2A);
-  static const darkSurfaceContainerHigh = Color(0xFF303031);
-  static const darkOnSurface = Color(0xFFE3E2E2);
-  static const darkOnSurfaceVariant = Color(0xFFBFCABA);
+  static const darkBackground = Color(0xFF101413);
+  static const darkSurface = Color(0xFF101413);
+  static const darkSurfaceContainerLowest = Color(0xFF0B0F0E);
+  static const darkSurfaceContainerLow = Color(0xFF181D1B);
+  static const darkSurfaceContainer = Color(0xFF1C2220);
+  static const darkSurfaceContainerHigh = Color(0xFF272D2B);
+  static const darkSurfaceContainerHighest = Color(0xFF323836);
+  static const darkOnSurface = Color(0xFFE2E3E0);
+  static const darkOnSurfaceVariant = Color(0xFFBEC9BD);
+  static const darkOutline = Color(0xFF889387);
+  static const darkOutlineVariant = Color(0xFF3F4A40);
 }

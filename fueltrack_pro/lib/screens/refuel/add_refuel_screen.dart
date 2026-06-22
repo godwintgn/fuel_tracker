@@ -407,10 +407,10 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.directions_car_outlined,
                   size: 64,
-                  color: AppColors.primary,
+                  color: theme.colorScheme.primary,
                 ),
                 const SizedBox(height: AppSpacing.stackLg),
                 Text(
@@ -422,7 +422,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                   'You need at least one vehicle before logging a refuel.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.stackLg),
@@ -442,7 +442,10 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       appBar: AppBar(
         title: Text(
           widget.isEditing ? 'Edit Refuel' : 'Add Refuel',
-          style: const TextStyle(color: AppColors.primary),
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: Form(
@@ -641,7 +644,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                         contentPadding: EdgeInsets.zero,
                       ),
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        color: AppColors.primary,
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -653,7 +656,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -662,13 +665,14 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                           Icon(
                             Icons.bolt,
                             size: 14,
-                            color: AppColors.primary,
+                            color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'AUTO',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.primary,
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -743,22 +747,29 @@ class _VehicleHeroCard extends StatelessWidget {
       height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.2),
-            AppColors.surfaceContainerLow,
+            AppColors.primary,
+            AppColors.primaryContainer,
           ],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Stack(
         children: [
-          const Center(
+          Center(
             child: Icon(
               Icons.directions_car_filled_outlined,
               size: 72,
-              color: AppColors.primary,
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           Positioned(
@@ -771,7 +782,7 @@ class _VehicleHeroCard extends StatelessWidget {
                 Text(
                   vehicle.displayName,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: AppColors.onPrimary,
+                    color: Colors.white,
                     shadows: const [
                       Shadow(
                         color: Colors.black54,
