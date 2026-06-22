@@ -1,0 +1,46 @@
+---
+description: Keep AGENT_CONTEXT.md in sync after every substantive project update.
+alwaysApply: true
+---
+
+# Update AGENT_CONTEXT.md (fuel_tracker)
+
+After **every substantive code or project change** (features, fixes, config, signing, workflow), update the repo-root file:
+
+**`AGENT_CONTEXT.md`**
+
+Do this in the **same turn** as the change (before commit/push if committing). Do not wait for the user to ask.
+
+## What to update
+
+1. **§4 Build order** — Mark steps done / in progress / pending.
+2. **§5 What is implemented** — Add or revise sections for new screens, services, providers, schema changes.
+3. **§3 Repository layout** — New folders or important files.
+4. **§10 Riverpod providers** — New or renamed providers.
+5. **§11 Navigation** — Routing or shell changes.
+6. **§7 Android / Play** — Package name, version, signing, ownership files, fingerprints (never paste secrets/passwords).
+7. **§9 Git commit history** — Add one-line row for the commit you are about to make (hash after commit is fine).
+8. **§12 Next work** — Shift “immediate next” to the correct step; remove completed items.
+9. **Footer** — `Last updated:` line with step name and `pubspec.yaml` version.
+
+## Also update when relevant
+
+- **§6 Design fallbacks** — New mockup compromises.
+- **§13 Testing** — New test patterns or mocks.
+- **§2 Tech stack** — Only if dependencies or architecture change.
+- **§1 Identity table** — Version, applicationId if changed.
+
+## Do NOT
+
+- Duplicate the full spec from `fueltrack-pro-cursor-prompt.md` — keep AGENT_CONTEXT as a living status doc.
+- Put keystore passwords, `key.properties` contents, or API tokens in AGENT_CONTEXT.
+- Skip the update because “it was a small change” if user-visible behavior or architecture changed.
+
+## Skip only when
+
+- User explicitly says not to update docs, or
+- Change is typo-only / comment-only with zero behavioral impact.
+
+## Commit
+
+Include `AGENT_CONTEXT.md` in the same commit as the feature when following `commit-push-build-apk.mdc`, unless the user asked not to commit.
