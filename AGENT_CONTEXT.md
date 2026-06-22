@@ -271,7 +271,7 @@ After substantive code changes:
 | `cd04522` | History list, filters, swipe edit/delete |
 | `7dd8e09` | Analytics screen + charts + insight cards |
 | `c2ece6c` | Settings, CSV export, Drive backup |
-| (pending) | Step 9: remove seed data, Play ownership file, polish |
+| `5030b0b` | Step 9: remove seed data, Play ownership file, polish |
 
 ---
 
