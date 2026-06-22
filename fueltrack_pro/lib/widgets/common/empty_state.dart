@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -21,7 +21,8 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Center(
       child: Padding(
@@ -33,22 +34,22 @@ class EmptyState extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHighest,
+                color: cs.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 48, color: AppColors.primary),
+              child: Icon(icon, size: 48, color: cs.primary),
             ),
             const SizedBox(height: AppSpacing.stackLg),
             Text(
               title,
-              style: theme.textTheme.titleLarge,
+              style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.stackSm),
             Text(
               message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -73,7 +74,8 @@ class AddAnotherPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return InkWell(
       onTap: onTap,
@@ -84,7 +86,7 @@ class AddAnotherPlaceholder extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           border: Border.all(
-            color: AppColors.outlineVariant,
+            color: cs.outlineVariant,
             width: 2,
             strokeAlign: BorderSide.strokeAlignInside,
           ),
@@ -94,19 +96,19 @@ class AddAnotherPlaceholder extends StatelessWidget {
             Container(
               width: 64,
               height: 64,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceContainerHighest,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.add, size: 32, color: AppColors.primary),
+              child: Icon(Icons.add, size: 32, color: cs.primary),
             ),
             const SizedBox(height: AppSpacing.stackMd),
-            Text('Add another vehicle', style: theme.textTheme.titleMedium),
+            Text('Add another vehicle', style: tt.titleMedium),
             const SizedBox(height: AppSpacing.stackSm),
             Text(
               'Ready to track a new ride? Tap here to register it.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/regions.dart';
 import '../../providers/onboarding_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 
@@ -43,7 +42,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                     Text(
                       'FuelTrack Pro',
                       style: theme.textTheme.headlineMedium?.copyWith(
-                        color: AppColors.primary,
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -73,7 +72,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                     Text(
                       'Step 1 of 4: Personalized Setup',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.outline,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.stackLg),
@@ -97,11 +96,13 @@ class _SampleVehicleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final cs = theme.colorScheme;
+
     return Card(
-      color: AppColors.surfaceContainerLow,
+      color: cs.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        side: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -111,13 +112,13 @@ class _SampleVehicleCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHighest,
+                color: cs.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.directions_car_filled_outlined,
                 size: 36,
-                color: AppColors.onSurfaceVariant,
+                color: cs.primary,
               ),
             ),
             const SizedBox(width: AppSpacing.gutter),
@@ -140,13 +141,13 @@ class _SampleVehicleCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
+                          color: cs.primaryContainer,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
                           draft.fuelType.label,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppColors.onPrimaryContainer,
+                            color: cs.onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -154,7 +155,7 @@ class _SampleVehicleCard extends StatelessWidget {
                       Text(
                         '12.5 km/L',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -162,7 +163,7 @@ class _SampleVehicleCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.verified, color: AppColors.primary),
+            Icon(Icons.verified, color: cs.primary),
           ],
         ),
       ),

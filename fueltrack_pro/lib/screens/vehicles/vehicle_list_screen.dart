@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/vehicle.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/vehicles/vehicle_card.dart';
@@ -81,7 +80,7 @@ class VehicleListScreen extends ConsumerWidget {
                     Text(
                       'Manage your fleet and track fuel efficiency.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -157,7 +156,7 @@ class _EfficiencyOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       ),
       child: Column(
@@ -166,14 +165,14 @@ class _EfficiencyOverviewCard extends StatelessWidget {
           Text(
             'Efficiency Overview',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.onPrimaryContainer,
+              color: theme.colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
             'Log refuels to unlock fleet-wide efficiency insights. $count vehicles registered.',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onPrimaryContainer.withValues(alpha: 0.85),
+              color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.85),
             ),
           ),
         ],

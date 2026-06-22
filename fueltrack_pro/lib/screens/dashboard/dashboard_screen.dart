@@ -11,6 +11,7 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../widgets/common/empty_state.dart';
@@ -46,7 +47,7 @@ class DashboardScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpacing.gutter),
                 child: Text(
                   'Select vehicle',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: context.tt.titleMedium,
                 ),
               ),
               ...data.allVehicles.map(
@@ -60,6 +61,7 @@ class DashboardScreen extends ConsumerWidget {
                   },
                 ),
               ),
+              const SizedBox(height: AppSpacing.stackMd),
             ],
           ),
         );
@@ -157,7 +159,8 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -176,7 +179,15 @@ class _DashboardHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    const Icon(Icons.directions_car, color: AppColors.primary),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      ),
+                      child: Icon(Icons.directions_car, color: cs.primary),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -187,18 +198,22 @@ class _DashboardHeader extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   vehicleName,
-                                  style: theme.textTheme.titleLarge,
+                                  style: tt.titleLarge,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               if (onVehicleTap != null)
-                                const Icon(Icons.expand_more, size: 18),
+                                Icon(
+                                  Icons.expand_more,
+                                  size: 18,
+                                  color: cs.onSurfaceVariant,
+                                ),
                             ],
                           ),
                           Text(
                             'FuelTrack Pro',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -226,7 +241,7 @@ class _HeroCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tt = context.tt;
     final odometer = stats.currentOdometer;
     final avg = stats.avgKmPerLiter;
     final trend = stats.efficiencyTrendPercent;
@@ -243,14 +258,21 @@ class _HeroCards extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [AppColors.primaryContainer, AppColors.primaryFixedDim],
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryContainer.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'CURRENT ODOMETER',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.onPrimaryContainer.withValues(alpha: 0.9),
+                  style: tt.labelSmall?.copyWith(
+                    color: AppColors.onPrimaryFixed.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -258,15 +280,15 @@ class _HeroCards extends StatelessWidget {
                   odometer != null
                       ? NumberFormat('#,###').format(odometer.round())
                       : '—',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: AppColors.onPrimaryContainer,
+                  style: tt.headlineSmall?.copyWith(
+                    color: AppColors.onPrimaryFixed,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'km',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.onPrimaryContainer.withValues(alpha: 0.8),
+                  style: tt.titleMedium?.copyWith(
+                    color: AppColors.onPrimaryFixed.withValues(alpha: 0.75),
                   ),
                 ),
               ],
@@ -284,13 +306,20 @@ class _HeroCards extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [AppColors.secondary, AppColors.secondaryContainer],
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'AVG EFFICIENCY',
-                  style: theme.textTheme.labelSmall?.copyWith(
+                  style: tt.labelSmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
@@ -299,7 +328,7 @@ class _HeroCards extends StatelessWidget {
                   children: [
                     Text(
                       avg != null ? avg.toStringAsFixed(1) : '—',
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: tt.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -307,7 +336,7 @@ class _HeroCards extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       'km/L',
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: tt.titleMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
@@ -334,7 +363,7 @@ class _HeroCards extends StatelessWidget {
                         ),
                         Text(
                           '${trend.abs().toStringAsFixed(0)}%',
-                          style: theme.textTheme.labelSmall?.copyWith(
+                          style: tt.labelSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -359,15 +388,16 @@ class _QuickOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Quick Overview',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
+          style: tt.titleMedium?.copyWith(
+            color: cs.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.stackMd),
@@ -378,7 +408,7 @@ class _QuickOverview extends StatelessWidget {
                 label: 'Total Spent',
                 value: '$currency ${stats.totalSpent30Days.toStringAsFixed(3)}',
                 subtitle: 'Last 30 days',
-                valueColor: AppColors.primary,
+                valueColor: cs.primary,
               ),
             ),
             const SizedBox(width: AppSpacing.gutter),
@@ -395,16 +425,19 @@ class _QuickOverview extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.gutter),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
+            color: cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.tertiaryContainer,
-                child: const Icon(
+                backgroundColor: cs.tertiaryContainer,
+                child: Icon(
                   Icons.payments_outlined,
-                  color: AppColors.onTertiaryContainer,
+                  color: cs.onTertiaryContainer,
                 ),
               ),
               const SizedBox(width: AppSpacing.stackMd),
@@ -414,20 +447,20 @@ class _QuickOverview extends StatelessWidget {
                   children: [
                     Text(
                       'Cost per km',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     Text(
                       stats.costPerKm30Days != null
                           ? '${stats.costPerKm30Days!.toStringAsFixed(3)} $currency'
                           : '—',
-                      style: theme.textTheme.titleMedium,
+                      style: tt.titleMedium,
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.outline),
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
             ],
           ),
         ),
@@ -451,14 +484,18 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Container(
       height: 120,
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,8 +503,8 @@ class _StatTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: AppColors.onSurfaceVariant,
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
             ),
           ),
           Column(
@@ -475,12 +512,12 @@ class _StatTile extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: theme.textTheme.titleLarge?.copyWith(color: valueColor),
+                style: tt.titleLarge?.copyWith(color: valueColor),
               ),
               Text(
                 subtitle,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.outline,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
                   fontSize: 10,
                 ),
               ),
@@ -505,7 +542,8 @@ class _LastRefuelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
     final daysAgo = DateTime.now().difference(entry.refuelDate).inDays;
     final agoLabel = daysAgo == 0
         ? 'Today'
@@ -521,8 +559,8 @@ class _LastRefuelCard extends StatelessWidget {
           children: [
             Text(
               'Last Refuel',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+              style: tt.titleMedium?.copyWith(
+                color: cs.onSurfaceVariant,
               ),
             ),
             TextButton(onPressed: onDetails, child: const Text('Details')),
@@ -530,73 +568,70 @@ class _LastRefuelCard extends StatelessWidget {
         ),
         Card(
           clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            side: const BorderSide(color: AppColors.outlineVariant),
-          ),
           child: InkWell(
             onTap: onDetails,
             child: Row(
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryContainer.withValues(alpha: 0.3),
-                  borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(AppSpacing.radiusXl),
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: cs.secondary.withValues(alpha: 0.14),
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(AppSpacing.radiusXl),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.local_gas_station,
+                    size: 40,
+                    color: cs.secondary,
                   ),
                 ),
-                child: const Icon(
-                  Icons.local_gas_station,
-                  size: 40,
-                  color: AppColors.secondary,
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.gutter),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.gutter),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.stationName ?? 'Fuel stop',
+                                style: tt.titleMedium,
+                              ),
+                              Text(
+                                agoLabel,
+                                style: tt.bodyMedium?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              entry.stationName ?? 'Fuel stop',
-                              style: theme.textTheme.titleMedium,
+                              '$currency ${entry.totalPrice.toStringAsFixed(3)}',
+                              style: tt.titleMedium?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
-                              agoLabel,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.outline,
+                              '${entry.quantity.toStringAsFixed(0)}L • ${entry.pricePerLiter?.toStringAsFixed(3) ?? '—'}/L',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '$currency ${entry.totalPrice.toStringAsFixed(3)}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Text(
-                            '${entry.quantity.toStringAsFixed(0)}L • ${entry.pricePerLiter?.toStringAsFixed(3) ?? '—'}/L',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
             ),
           ),
         ),
@@ -616,6 +651,8 @@ class _MonthlySpendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     if (monthly.isEmpty) {
       return _ChartCard(
         title: 'Monthly Spend',
@@ -658,9 +695,7 @@ class _MonthlySpendChart extends StatelessWidget {
                         monthly[index].label,
                         style: TextStyle(
                           fontSize: 10,
-                          color: isLast
-                              ? AppColors.onSurface
-                              : AppColors.outline,
+                          color: isLast ? cs.onSurface : cs.onSurfaceVariant,
                           fontWeight:
                               isLast ? FontWeight.bold : FontWeight.normal,
                         ),
@@ -682,8 +717,8 @@ class _MonthlySpendChart extends StatelessWidget {
                         top: Radius.circular(6),
                       ),
                       color: i == monthly.length - 1
-                          ? AppColors.primaryContainer
-                          : AppColors.secondaryContainer,
+                          ? cs.primary
+                          : cs.primary.withValues(alpha: 0.35),
                     ),
                   ],
                 ),
@@ -702,6 +737,8 @@ class _EfficiencyTrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     if (trips.isEmpty) {
       return _ChartCard(
         title: 'Efficiency Trend',
@@ -734,7 +771,7 @@ class _EfficiencyTrendChart extends StatelessWidget {
               show: true,
               drawVerticalLine: false,
               getDrawingHorizontalLine: (_) => FlLine(
-                color: AppColors.outlineVariant.withValues(alpha: 0.4),
+                color: cs.outlineVariant.withValues(alpha: 0.4),
                 strokeWidth: 1,
               ),
             ),
@@ -749,10 +786,13 @@ class _EfficiencyTrendChart extends StatelessWidget {
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
-                color: AppColors.surfaceTint,
+                color: cs.primary,
                 barWidth: 3,
                 dotData: const FlDotData(show: true),
-                belowBarData: BarAreaData(show: false),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: cs.primary.withValues(alpha: 0.10),
+                ),
               ),
             ],
           ),
@@ -775,11 +815,16 @@ class _ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,8 +832,8 @@ class _ChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              Icon(icon, size: 18, color: AppColors.outline),
+              Text(title, style: context.tt.titleMedium),
+              Icon(icon, size: 18, color: cs.onSurfaceVariant),
             ],
           ),
           const SizedBox(height: AppSpacing.stackMd),

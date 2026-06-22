@@ -66,7 +66,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -145,21 +148,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         Text(
                           'FuelTrack Pro',
                           style: theme.textTheme.headlineMedium?.copyWith(
-                            color: AppColors.primary,
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.stackMd),
                         Material(
-                          color: AppColors.surfaceContainer,
+                          color: theme.colorScheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(999),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.search,
-                                  color: AppColors.onSurfaceVariant,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                                 Expanded(
                                   child: TextField(
@@ -208,7 +211,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               Text(
                                 '${summary.periodLabel} • ${summary.entryCount} entries',
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppColors.onSurfaceVariant,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -274,26 +277,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             alignment: Alignment.centerLeft,
                             padding: const EdgeInsets.only(left: 24),
                             decoration: BoxDecoration(
-                              color: AppColors.secondaryContainer,
+                              color: theme.colorScheme.secondaryContainer,
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusXl),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.edit_outlined,
-                              color: AppColors.onSecondaryContainer,
+                              color: theme.colorScheme.onSecondaryContainer,
                             ),
                           ),
                           secondaryBackground: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 24),
                             decoration: BoxDecoration(
-                              color: AppColors.errorContainer,
+                              color: theme.colorScheme.errorContainer,
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusXl),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.delete_outline,
-                              color: AppColors.error,
+                              color: theme.colorScheme.onErrorContainer,
                             ),
                           ),
                           confirmDismiss: (direction) async {

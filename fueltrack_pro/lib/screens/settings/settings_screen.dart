@@ -9,8 +9,8 @@ import '../../providers/backup_provider.dart';
 import '../../providers/data_refresh.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/backup_service.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../vehicles/vehicle_list_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -363,9 +363,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Settings',
-          style: TextStyle(color: AppColors.primary),
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: settingsAsync.when(
@@ -464,7 +467,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(
                     'Optional encrypted backup in your Google account app data folder (not visible in Drive).',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.stackMd),
@@ -506,7 +509,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           title: const Text('Last error'),
                           subtitle: Text(
                             prefs.lastError!,
-                            style: const TextStyle(color: AppColors.error),
+                            style: TextStyle(color: theme.colorScheme.error),
                           ),
                         ),
                       ],
@@ -526,9 +529,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
                   Text(
-                    'FuelTrack Pro v1.8.0',
+                    'FuelTrack Pro v1.9.0',
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -661,9 +664,14 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+    final cs = context.cs;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(children: children),
     );
   }

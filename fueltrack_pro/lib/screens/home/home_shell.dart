@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/vehicles_provider.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/dashboard/speed_dial_fab.dart';
 import '../analytics/analytics_screen.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -67,9 +67,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       appBar: _index == 0 || _index == 2 || _index == 3
           ? null
           : AppBar(
-              title: const Text(
+              title: Text(
                 'FuelTrack Pro',
-                style: TextStyle(color: AppColors.primary),
+                style: TextStyle(
+                  color: context.cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               actions: [
                 if (_index == 1)

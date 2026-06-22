@@ -6,6 +6,7 @@ import '../../models/enums.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 
 class OnboardingAddVehicleScreen extends ConsumerStatefulWidget {
@@ -170,7 +171,7 @@ class _OnboardingAddVehicleScreenState
                     Text(
                       'Fuel Type',
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.stackSm),
@@ -226,20 +227,27 @@ class _HeroBanner extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.surfaceContainerLow,
+            AppColors.primary,
+            AppColors.primaryContainer,
           ],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.directions_car_filled_outlined,
           size: 72,
-          color: AppColors.primary,
+          color: Colors.white.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -268,7 +276,7 @@ class _DetailField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.surfaceContainerLow,
+        fillColor: context.cs.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
     );
   }

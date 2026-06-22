@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.8.0+12` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.9.0+13` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -188,8 +188,15 @@ Colors and typography from `stitch_fueltrack_pro_analytics_app/fueltrack_pro/DES
 
 - **Green** (`#0D631B` primary) — efficiency  
 - **Blue** (`#005FAF` secondary) — financial  
-- Theme: `lib/theme/app_colors.dart`, `app_theme.dart`, `app_spacing.dart`  
+- Theme: `lib/theme/app_colors.dart`, `app_theme.dart`, `app_spacing.dart`, `theme_x.dart`  
 - App icon: `assets/icon/app_icon.png` + `flutter_launcher_icons`  
+
+### Dark/light theming rule (v1.9.0)
+
+- **All screens must source theme-variant colors from `ColorScheme`** (via `context.cs` / `context.tt` from `theme_x.dart` or `Theme.of(context)`), **not** directly from static `AppColors` light constants. `AppColors` is now reserved for **brand/fixed** colors only (gradients, white-on-color, fixed tonal palette for pie slices, hero banners).
+- Both `ColorScheme`s define the full `surfaceContainer*` ladder; dark adds `darkOutline`/`darkOutlineVariant` + container constants in `app_colors.dart`.
+- Shared component themes (cards, inputs, nav bar, bottom sheets, dialogs, snackbars, chips, list tiles) are styled centrally in `app_theme.dart` so widgets stay minimal.
+- `context.cs` / `context.tt` / `context.isDark` extension lives in `lib/theme/theme_x.dart`.
 
 ### Known mockup fallbacks (user accepted)
 
@@ -382,4 +389,4 @@ Or attach:
 
 ---
 
-*Last updated: Flutter SDK upgraded to 3.44.2 / Dart 3.12.2; project deps refreshed. Version `1.8.0+12`.*
+*Last updated: Dark/light theme overhaul — all screens made theme-aware via `ColorScheme`/`theme_x.dart`, surface-container ladder wired into both schemes, component themes polished (cards, inputs, nav bar, sheets, dialogs, snackbars). Version `1.9.0+13`.*

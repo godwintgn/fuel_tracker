@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 
 class OnboardingGradientBackground extends StatelessWidget {
   const OnboardingGradientBackground({super.key, required this.child});
@@ -79,6 +80,8 @@ class OnboardingProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     if (segmented) {
       return Row(
         children: List.generate(totalSteps, (index) {
@@ -88,9 +91,7 @@ class OnboardingProgressBar extends StatelessWidget {
               height: 4,
               margin: EdgeInsets.only(right: index < totalSteps - 1 ? 8 : 0),
               decoration: BoxDecoration(
-                color: active
-                    ? AppColors.primary
-                    : AppColors.surfaceContainerHighest,
+                color: active ? cs.primary : cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -105,8 +106,8 @@ class OnboardingProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         value: progress,
         minHeight: 4,
-        backgroundColor: AppColors.surfaceContainerHighest,
-        color: AppColors.primary,
+        backgroundColor: cs.surfaceContainerHighest,
+        color: cs.primary,
       ),
     );
   }
@@ -130,13 +131,14 @@ class SelectionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cs = context.cs;
+    final tt = context.tt;
 
     return Material(
-      color: selected ? AppColors.primaryContainer : Colors.transparent,
+      color: selected ? cs.primaryContainer : Colors.transparent,
       shape: StadiumBorder(
         side: BorderSide(
-          color: selected ? AppColors.primaryContainer : AppColors.outlineVariant,
+          color: selected ? cs.primaryContainer : cs.outlineVariant,
         ),
       ),
       child: InkWell(
@@ -155,17 +157,18 @@ class SelectionChip extends StatelessWidget {
                   icon,
                   size: 20,
                   color: selected
-                      ? AppColors.onPrimaryContainer
-                      : AppColors.onSurfaceVariant,
+                      ? cs.onPrimaryContainer
+                      : cs.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
               ],
               Text(
                 label,
-                style: theme.textTheme.labelLarge?.copyWith(
+                style: tt.labelLarge?.copyWith(
                   color: selected
-                      ? AppColors.onPrimaryContainer
-                      : AppColors.onSurfaceVariant,
+                      ? cs.onPrimaryContainer
+                      : cs.onSurfaceVariant,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],
