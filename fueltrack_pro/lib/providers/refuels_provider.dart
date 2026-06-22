@@ -30,6 +30,12 @@ class RefuelsNotifier extends AsyncNotifier<List<RefuelEntry>> {
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> deleteEntry(int id) async {
+    await ref.read(databaseServiceProvider).deleteRefuelEntry(id);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 final vehicleRefuelsProvider =
