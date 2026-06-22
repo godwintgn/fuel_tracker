@@ -14,12 +14,14 @@ After **implementing or modifying** project code (not for drive-by typo-only edi
 
 2. **Quality** — Run `flutter analyze` (and tests when logic changed) before commit when practical.
 
-3. **Commit** — One logical commit per coherent change. Conventional Commits:
+3. **Agent context** — Update [`AGENT_CONTEXT.md`](../../AGENT_CONTEXT.md) per `update-agent-context.mdc` (version, build-order progress, new files/providers, next steps, footer).
+
+4. **Commit** — One logical commit per coherent change. Conventional Commits:
    - `feat:`, `fix:`, `refactor:`, `perf:`, `chore:`, `docs:` + short imperative summary.
 
-4. **Push** — `git push origin` (current branch). Resolve conflicts before pushing.
+5. **Push** — `git push origin` (current branch). Resolve conflicts before pushing.
 
-5. **Clean release APK** — After push, from `fueltrack_pro/`:
+6. **Clean release APK** — After push, from `fueltrack_pro/`:
    ```bash
    flutter clean
    flutter pub get
@@ -27,6 +29,6 @@ After **implementing or modifying** project code (not for drive-by typo-only edi
    ```
    Report the output path: `build/app/outputs/flutter-apk/app-release.apk`.
 
-6. **Never commit** signing keys, keystores (`.jks`, `.p12`), `key.properties`, passwords, or tokens. Respect `.gitignore`.
+7. **Never commit** signing keys, keystores (`.jks`, `.p12`), `key.properties`, passwords, or tokens. Respect `.gitignore`.
 
 If the user explicitly says not to commit, push, or build, skip those steps for that turn.
