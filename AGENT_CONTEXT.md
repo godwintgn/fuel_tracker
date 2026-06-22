@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.11.3+18` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.11.4+19` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -125,12 +125,13 @@ Bottom nav (4 tabs):
 - Last refuel card — tap **Details** or card → edit refuel  
 - Monthly spend bar chart (`FuelChartStyle.horizontalGrid`, thin `spaceBetween` bars, `pal.spend`)  
 - Efficiency trend line chart (`FuelChartStyle.primarySeries`, `pal.efficiency`)  
+- Friendly icon+text chart empty states; skeleton placeholder while loading (no full-screen spinner)  
 - Data via `dashboardProvider` → `DashboardStats` + `FuelCalculations`
 
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
 
-- List with `VehicleCard`, empty state, add-another dashed card  
-- **Details** → `VehicleDetailScreen` (read-only profile + photo); **Edit** in app bar → `AddEditVehicleScreen`  
+- List with `VehicleCard` (tap photo → Details; buttons trimmed to Set active + Fuel Log; no duplicate fuel-type chip), empty state, add-another dashed card  
+- **Details** → `VehicleDetailScreen` (read-only profile + photo, Hero transition from card): stats strip (distance tracked, total spend, avg efficiency, last odometer), recent activity list (last 5, tap → `RefuelDetailScreen`), bottom-docked **Log refuel** button; **Edit** in app bar → `AddEditVehicleScreen`  
 - Add/Edit form; delete blocked if refuel history exists  
 - **Fuel Log** opens `AddRefuelScreen` for that vehicle (vehicle + fuel type locked)  
 
@@ -147,8 +148,11 @@ Bottom nav (4 tabs):
 
 ### 5.6b Refuel detail (`lib/screens/refuel/refuel_detail_screen.dart`)
 
-- Read-only refuel view; **Edit** opens `AddRefuelScreen` in edit mode (vehicle/fuel locked)  
+- **Cost hero** card at top (large total + quantity/price subtitle)  
+- Spec rows incl. **Efficiency (this fill)** = distance since previous refuel ÷ quantity  
+- Read-only view; **Edit** opens `AddRefuelScreen` in edit mode (vehicle/fuel locked)  
 - History tap → detail; swipe right → edit  
+- Shared `DetailRow` (`lib/widgets/common/detail_row.dart`) used here + vehicle detail  
 
 ### 5.7 History (`lib/screens/history/history_screen.dart`)
 
@@ -296,7 +300,9 @@ After substantive code changes:
 | `7dd8e09` | Analytics screen + charts + insight cards |
 | `c2ece6c` | Settings, CSV export, Drive backup |
 | `9b1eea4` | feat: theme-aware dark/light UI overhaul |
-| *(pending)* | feat: Wealth Journal UI alignment — WJ colours, Manrope/Inter, AppPalette, FuelChartStyle, AppCard across dashboard/analytics/history/refuel/onboarding |
+| `625a705` | feat: WJ UI, active vehicle scoping, fuel-type metrics, FAB polish |
+| `a9ea23d` | feat: vehicle detail view, refuel timeline validation, single FAB (v1.11.3+18) |
+| *(pending)* | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
 
 ---
 
@@ -409,4 +415,4 @@ Or attach:
 
 ---
 
-*Last updated: Vehicle view-only detail + edit, refuel timeline validation, locked vehicle on Fuel Log. Version `1.11.3+18`.*
+*Last updated: UI polish — vehicle card cleanup, refuel cost hero + per-fill efficiency, dashboard skeletons/empty states, shared DetailRow, haptics. Version `1.11.4+19`.*

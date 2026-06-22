@@ -43,31 +43,38 @@ class VehicleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Stack(
-            children: [
-              VehiclePhotoView(
-                vehicle: vehicle,
-                fallbackIcon: _iconForFuelType(vehicle.fuelType),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: selected ? cs.primary : cs.secondary,
-                    borderRadius: BorderRadius.circular(999),
+          GestureDetector(
+            onTap: onDetails,
+            child: Stack(
+              children: [
+                Hero(
+                  tag: 'vehicle-photo-${vehicle.id}',
+                  child: VehiclePhotoView(
+                    vehicle: vehicle,
+                    fallbackIcon: _iconForFuelType(vehicle.fuelType),
                   ),
-                  child: Text(
-                    selected ? 'Active' : vehicle.fuelType.label,
-                    style: context.tt.labelSmall?.copyWith(
-                      color: selected ? cs.onPrimary : cs.onSecondary,
-                      fontWeight: FontWeight.w600,
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: selected ? cs.primary : cs.secondary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      selected ? 'Active' : vehicle.fuelType.label,
+                      style: context.tt.labelSmall?.copyWith(
+                        color: selected ? cs.onPrimary : cs.onSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -108,45 +115,37 @@ class VehicleCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.gutter),
                 const Divider(height: 1),
                 const SizedBox(height: AppSpacing.stackMd),
-                Wrap(
-                  spacing: AppSpacing.gutter,
-                  runSpacing: AppSpacing.stackSm,
-                  children: [
-                    if (vehicle.year != null)
-                      _MetaChip(
-                        icon: Icons.calendar_today_outlined,
-                        label: '${vehicle.year}',
-                      ),
-                    _MetaChip(
-                      icon: Icons.local_gas_station_outlined,
-                      label: vehicle.fuelType.label,
-                    ),
-                    if (vehicle.licensePlate?.isNotEmpty == true)
-                      _MetaChip(
-                        icon: Icons.badge_outlined,
-                        label: vehicle.licensePlate!,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.gutter),
+                if (vehicle.year != null ||
+                    vehicle.licensePlate?.isNotEmpty == true) ...[
+                  Wrap(
+                    spacing: AppSpacing.gutter,
+                    runSpacing: AppSpacing.stackSm,
+                    children: [
+                      if (vehicle.year != null)
+                        _MetaChip(
+                          icon: Icons.calendar_today_outlined,
+                          label: '${vehicle.year}',
+                        ),
+                      if (vehicle.licensePlate?.isNotEmpty == true)
+                        _MetaChip(
+                          icon: Icons.badge_outlined,
+                          label: vehicle.licensePlate!,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.gutter),
+                ],
                 Row(
                   children: [
                     if (!selected && onSetActive != null) ...[
                       Expanded(
-                        child: FilledButton(
+                        child: OutlinedButton(
                           onPressed: onSetActive,
                           child: const Text('Set active'),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.stackMd),
                     ],
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onDetails,
-                        child: const Text('Details'),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.stackMd),
                     Expanded(
                       child: FilledButton.tonal(
                         onPressed: onFuelLog,
