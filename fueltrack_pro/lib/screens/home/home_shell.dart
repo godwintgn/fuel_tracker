@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/dashboard/speed_dial_fab.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../history/history_screen.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../vehicles/add_edit_vehicle_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
@@ -62,7 +63,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     );
 
     return Scaffold(
-      appBar: _index == 0
+      appBar: _index == 0 || _index == 2
           ? null
           : AppBar(
               title: const Text(
@@ -88,15 +89,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         children: [
           IndexedStack(
             index: _index,
-            children: const [
-              DashboardScreen(),
-              VehicleListScreen(),
-              _PlaceholderTab(
-                icon: Icons.history,
-                title: 'History',
-                message: 'Refuel history coming in Step 6.',
-              ),
-              _PlaceholderTab(
+            children: [
+              const DashboardScreen(),
+              const VehicleListScreen(),
+              const HistoryScreen(),
+              const _PlaceholderTab(
                 icon: Icons.insights_outlined,
                 title: 'Analytics',
                 message: 'Efficiency analytics coming in Step 7.',

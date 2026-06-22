@@ -17,9 +17,16 @@ import '../../widgets/refuel/refuel_field_container.dart';
 import '../vehicles/add_edit_vehicle_screen.dart';
 
 class AddRefuelScreen extends ConsumerStatefulWidget {
-  const AddRefuelScreen({super.key, this.initialVehicleId});
+  const AddRefuelScreen({
+    super.key,
+    this.initialVehicleId,
+    this.entry,
+  });
 
   final int? initialVehicleId;
+  final RefuelEntry? entry;
+
+  bool get isEditing => entry != null;
 
   static Future<void> open(
     BuildContext context, {
@@ -28,6 +35,17 @@ class AddRefuelScreen extends ConsumerStatefulWidget {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => AddRefuelScreen(initialVehicleId: vehicleId),
+      ),
+    );
+  }
+
+  static Future<void> openForEdit(
+    BuildContext context, {
+    required RefuelEntry entry,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AddRefuelScreen(entry: entry),
       ),
     );
   }
@@ -56,7 +74,25 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   @override
   void initState() {
     super.initState();
-    _refuelDate = DateTime.now();
+    final existing = widget.entry;
+    _refuelDate = existing?.refuelDate ?? DateTime.now();
+    if (existing != null) {
+      _odometerController.text = existing.odometer.toStringAsFixed(0);
+      _quantityController.text =
+          RefuelCalculation.formatQuantity(existing.quantity);
+      if (existing.pricePerLiter != null) {
+        _pricePerLiterController.text =
+            RefuelCalculation.formatMoney(existing.pricePerLiter!);
+      }
+      _totalPriceController.text =
+          RefuelCalculation.formatMoney(existing.totalPrice);
+      _stationController.text = existing.stationName ?? '';
+      _notesController.text = existing.notes ?? '';
+      _manualOrder = const [
+        RefuelPriceField.quantity,
+        RefuelPriceField.pricePerLiter,
+      ];
+    }
     _quantityController.addListener(_onQuantityChanged);
     _pricePerLiterController.addListener(_onPriceChanged);
     _totalPriceController.addListener(_onTotalChanged);
@@ -85,7 +121,8 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     if (!mounted || vehicles.isEmpty) return;
 
     final settings = await ref.read(settingsProvider.future);
-    final targetId = widget.initialVehicleId ??
+    final targetId = widget.entry?.vehicleId ??
+        widget.initialVehicleId ??
         settings.selectedVehicleId ??
         vehicles.first.id;
 
@@ -107,12 +144,17 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
   Future<void> _loadVehicleHints(int vehicleId) async {
     final refuels = await ref.read(vehicleRefuelsProvider(vehicleId).future);
-    if (!mounted || refuels.isEmpty) return;
+    final others = widget.entry?.id == null
+        ? refuels
+        : refuels.where((e) => e.id != widget.entry!.id).toList();
+    if (!mounted || others.isEmpty) return;
 
-    final last = refuels.first;
+    final last = others.first;
     setState(() {
       _lastOdometer = last.odometer;
-      if (last.pricePerLiter != null && _pricePerLiterController.text.isEmpty) {
+      if (widget.entry == null &&
+          last.pricePerLiter != null &&
+          _pricePerLiterController.text.isEmpty) {
         _pricePerLiterController.text =
             RefuelCalculation.formatMoney(last.pricePerLiter!);
         _manualOrder = RefuelCalculation.trackManualEdit(
@@ -292,6 +334,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     try {
       final now = DateTime.now();
       final entry = RefuelEntry(
+        id: widget.entry?.id,
         vehicleId: vehicle!.id!,
         refuelDate: _refuelDate,
         odometer: odometer,
@@ -305,11 +348,15 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        createdAt: now,
+        createdAt: widget.entry?.createdAt ?? now,
         updatedAt: now,
       );
 
-      await ref.read(refuelsProvider.notifier).addEntry(entry);
+      if (widget.isEditing) {
+        await ref.read(refuelsProvider.notifier).updateEntry(entry);
+      } else {
+        await ref.read(refuelsProvider.notifier).addEntry(entry);
+      }
       ref.invalidate(dashboardProvider);
 
       if (mounted) {
@@ -317,7 +364,9 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Refuel saved for ${vehicle.displayName}',
+              widget.isEditing
+                  ? 'Refuel updated for ${vehicle.displayName}'
+                  : 'Refuel saved for ${vehicle.displayName}',
             ),
           ),
         );
@@ -351,7 +400,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
     if (vehicles.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Add Refuel')),
+        appBar: AppBar(title: Text(widget.isEditing ? 'Edit Refuel' : 'Add Refuel')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.stackLg),
@@ -391,9 +440,9 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Add Refuel',
-          style: TextStyle(color: AppColors.primary),
+        title: Text(
+          widget.isEditing ? 'Edit Refuel' : 'Add Refuel',
+          style: const TextStyle(color: AppColors.primary),
         ),
       ),
       body: Form(
@@ -666,7 +715,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.marginMobile),
           child: OnboardingPrimaryButton(
-            label: 'Save Entry',
+            label: widget.isEditing ? 'Save Changes' : 'Save Entry',
             icon: Icons.save_outlined,
             loading: _saving,
             onPressed: _save,
