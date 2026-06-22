@@ -529,7 +529,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
                   Text(
-                    'FuelTrack Pro v1.11.1',
+                    'FuelTrack Pro v1.11.3',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

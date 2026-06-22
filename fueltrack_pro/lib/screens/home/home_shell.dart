@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../theme/theme_x.dart';
-import '../../widgets/dashboard/speed_dial_fab.dart';
 import '../analytics/analytics_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../history/history_screen.dart';
 import '../refuel/add_refuel_screen.dart';
-import '../vehicles/add_edit_vehicle_screen.dart';
 import '../settings/settings_screen.dart';
+import '../vehicles/add_edit_vehicle_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
-import '../../providers/settings_provider.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -24,7 +23,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   var _index = 0;
 
   Future<void> _onNewRefuel() async {
-    final vehicles = ref.read(vehiclesProvider).valueOrNull;
+    final vehiclesState = ref.read(vehiclesProvider);
+    final vehicles = vehiclesState.valueOrNull;
+
+    if (vehiclesState.isLoading) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Loading vehicles…')),
+      );
+      return;
+    }
+
     if (vehicles == null || vehicles.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -44,16 +53,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     await AddRefuelScreen.open(context, vehicleId: vehicleId);
   }
 
-  void _onNewVehicle() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const AddEditVehicleScreen(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final cs = context.cs;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -81,9 +84,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           AnalyticsScreen(),
         ],
       ),
-      floatingActionButton: SpeedDialFab(
-        onNewRefuel: _onNewRefuel,
-        onNewVehicle: _onNewVehicle,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _onNewRefuel,
+        tooltip: 'Log refuel',
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        child: const Icon(Icons.local_gas_station_outlined),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
