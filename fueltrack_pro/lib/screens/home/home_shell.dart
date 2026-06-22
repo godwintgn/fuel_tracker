@@ -9,6 +9,7 @@ import '../dashboard/dashboard_screen.dart';
 import '../history/history_screen.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../vehicles/add_edit_vehicle_screen.dart';
+import '../settings/settings_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
 import '../../providers/settings_provider.dart';
 
@@ -73,13 +74,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               actions: [
                 if (_index == 1)
                   IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Settings coming in Step 8'),
-                        ),
-                      );
-                    },
+                    onPressed: () => SettingsScreen.open(context),
                     icon: const Icon(Icons.settings_outlined),
                   ),
               ],
