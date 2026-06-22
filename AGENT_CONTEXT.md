@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.7.0+11` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.8.0+12` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -58,14 +58,13 @@ fuel_tracker/                          # Git repo root
     │   ├── services/                  # db, backup, drive, analytics, calculations
     │   ├── config/                    # google_oauth_config.dart
     │   ├── theme/                     # M3 colors from DESIGN.md
-    │   └── widgets/                   # onboarding, vehicles, dashboard, common
     └── android/
-        ├── app/build.gradle.kts       # Release signing via key.properties
-        ├── key.properties             # GITIGNORED — copied from Wealth Journal
-        ├── app/melmidalam-release.jks # GITIGNORED — same keystore as Wealth Journal
-        └── app/src/main/assets/
-            └── adi-registration.properties  # Play Console ownership proof (can remove after verified)
+        ├── app/build.gradle.kts
+        ├── key.properties             # GITIGNORED
+        └── app/melmidalam-release.jks # GITIGNORED
 ```
+
+(`adi-registration.properties` removed in Step 9 after Play ownership verification.)
 
 ---
 
@@ -78,12 +77,14 @@ Incremental build per original prompt. **Do not generate everything at once.**
 | 1 | ✅ Done | Scaffold, M3 theme, SQLite schema (`vehicles`, `refuel_entries`, `settings`) |
 | 2 | ✅ Done | Onboarding (4 screens, Skip on each), persistence |
 | 3 | ✅ Done | Vehicle list, add/edit, empty state, selected vehicle in settings |
-| 4 | ✅ Done | Dashboard, charts, FAB speed-dial, **dev seed data** |
+| 4 | ✅ Done | Dashboard, charts, FAB speed-dial |
 | 5 | ✅ Done | Refuel Entry + smart quantity/price/total calculation |
 | 6 | ✅ Done | History (search, filters, swipe edit/delete) |
 | 7 | ✅ Done | Analytics (charts, insight cards, period selector) |
 | 8 | ✅ Done | Settings + Google Drive backup + CSV export |
-| 9 | ⏳ Next | Wire end-to-end, **remove seed data** |
+| 9 | ✅ Done | Final wiring — real data only, seed removed, Play ownership file removed |
+
+**All 9 build steps complete.**
 
 ---
 
@@ -120,7 +121,7 @@ Bottom nav (4 tabs):
 - Vehicle selector in header  
 - Hero: odometer, avg km/L + trend %  
 - Quick overview: spend/liters/fill-ups (30d), cost/km  
-- Last refuel card  
+- Last refuel card — tap **Details** or card → edit refuel  
 - Monthly spend bar chart, efficiency trend line chart (`fl_chart`)  
 - Data via `dashboardProvider` → `DashboardStats` + `FuelCalculations`
 
@@ -171,16 +172,7 @@ Bottom nav (4 tabs):
 - OAuth: `--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=...` + release SHA-1  
 - Opened from Dashboard / Vehicles gear icons  
 
-### 5.10 Dev seed data (`lib/services/seed_data_service.dart`)
-
-**Important:** Runs only when **no refuel entries** exist in DB.
-
-- Vehicle: Mitsubishi Montero Sport, Diesel, plate ABC-1234  
-- Currency: OMR, km, liters  
-- 8 refuels over ~3 months, odometer 41,200 → 45,230  
-- **Must be removed in Step 9** before final release wiring.
-
-### 5.11 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
+### 5.10 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
 
 - **km/L** = distance between consecutive refuels (odometer delta) ÷ liters at later refuel  
 - **L/100km** = (liters ÷ km) × 100  
@@ -231,10 +223,8 @@ Use SHA-1 when adding `com.fuel.tracker` to Google Cloud OAuth (Drive backup, St
 
 ### Play package ownership verification
 
-- File: `android/app/src/main/assets/adi-registration.properties`  
-- Contains account-specific snippet from Play Console  
-- APK path for upload: `fueltrack_pro/build/app/outputs/flutter-apk/app-release.apk`  
-- **Can delete** `adi-registration.properties` after ownership is verified  
+- ~~`adi-registration.properties`~~ **Removed** (Step 9) after Play ownership verified  
+- APK path: `fueltrack_pro/build/app/outputs/flutter-apk/app-release.apk`  
 
 ---
 
@@ -281,6 +271,7 @@ After substantive code changes:
 | `cd04522` | History list, filters, swipe edit/delete |
 | `7dd8e09` | Analytics screen + charts + insight cards |
 | `c2ece6c` | Settings, CSV export, Drive backup |
+| (pending) | Step 9: remove seed data, Play ownership file, polish |
 
 ---
 
@@ -324,14 +315,11 @@ Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
 
 ---
 
-## 12. Next work (Step 9)
+## 12. Post-v1 maintenance (optional)
 
-### Step 9 — Final wiring (immediate next)
-
-- Remove `SeedDataService` / stop calling `seedIfEmpty()`  
-- Remove `adi-registration.properties` if Play verified  
-- Real data only; polish mockup gaps  
-- Register Google OAuth client for `com.fuel.tracker` if using Drive on release builds  
+- Register Google OAuth web client + Android client for Drive on release builds (`GOOGLE_OAUTH_SERVER_CLIENT_ID` dart-define)  
+- Scheduled Drive backups (Wealth Journal has daily auto-upload)  
+- Efficiency format picker (km/L vs L/100km vs MPG) in settings  
 
 ---
 
@@ -393,4 +381,4 @@ Or attach:
 
 ---
 
-*Last updated: Step 8 settings, CSV export, Google Drive backup. Version `1.7.0+11`.*
+*Last updated: Step 9 complete — all build steps done; seed data removed. Version `1.8.0+12`.*

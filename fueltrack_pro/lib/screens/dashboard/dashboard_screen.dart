@@ -11,6 +11,7 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
+import '../refuel/add_refuel_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../widgets/common/empty_state.dart';
 
@@ -120,6 +121,10 @@ class DashboardScreen extends ConsumerWidget {
                       _LastRefuelCard(
                         entry: stats.lastRefuel!,
                         currency: currency,
+                        onDetails: () => AddRefuelScreen.openForEdit(
+                          context,
+                          entry: stats.lastRefuel!,
+                        ),
                       ),
                     const SizedBox(height: AppSpacing.stackLg),
                     _MonthlySpendChart(
@@ -488,10 +493,15 @@ class _StatTile extends StatelessWidget {
 }
 
 class _LastRefuelCard extends StatelessWidget {
-  const _LastRefuelCard({required this.entry, required this.currency});
+  const _LastRefuelCard({
+    required this.entry,
+    required this.currency,
+    required this.onDetails,
+  });
 
   final RefuelEntry entry;
   final String currency;
+  final VoidCallback onDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -515,15 +525,18 @@ class _LastRefuelCard extends StatelessWidget {
                 color: AppColors.onSurfaceVariant,
               ),
             ),
-            TextButton(onPressed: () {}, child: const Text('Details')),
+            TextButton(onPressed: onDetails, child: const Text('Details')),
           ],
         ),
         Card(
+          clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
             side: const BorderSide(color: AppColors.outlineVariant),
           ),
-          child: Row(
+          child: InkWell(
+            onTap: onDetails,
+            child: Row(
             children: [
               Container(
                 width: 96,
@@ -584,6 +597,7 @@ class _LastRefuelCard extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ],
