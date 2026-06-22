@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
 import '../../models/vehicle.dart';
+import '../../providers/dashboard_provider.dart';
 import '../../providers/refuels_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
@@ -61,23 +62,6 @@ class RefuelDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('${FuelTypeMetrics.fillVerb(fuelType)} details'),
-        actions: [
-          TextButton.icon(
-            onPressed: () async {
-              await Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => AddRefuelScreen(entry: entry),
-                ),
-              );
-              if (context.mounted) {
-                ref.invalidate(refuelsProvider);
-                Navigator.of(context).pop();
-              }
-            },
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Edit'),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.marginMobile),
@@ -160,7 +144,94 @@ class RefuelDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.marginMobile),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _delete(context, ref),
+                  icon: Icon(Icons.delete_outline, color: context.cs.error),
+                  label: Text(
+                    'Delete',
+                    style: TextStyle(color: context.cs.error),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    side: BorderSide(color: context.cs.error),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.gutter),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  onPressed: () => _edit(context, ref),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => AddRefuelScreen(entry: entry),
+      ),
+    );
+    if (context.mounted) {
+      ref.invalidate(refuelsProvider);
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    if (entry.id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete refuel?'),
+        content: const Text(
+          'This entry will be removed from your history and dashboard stats.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.cs.error,
+              foregroundColor: context.cs.onError,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ref.read(refuelsProvider.notifier).deleteEntry(entry.id!);
+    ref
+      ..invalidate(dashboardProvider)
+      ..invalidate(vehicleRefuelsProvider(entry.vehicleId));
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Refuel entry deleted')),
+      );
+    }
   }
 
   /// km/L (etc.) for this fill: distance since the previous refuel ÷ quantity.

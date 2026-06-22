@@ -75,12 +75,25 @@ class ActiveVehicleBar extends ConsumerWidget {
                     Icon(Icons.directions_car, size: 18, color: cs.primary),
                     const SizedBox(width: 8),
                     Flexible(
-                      child: Text(
-                        active.displayName,
-                        style: tt.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            active.displayName,
+                            style: tt.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _vehicleMeta(active),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                     if (vehicles.length > 1) ...[
@@ -115,6 +128,14 @@ class ActiveVehicleBar extends ConsumerWidget {
     );
   }
 
+  static String _vehicleMeta(Vehicle v) {
+    final plate = v.licensePlate?.trim();
+    if (plate != null && plate.isNotEmpty) {
+      return '${v.fuelType.label} • $plate';
+    }
+    return v.fuelType.label;
+  }
+
   void _showPicker(
     BuildContext context,
     WidgetRef ref,
@@ -141,7 +162,7 @@ class ActiveVehicleBar extends ConsumerWidget {
                     color: context.cs.primary,
                   ),
                   title: Text(v.displayName),
-                  subtitle: Text(v.fuelType.label),
+                  subtitle: Text(_vehicleMeta(v)),
                   onTap: () async {
                     Navigator.pop(context);
                     await setActiveVehicle(ref, v);

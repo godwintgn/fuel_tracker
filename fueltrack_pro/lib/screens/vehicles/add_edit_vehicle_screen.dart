@@ -272,30 +272,42 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
             ),
             const SizedBox(height: AppSpacing.stackMd),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _makeController,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
-                      labelText: 'Manufacturer',
+                      labelText: 'Manufacturer *',
                       hintText: 'e.g. Mitsubishi',
                     ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                            ? 'Required'
+                            : null,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.gutter),
                 Expanded(
                   child: TextFormField(
                     controller: _modelController,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
-                      labelText: 'Model',
+                      labelText: 'Model *',
                       hintText: 'e.g. Montero Sport',
                     ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                            ? 'Required'
+                            : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.stackMd),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextFormField(
@@ -311,10 +323,15 @@ class _AddEditVehicleScreenState extends ConsumerState<AddEditVehicleScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _plateController,
+                    textCapitalization: TextCapitalization.characters,
                     decoration: const InputDecoration(
-                      labelText: 'Registration',
+                      labelText: 'Vehicle Number *',
                       hintText: 'ABC-1234',
                     ),
+                    validator: (value) =>
+                        (value == null || value.trim().isEmpty)
+                            ? 'Required'
+                            : null,
                   ),
                 ),
               ],
