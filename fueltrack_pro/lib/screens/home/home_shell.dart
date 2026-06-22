@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/vehicles_provider.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_spacing.dart';
 import '../../widgets/dashboard/speed_dial_fab.dart';
+import '../analytics/analytics_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../history/history_screen.dart';
 import '../refuel/add_refuel_screen.dart';
@@ -63,7 +63,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     );
 
     return Scaffold(
-      appBar: _index == 0 || _index == 2
+      appBar: _index == 0 || _index == 2 || _index == 3
           ? null
           : AppBar(
               title: const Text(
@@ -93,11 +93,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               const DashboardScreen(),
               const VehicleListScreen(),
               const HistoryScreen(),
-              const _PlaceholderTab(
-                icon: Icons.insights_outlined,
-                title: 'Analytics',
-                message: 'Efficiency analytics coming in Step 7.',
-              ),
+              const AnalyticsScreen(),
             ],
           ),
           if (_showSpeedDial)
@@ -140,43 +136,6 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             label: 'Analytics',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.stackLg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: AppColors.primary),
-            const SizedBox(height: AppSpacing.stackLg),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: AppSpacing.stackSm),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-            ),
-          ],
-        ),
       ),
     );
   }

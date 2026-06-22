@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.5.0+9` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.6.0+10` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -54,8 +54,8 @@ fuel_tracker/                          # Git repo root
     │   ├── data/                      # regions, onboarding draft types
     │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, DashboardStats
     │   ├── providers/                 # Riverpod
-    │   ├── screens/                   # onboarding, home, dashboard, refuel, history, vehicles
-    │   ├── services/                  # db, calculations, refuel calc, seed data
+    │   ├── screens/                   # onboarding, home, dashboard, refuel, history, analytics, vehicles
+    │   ├── services/                  # db, calculations, analytics, refuel calc, seed data
     │   ├── theme/                     # M3 colors from DESIGN.md
     │   └── widgets/                   # onboarding, vehicles, dashboard, common
     └── android/
@@ -80,8 +80,8 @@ Incremental build per original prompt. **Do not generate everything at once.**
 | 4 | ✅ Done | Dashboard, charts, FAB speed-dial, **dev seed data** |
 | 5 | ✅ Done | Refuel Entry + smart quantity/price/total calculation |
 | 6 | ✅ Done | History (search, filters, swipe edit/delete) |
-| 7 | ⏳ Next | Analytics (more charts, insight cards) |
-| 8 | Pending | Settings + Google Drive backup |
+| 7 | ✅ Done | Analytics (charts, insight cards, period selector) |
+| 8 | ⏳ Next | Settings + Google Drive backup |
 | 9 | Pending | Wire end-to-end, **remove seed data** |
 
 ---
@@ -109,7 +109,7 @@ Bottom nav (4 tabs):
 | 0 | Dashboard | ✅ Live |
 | 1 | Vehicles | ✅ Live |
 | 2 | History | ✅ Live |
-| 3 | Analytics | Placeholder |
+| 3 | Analytics | ✅ Live |
 
 - **FAB speed-dial** on Dashboard (0) and History (2): New Refuel / New Vehicle + scrim.  
 - Vehicles tab uses simple `+` FAB to add vehicle.
@@ -150,7 +150,17 @@ Bottom nav (4 tabs):
 - Tap card → edit; empty states for no data / no matches  
 - Speed-dial **New Refuel** still available on History tab  
 
-### 5.8 Dev seed data (`lib/services/seed_data_service.dart`)
+### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
+
+- Period selector: weekly / monthly / yearly  
+- Efficiency line chart with peak km/L badge  
+- Insight cards: efficiency change %, cost per km  
+- Monthly spending bar chart (last 3 months)  
+- Vehicle fuel-share pie chart + period summary metrics  
+- Per-vehicle profile cards (avg km/L)  
+- `AnalyticsService` + `analyticsProvider`; empty states when no refuels  
+
+### 5.9 Dev seed data (`lib/services/seed_data_service.dart`)
 
 **Important:** Runs only when **no refuel entries** exist in DB.
 
@@ -159,7 +169,7 @@ Bottom nav (4 tabs):
 - 8 refuels over ~3 months, odometer 41,200 → 45,230  
 - **Must be removed in Step 9** before final release wiring.
 
-### 5.9 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
+### 5.10 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
 
 - **km/L** = distance between consecutive refuels (odometer delta) ÷ liters at later refuel  
 - **L/100km** = (liters ÷ km) × 100  
@@ -258,6 +268,7 @@ After substantive code changes:
 | `c304c33` | AGENT_CONTEXT rule + handoff doc |
 | `b2a3c59` | Refuel entry screen + smart calculation |
 | `cd04522` | History list, filters, swipe edit/delete |
+| (pending) | Analytics screen + charts + insight cards |
 
 ---
 
@@ -272,6 +283,8 @@ After substantive code changes:
 | `refuelsProvider` | All refuel entries |
 | `onboardingDraftProvider` | Transient onboarding form state |
 | `dashboardProvider` | Seed if empty + stats for selected vehicle |
+| `analyticsProvider` | Fleet analytics for period (weekly/monthly/yearly) |
+| `analyticsPeriodProvider` | Selected analytics timeframe |
 
 ---
 
@@ -286,7 +299,7 @@ main.dart → ProviderScope → FuelTrackApp (app.dart)
             ├─ [0] DashboardScreen
             ├─ [1] VehicleListScreen
             ├─ [2] HistoryScreen
-            └─ [3] Analytics placeholder
+            └─ [3] AnalyticsScreen
 ```
 
 Add/Edit vehicle: pushed route from list or speed-dial.  
@@ -295,14 +308,9 @@ Edit refuel: swipe right or tap card in History.
 
 ---
 
-## 12. Next work (Step 7+)
+## 12. Next work (Step 8+)
 
-### Step 7 — Analytics (immediate next)
-
-- `analytics` mockup, more `fl_chart` usage  
-- Insight cards, weekly/monthly/yearly spending  
-
-### Step 8 — Settings + Google Drive
+### Step 8 — Settings + Google Drive (immediate next)
 
 - Mirror Wealth Journal backup pattern  
 - OAuth client for `com.fuel.tracker` + release SHA-1  
@@ -322,6 +330,7 @@ Edit refuel: swipe right or tap card in History.
 - `test/widget_test.dart` — expects Dashboard “Quick Overview” with overridden `dashboardProvider`.  
 - `test/refuel_calculation_test.dart` — unit tests for smart refuel math (all 3 derive paths).  
 - `test/refuel_history_filter_test.dart` — filter/search/date-range unit tests.  
+- `test/analytics_service_test.dart` — period filter, fuel share, monthly spend.  
 - Use `pump()` + short delay, not always `pumpAndSettle()` (can timeout on async DB).
 
 ---
@@ -372,4 +381,4 @@ Or attach:
 
 ---
 
-*Last updated: Step 6 history with search, filters, swipe actions. Version `1.5.0+9`.*
+*Last updated: Step 7 analytics with charts and insight cards. Version `1.6.0+10`.*
