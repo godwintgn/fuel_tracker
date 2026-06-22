@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
 import '../../models/vehicle.dart';
 import '../../providers/refuels_provider.dart';
@@ -11,6 +12,7 @@ import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/detail_row.dart';
 import 'add_refuel_screen.dart';
 
 /// Read-only refuel entry view. Edit opens the form screen.
@@ -52,6 +54,10 @@ class RefuelDetailScreen extends ConsumerWidget {
     final priceLabel = FuelTypeMetrics.pricePerQuantityLabel(fuelType);
     final dateFmt = DateFormat.yMMMd().add_jm();
 
+    final siblings = ref.watch(vehicleRefuelsProvider(entry.vehicleId)).valueOrNull ??
+        const <RefuelEntry>[];
+    final fillEfficiency = _fillEfficiency(siblings);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${FuelTypeMetrics.fillVerb(fuelType)} details'),
@@ -76,6 +82,15 @@ class RefuelDetailScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.marginMobile),
         children: [
+          _CostHero(
+            currency: currency,
+            total: entry.totalPrice,
+            quantity: entry.quantity,
+            qtyUnit: qtyUnit,
+            pricePerUnit: entry.pricePerLiter,
+            fuelType: fuelType,
+          ),
+          const SizedBox(height: AppSpacing.gutter),
           if (resolvedVehicle != null)
             AppCard(
               child: Row(
@@ -108,34 +123,38 @@ class RefuelDetailScreen extends ConsumerWidget {
           AppCard(
             child: Column(
               children: [
-                _DetailRow(
+                DetailRow(
                   label: 'Date & time',
                   value: dateFmt.format(entry.refuelDate),
                 ),
-                _DetailRow(
+                DetailRow(
                   label: 'Odometer',
                   value:
                       '${entry.odometer.toStringAsFixed(0)} $distanceUnit',
                 ),
-                _DetailRow(
+                DetailRow(
                   label: FuelTypeMetrics.quantityFieldLabel(fuelType),
                   value: '${entry.quantity.toStringAsFixed(2)} $qtyUnit',
                 ),
                 if (entry.pricePerLiter != null)
-                  _DetailRow(
+                  DetailRow(
                     label: priceLabel,
                     value:
                         '$currency ${entry.pricePerLiter!.toStringAsFixed(3)}',
                   ),
-                _DetailRow(
-                  label: 'Total cost',
-                  value: '$currency ${entry.totalPrice.toStringAsFixed(3)}',
-                  emphasized: true,
-                ),
+                if (fillEfficiency != null)
+                  DetailRow(
+                    label: 'Efficiency (this fill)',
+                    value: FuelTypeMetrics.formatEfficiency(
+                      fillEfficiency,
+                      fuelType,
+                    ),
+                    emphasized: true,
+                  ),
                 if (entry.stationName?.isNotEmpty == true)
-                  _DetailRow(label: 'Station', value: entry.stationName!),
+                  DetailRow(label: 'Station', value: entry.stationName!),
                 if (entry.notes?.isNotEmpty == true)
-                  _DetailRow(label: 'Notes', value: entry.notes!),
+                  DetailRow(label: 'Notes', value: entry.notes!),
               ],
             ),
           ),
@@ -143,44 +162,90 @@ class RefuelDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// km/L (etc.) for this fill: distance since the previous refuel ÷ quantity.
+  double? _fillEfficiency(List<RefuelEntry> siblings) {
+    if (entry.quantity <= 0 || siblings.isEmpty) return null;
+    final sorted = [...siblings]
+      ..sort((a, b) => a.refuelDate.compareTo(b.refuelDate));
+
+    RefuelEntry? previous;
+    for (final s in sorted) {
+      final isBefore = s.refuelDate.isBefore(entry.refuelDate) ||
+          (s.refuelDate.isAtSameMomentAs(entry.refuelDate) &&
+              s.odometer < entry.odometer);
+      if (s.id != entry.id && isBefore) previous = s;
+    }
+    if (previous == null) return null;
+
+    final distance = entry.odometer - previous.odometer;
+    if (distance <= 0) return null;
+    return distance / entry.quantity;
+  }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.emphasized = false,
+class _CostHero extends StatelessWidget {
+  const _CostHero({
+    required this.currency,
+    required this.total,
+    required this.quantity,
+    required this.qtyUnit,
+    required this.pricePerUnit,
+    required this.fuelType,
   });
 
-  final String label;
-  final String value;
-  final bool emphasized;
+  final String currency;
+  final double total;
+  final double quantity;
+  final String qtyUnit;
+  final double? pricePerUnit;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     final tt = context.tt;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+    final cs = context.cs;
+    final pal = context.palette;
+    final subtitle = StringBuffer('${quantity.toStringAsFixed(2)} $qtyUnit');
+    if (pricePerUnit != null) {
+      subtitle.write(' • ${pricePerUnit!.toStringAsFixed(3)} $currency/$qtyUnit');
+    }
+
+    return AppCard(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: tt.bodyMedium?.copyWith(
-                color: context.cs.onSurfaceVariant,
-              ),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: pal.spend.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             ),
+            child: Icon(Icons.account_balance_wallet_outlined, color: pal.spend),
           ),
+          const SizedBox(width: AppSpacing.gutter),
           Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              style: (emphasized ? tt.titleMedium : tt.bodyLarge)?.copyWith(
-                fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
-              ),
-              textAlign: TextAlign.end,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total cost',
+                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$currency ${total.toStringAsFixed(3)}',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: pal.spend,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle.toString(),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
             ),
           ),
         ],

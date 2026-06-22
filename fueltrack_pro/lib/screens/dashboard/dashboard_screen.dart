@@ -29,7 +29,7 @@ class DashboardScreen extends ConsumerWidget {
     final currency = settingsAsync.valueOrNull?.currencySymbol ?? 'OMR';
 
     return dashboardAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const _DashboardSkeleton(),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (data) {
         if (data.vehicle == null) {
@@ -486,12 +486,12 @@ class _MonthlySpendChart extends StatelessWidget {
     final pal = context.palette;
 
     if (monthly.isEmpty) {
-      return _ChartCard(
+      return const _ChartCard(
         title: 'Monthly Spend',
         subtitle: 'Fuel spending by month',
-        child: const SizedBox(
-          height: 120,
-          child: Center(child: Text('No spending data yet')),
+        child: _ChartEmpty(
+          icon: Icons.bar_chart_outlined,
+          message: 'Log a refuel to see monthly spending.',
         ),
       );
     }
@@ -579,9 +579,9 @@ class _EfficiencyTrendChart extends StatelessWidget {
       return _ChartCard(
         title: 'Efficiency Trend',
         subtitle: '$unit over recent fill-ups',
-        child: const SizedBox(
-          height: 120,
-          child: Center(child: Text('Need 2+ refuels for trends')),
+        child: const _ChartEmpty(
+          icon: Icons.show_chart_outlined,
+          message: 'Log 2+ refuels to chart your efficiency trend.',
         ),
       );
     }
@@ -647,6 +647,94 @@ class _ChartCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.stackMd),
           child,
         ],
+      ),
+    );
+  }
+}
+
+class _ChartEmpty extends StatelessWidget {
+  const _ChartEmpty({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    return SizedBox(
+      height: 120,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 32, color: cs.onSurfaceVariant),
+          const SizedBox(height: AppSpacing.stackSm),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: context.tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.marginMobile,
+        AppSpacing.stackMd,
+        AppSpacing.marginMobile,
+        120,
+      ),
+      physics: const NeverScrollableScrollPhysics(),
+      children: const [
+        Row(
+          children: [
+            Expanded(child: _SkeletonBox(height: 92)),
+            SizedBox(width: 10),
+            Expanded(child: _SkeletonBox(height: 92)),
+          ],
+        ),
+        SizedBox(height: AppSpacing.stackLg),
+        _SkeletonBox(height: 24, width: 160),
+        SizedBox(height: AppSpacing.stackMd),
+        Row(
+          children: [
+            Expanded(child: _SkeletonBox(height: 100)),
+            SizedBox(width: AppSpacing.gutter),
+            Expanded(child: _SkeletonBox(height: 100)),
+          ],
+        ),
+        SizedBox(height: AppSpacing.gutter),
+        _SkeletonBox(height: 72),
+        SizedBox(height: AppSpacing.stackLg),
+        _SkeletonBox(height: 220),
+        SizedBox(height: AppSpacing.gutter),
+        _SkeletonBox(height: 220),
+      ],
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({required this.height, this.width});
+
+  final double height;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
     );
   }

@@ -406,6 +406,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         await ref.read(refuelsProvider.notifier).addEntry(entry);
       }
       ref.invalidate(dashboardProvider);
+      await HapticFeedback.lightImpact();
 
       if (mounted) {
         Navigator.of(context).pop();

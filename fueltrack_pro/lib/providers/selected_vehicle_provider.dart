@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/vehicle.dart';
@@ -22,6 +23,7 @@ final selectedVehicleProvider = FutureProvider<Vehicle?>((ref) async {
 });
 
 Future<void> setActiveVehicle(WidgetRef ref, Vehicle vehicle) async {
+  await HapticFeedback.selectionClick();
   final settings = await ref.read(settingsProvider.future);
   await ref.read(settingsProvider.notifier).updateSettings(
         settings.copyWith(selectedVehicleId: vehicle.id),
