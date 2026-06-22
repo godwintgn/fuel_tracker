@@ -280,7 +280,7 @@ After substantive code changes:
 | `b2a3c59` | Refuel entry screen + smart calculation |
 | `cd04522` | History list, filters, swipe edit/delete |
 | `7dd8e09` | Analytics screen + charts + insight cards |
-| (pending) | Settings, CSV export, Drive backup |
+| `c2ece6c` | Settings, CSV export, Drive backup |
 
 ---
 
