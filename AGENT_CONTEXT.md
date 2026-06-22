@@ -257,7 +257,7 @@ After substantive code changes:
 | `55fd3c0` | Dashboard, charts, seed data, FAB speed-dial |
 | `c304c33` | AGENT_CONTEXT rule + handoff doc |
 | `b2a3c59` | Refuel entry screen + smart calculation |
-| (this commit) | History list, filters, swipe edit/delete |
+| `cd04522` | History list, filters, swipe edit/delete |
 
 ---
 
