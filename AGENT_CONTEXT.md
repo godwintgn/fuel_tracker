@@ -302,7 +302,7 @@ After substantive code changes:
 | `9b1eea4` | feat: theme-aware dark/light UI overhaul |
 | `625a705` | feat: WJ UI, active vehicle scoping, fuel-type metrics, FAB polish |
 | `a9ea23d` | feat: vehicle detail view, refuel timeline validation, single FAB (v1.11.3+18) |
-| *(pending)* | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
+| `89bd5bd` | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
 
 ---
 
