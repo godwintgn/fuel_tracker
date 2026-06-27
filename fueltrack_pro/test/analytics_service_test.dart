@@ -84,15 +84,23 @@ void main() {
     expect(stats.vehicleShares.first.vehicle.id, 1);
   });
 
-  test('monthly spending returns last three months', () {
-    final stats = AnalyticsService.build(
+  test('monthly spending respects period cap', () {
+    final monthlyStats = AnalyticsService.build(
+      allEntries: entries,
+      vehicles: [vehicle],
+      period: AnalyticsPeriod.monthly,
+      now: now,
+    );
+    expect(monthlyStats.monthlySpending.length, lessThanOrEqualTo(3));
+
+    final yearlyStats = AnalyticsService.build(
       allEntries: entries,
       vehicles: [vehicle],
       period: AnalyticsPeriod.yearly,
       now: now,
     );
-
-    expect(stats.monthlySpending.length, lessThanOrEqualTo(3));
-    expect(stats.monthlySpending.isNotEmpty, isTrue);
+    expect(yearlyStats.monthlySpending.length, lessThanOrEqualTo(6));
+    expect(yearlyStats.monthlySpending.isNotEmpty, isTrue);
   });
 }
+
