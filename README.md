@@ -4,7 +4,7 @@
 
 **Local-first fuel and vehicle expense tracking for Android.**
 
-[![Version](https://img.shields.io/badge/version-1.18.0-blue)](fueltrack_pro/pubspec.yaml)
+[![Version](https://img.shields.io/badge/version-1.18.1-blue)](fueltrack_pro/pubspec.yaml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 Track refuels, measure efficiency, compare stations, and manage a multi-vehicle fleet — on your phone. No account required. Data stays on your device unless you export or back up.
