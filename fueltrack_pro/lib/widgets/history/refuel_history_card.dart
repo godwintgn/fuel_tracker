@@ -62,14 +62,15 @@ class RefuelHistoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: iconBg,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.local_gas_station_outlined,
+                      size: 20,
                       color: iconFg,
                     ),
                   ),
@@ -78,7 +79,14 @@ class RefuelHistoryCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: tt.titleMedium),
+                        Text(
+                          title,
+                          style: tt.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
@@ -103,14 +111,14 @@ class RefuelHistoryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${entry.totalPrice.toStringAsFixed(3)} $currency',
-                        style: tt.titleLarge?.copyWith(
+                        '${entry.totalPrice.toStringAsFixed(2)} $currency',
+                        style: tt.titleSmall?.copyWith(
                           color: cs.primary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
-                        '${entry.quantity.toStringAsFixed(2)} $qtyUnit • ${entry.fuelType.label}',
+                        '${entry.quantity.toStringAsFixed(1)} $qtyUnit • ${entry.fuelType.label}',
                         style: tt.labelSmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -135,7 +143,7 @@ class RefuelHistoryCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     '${NumberFormat('#,###').format(entry.odometer.round())} $distanceUnit',
-                    style: tt.bodyMedium,
+                    style: tt.labelMedium,
                   ),
                   const Spacer(),
                   if (entry.pricePerLiter != null) ...[
@@ -147,7 +155,7 @@ class RefuelHistoryCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       '${entry.pricePerLiter!.toStringAsFixed(3)} $currency/L',
-                      style: tt.bodyMedium,
+                      style: tt.labelMedium,
                     ),
                   ],
                 ],
