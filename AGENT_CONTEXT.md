@@ -309,6 +309,7 @@ After substantive code changes:
 | `a9ea23d` | feat: vehicle detail view, refuel timeline validation, single FAB (v1.11.3+18) |
 | `89bd5bd` | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
 | `2c0eb39` | feat: refuel edit/delete bar, active chip fuel+number, station autocomplete, mandatory vehicle fields (v1.12.0+20) |
+| `8c4427b` | feat: Donate screen, remove local save encrypted backup (v1.12.1+21) |
 
 ---
 
