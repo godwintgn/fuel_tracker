@@ -413,7 +413,7 @@ After substantive code changes:
 | `e3f79e3` | chore: scope APK CI to fueltrack_pro changes, add website-only sync workflow |
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
 | `98419c1` | feat: rich PDF reports, share, README GPL, CHANGELOG releases (v1.18.0+29) |
-| *(pending)* | fix: CI embeds Google Drive OAuth client ID from GitHub secret (v1.18.1+30) |
+| `f09cc5c` | fix: CI embeds Google Drive OAuth client ID from GitHub secret (v1.18.1+30) |
 
 ---
 
