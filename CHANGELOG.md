@@ -2,6 +2,11 @@
 
 All notable changes to FuelTrack Pro are documented here. GitHub Releases use the section for each version.
 
+## [1.18.1] - 2026-06-27
+
+### Fixed
+- GitHub Actions release APK now embeds `GOOGLE_OAUTH_SERVER_CLIENT_ID` so Google Drive sign-in works on CI-built installs
+
 ## [1.18.0] - 2026-06-27
 
 ### Added

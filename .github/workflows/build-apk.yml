@@ -25,6 +25,7 @@ jobs:
         working-directory: fueltrack_pro
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      GOOGLE_OAUTH_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_SERVER_CLIENT_ID }}
 
     steps:
       - name: Checkout
@@ -78,7 +79,16 @@ jobs:
           EOF
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          set -euo pipefail
+          ARGS=(build apk --release)
+          if [ -n "${GOOGLE_OAUTH_SERVER_CLIENT_ID:-}" ]; then
+            ARGS+=(--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID="${GOOGLE_OAUTH_SERVER_CLIENT_ID}")
+            echo "Google Drive OAuth client ID configured for release build."
+          else
+            echo "::warning::GOOGLE_OAUTH_SERVER_CLIENT_ID secret is not set — Google Drive sign-in will be disabled in this APK."
+          fi
+          flutter "${ARGS[@]}"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

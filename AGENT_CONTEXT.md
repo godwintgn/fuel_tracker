@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.18.0+29` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.18.1+30` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -319,6 +319,37 @@ Visual language aligned with **Wealth Journal** (`Assets/wealth_journal/`). Stit
 
 Use SHA-1 when adding `com.fuel.tracker` to Google Cloud OAuth (Drive backup, Step 8).
 
+### Google Drive backup (release builds)
+
+Drive sync needs **two OAuth clients** in [Google Cloud Console](https://console.cloud.google.com/) (same project):
+
+| Client type | Purpose |
+|-------------|---------|
+| **Web application** | `serverClientId` — passed at build time as `GOOGLE_OAUTH_SERVER_CLIENT_ID` |
+| **Android** | Package `com.fuel.tracker` + **release SHA-1** above |
+
+Also enable **Google Drive API** for the project.
+
+**GitHub Actions (do not commit the client ID to git):**
+
+1. Repo → **Settings → Secrets and variables → Actions → New repository secret**
+2. Name: `GOOGLE_OAUTH_SERVER_CLIENT_ID`
+3. Value: your Web client ID (`….apps.googleusercontent.com`)
+
+CI (`.github/workflows/build-apk.yml`) passes it to `flutter build apk --release --dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=…`.
+
+**Local release build:**
+
+```bash
+cd fueltrack_pro
+flutter build apk --release --dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
+flutter build appbundle --release --dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
+```
+
+If the dart-define is omitted, the app builds but Google Drive sign-in is disabled.
+
+**Set secret via CLI:** `gh secret set GOOGLE_OAUTH_SERVER_CLIENT_ID --repo godwintgn/fuel_tracker`
+
 ### Play package ownership verification
 
 - ~~`adi-registration.properties`~~ **Removed** (Step 9) after Play ownership verified  
@@ -382,6 +413,7 @@ After substantive code changes:
 | `e3f79e3` | chore: scope APK CI to fueltrack_pro changes, add website-only sync workflow |
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
 | `98419c1` | feat: rich PDF reports, share, README GPL, CHANGELOG releases (v1.18.0+29) |
+| *(pending)* | fix: CI embeds Google Drive OAuth client ID from GitHub secret (v1.18.1+30) |
 
 ---
 
@@ -495,4 +527,4 @@ Or attach:
 
 ---
 
-*Last updated: PDF report charts/share/landscape, README GPL, CHANGELOG release notes. Version `1.18.0+29`.*
+*Last updated: CI Google Drive OAuth via GitHub secret. Version `1.18.1+30`.*
