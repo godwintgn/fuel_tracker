@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.12.0+20` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.12.1+21` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -183,8 +183,9 @@ Bottom nav (4 tabs):
 - Currency, distance/fuel units, theme mode  
 - Manage vehicles shortcut  
 - Export refuel history CSV (unencrypted)  
-- Local encrypted `.ftbak` backup / restore (PBKDF2 + AES-GCM)  
+- Restore from `.ftbak` file (local encrypted backup import only — save-to-device removed)  
 - Google Drive: sign in, manual backup/restore to app data folder  
+- **Donate** screen (`lib/features/donate/`) — UPI, PayPal, crypto (Wealth Journal pattern, shared `DonateConfig`)  
 - OAuth: `--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=...` + release SHA-1  
 - Opened from Dashboard / Vehicles gear icons  
 
@@ -420,4 +421,4 @@ Or attach:
 
 ---
 
-*Last updated: Added GitHub README + CI workflow (analyze/test/build APK on push). Version `1.12.0+20`.*
+*Last updated: Removed local save encrypted backup; added Donate screen (WJ pattern). Version `1.12.1+21`.*
