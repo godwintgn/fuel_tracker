@@ -1,8 +1,3 @@
-# Copy to fdroiddata: metadata/com.fuel.tracker.yml
-#
-# Fork https://gitlab.com/fdroid/fdroiddata → branch com.fuel.tracker → open MR.
-# See ../FDROID.md in repo root for full instructions.
-
 Categories:
   - Money
 License: GPL-3.0-only
