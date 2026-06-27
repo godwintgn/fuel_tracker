@@ -89,6 +89,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
@@ -108,10 +111,10 @@ jobs:
           - Signed release APK for Android
           - Install via Obtainium: https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/godwintgn/fuel_tracker
           - Direct download: https://github.com/godwintgn/fuel_tracker/releases/download/${TAG}/FuelTrack-Pro.apk"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" FuelTrack-Pro.apk "FuelTrack-Pro-v${VERSION}.apk" --clobber
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "$TAG" --repo "${{ github.repository }}" FuelTrack-Pro.apk "FuelTrack-Pro-v${VERSION}.apk" --clobber
           else
-            gh release create "$TAG" \
+            gh release create "$TAG" --repo "${{ github.repository }}" \
               --title "FuelTrack Pro v${VERSION_NAME}" \
               --notes "$NOTES" \
               FuelTrack-Pro.apk "FuelTrack-Pro-v${VERSION}.apk"
@@ -170,3 +173,4 @@ jobs:
           fi
           git commit --trailer "Co-authored-by: Cursor <cursoragent@cursor.com>" -m "chore(site): sync FuelTrack Pro ${VERSION} release metadata"
           git push origin main
+
