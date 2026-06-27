@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'app_fonts.dart';
 import 'app_palette.dart';
 import 'app_spacing.dart';
 
@@ -89,63 +89,63 @@ abstract final class AppTheme {
     final onSurface = colorScheme.onSurface;
 
     final textTheme = TextTheme(
-      displayLarge: GoogleFonts.manrope(
+      displayLarge: AppFonts.manropeStyle(
         fontWeight: FontWeight.w800,
         color: onSurface,
       ),
-      displayMedium: GoogleFonts.manrope(
+      displayMedium: AppFonts.manropeStyle(
         fontWeight: FontWeight.w800,
         color: onSurface,
       ),
-      displaySmall: GoogleFonts.manrope(
+      displaySmall: AppFonts.manropeStyle(
         fontWeight: FontWeight.w700,
         color: onSurface,
       ),
-      headlineLarge: GoogleFonts.manrope(
+      headlineLarge: AppFonts.manropeStyle(
         fontWeight: FontWeight.w700,
         color: onSurface,
       ),
-      headlineMedium: GoogleFonts.manrope(
+      headlineMedium: AppFonts.manropeStyle(
         fontWeight: FontWeight.w700,
         color: onSurface,
       ),
-      headlineSmall: GoogleFonts.manrope(
+      headlineSmall: AppFonts.manropeStyle(
         fontWeight: FontWeight.w700,
         color: onSurface,
       ),
-      titleLarge: GoogleFonts.manrope(
+      titleLarge: AppFonts.manropeStyle(
         fontWeight: FontWeight.w700,
         color: onSurface,
       ),
-      titleMedium: GoogleFonts.manrope(
+      titleMedium: AppFonts.manropeStyle(
         fontWeight: FontWeight.w600,
         color: onSurface,
       ),
-      titleSmall: GoogleFonts.manrope(
+      titleSmall: AppFonts.manropeStyle(
         fontWeight: FontWeight.w600,
         color: onSurface,
       ),
-      bodyLarge: GoogleFonts.inter(
+      bodyLarge: AppFonts.interStyle(
         fontWeight: FontWeight.w400,
         color: onSurface,
       ),
-      bodyMedium: GoogleFonts.inter(
+      bodyMedium: AppFonts.interStyle(
         fontWeight: FontWeight.w400,
         color: onSurface,
       ),
-      bodySmall: GoogleFonts.inter(
+      bodySmall: AppFonts.interStyle(
         fontWeight: FontWeight.w400,
         color: colorScheme.onSurfaceVariant,
       ),
-      labelLarge: GoogleFonts.inter(
+      labelLarge: AppFonts.interStyle(
         fontWeight: FontWeight.w600,
         color: onSurface,
       ),
-      labelMedium: GoogleFonts.inter(
+      labelMedium: AppFonts.interStyle(
         fontWeight: FontWeight.w500,
         color: onSurface,
       ),
-      labelSmall: GoogleFonts.inter(
+      labelSmall: AppFonts.interStyle(
         fontWeight: FontWeight.w500,
         color: colorScheme.onSurfaceVariant,
       ),
@@ -276,10 +276,10 @@ abstract final class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return GoogleFonts.inter(
+          return AppFonts.interStyle(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 12,
             color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            fontSize: 12,
           );
         }),
       ),

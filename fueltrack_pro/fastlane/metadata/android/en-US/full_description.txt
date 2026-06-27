@@ -1,0 +1,14 @@
+FuelTrack Pro helps you log refuels, track spending, and measure fuel efficiency across one or many vehicles — entirely on your device.
+
+Features:
+• Multi-vehicle garage with registration, fuel type, and photos
+• Smart refuel entry (enter any two of quantity, price, or total)
+• Dashboard and analytics with charts and period filters
+• PDF fuel reports with registration plates, stations, and refuel history
+• Local JSON backup and restore
+• Optional Google Drive sync (uses Google services when enabled)
+• Fuel cards, service reminders, and Material 3 light/dark themes
+
+No account is required for core tracking. Your data stays in local SQLite unless you export or back up.
+
+License: GNU GPL v3

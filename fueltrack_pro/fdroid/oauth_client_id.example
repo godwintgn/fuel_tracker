@@ -1,0 +1,6 @@
+# Optional: Web OAuth client ID for Google Drive sync in F-Droid builds.
+# Copy to oauth_client_id (same folder) with your Web application client ID.
+# This file is public configuration (not a secret).
+#
+# Example:
+# 432666712330-xxxxxxxx.apps.googleusercontent.com

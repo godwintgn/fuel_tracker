@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.18.1+30` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.19.0+31` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -31,7 +31,7 @@
 | State | `flutter_riverpod` |
 | Database | `sqflite` (SQLite on-device) |
 | Charts | `fl_chart` |
-| Fonts | `google_fonts` — **Manrope** (headings) + **Inter** (body), aligned with Wealth Journal |
+| Fonts | Bundled Manrope + Inter in `assets/fonts/` (OFL; no runtime fetch) |
 | Intl | `intl` |
 | PDF reports | `pdf` |
 | Share | `share_plus` |
@@ -46,7 +46,10 @@
 fuel_tracker/                          # Git repo root
 ├── README.md                          # Public GitHub readme (features, build, CI)
 ├── AGENT_CONTEXT.md                   # This file
-├── fueltrack-pro-cursor-prompt.md     # Original build spec & order
+├── FDROID.md                          # F-Droid submission guide
+├── fdroid/metadata/com.fuel.tracker.yml
+├── CHANGELOG.md
+├── LICENSE
 ├── .github/workflows/build-apk.yml    # CI: fueltrack_pro/** only — analyze + test + APK + Release + sync release.json
 ├── .github/workflows/sync-website.yml # CI: website/** only — sync to wealth-journal (no APK build)
 ├── website/                           # FuelTrack marketing site source (synced to godwintgn/wealth-journal)
@@ -56,17 +59,19 @@ fuel_tracker/                          # Git repo root
 │   └── update-agent-context.mdc       # Auto rule: keep this file updated every change
 ├── stitch_fueltrack_pro_analytics_app/  # Stitch mockups (reference only)
 └── fueltrack_pro/                     # Flutter project
+    ├── assets/fonts/                  # Bundled Manrope + Inter (OFL)
+    ├── fastlane/metadata/android/en-US/
+    ├── fdroid/oauth_client_id.example
     ├── lib/
-    │   ├── app.dart                   # Root widget + onboarding vs home routing
+    │   ├── app.dart
     │   ├── main.dart
-    │   ├── data/                      # regions, onboarding draft types
-    │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, ReportFilters, …
-    │   ├── providers/                 # Riverpod
-    │   ├── screens/                   # … settings, analytics, reports, vehicles
-    │   ├── services/                  # db, backup, drive, analytics, fuel_report, calculations
-    │   ├── config/                    # google_oauth_config.dart
-    │   ├── theme/                     # WJ-aligned theme (app_theme, app_palette, fuel_chart_style, theme_x)
-    │   ├── widgets/common/            # AppCard, SectionHeader, EmptyState, SummaryHeaderCard, SummaryStat
+    │   ├── data/
+    │   ├── models/
+    │   ├── providers/
+    │   ├── screens/
+    │   ├── services/
+    │   ├── config/
+    │   ├── theme/
     └── android/
         ├── app/build.gradle.kts
         ├── key.properties             # GITIGNORED
@@ -414,6 +419,7 @@ After substantive code changes:
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
 | `98419c1` | feat: rich PDF reports, share, README GPL, CHANGELOG releases (v1.18.0+29) |
 | `f09cc5c` | fix: CI embeds Google Drive OAuth client ID from GitHub secret (v1.18.1+30) |
+| `1f1bfb0` | feat: bundled fonts, Fastlane + F-Droid metadata (v1.19.0+31) |
 
 ---
 
@@ -463,6 +469,7 @@ Reports: Settings → Fuel reports → `ReportsScreen`.
 
 - Commit + push + release APK for v1.10.0 WJ UI alignment (when user requests)  
 - Register Google OAuth web client + Android client for Drive on release builds (`GOOGLE_OAUTH_SERVER_CLIENT_ID` dart-define)  
+- **F-Droid:** copy `fdroid/metadata/com.fuel.tracker.yml` to fdroiddata MR (see `FDROID.md`)  
 - Scheduled Drive backups (Wealth Journal has daily auto-upload)  
 - Efficiency format picker (km/L vs L/100km vs MPG) in settings  
 
@@ -527,4 +534,4 @@ Or attach:
 
 ---
 
-*Last updated: CI Google Drive OAuth via GitHub secret. Version `1.18.1+30`.*
+*Last updated: F-Droid prep — bundled fonts, fastlane, fdroid metadata. Version `1.19.0+31`.*

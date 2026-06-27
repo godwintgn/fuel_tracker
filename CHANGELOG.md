@@ -2,6 +2,15 @@
 
 All notable changes to FuelTrack Pro are documented here. GitHub Releases use the section for each version.
 
+## [1.19.0] - 2026-06-27
+
+### Added
+- Bundled Manrope and Inter fonts (no runtime download — F-Droid friendly)
+- Fastlane store metadata and F-Droid build recipe template (`fdroid/metadata/`, `FDROID.md`)
+
+### Changed
+- Removed `google_fonts` dependency; fonts ship in `assets/fonts/`
+
 ## [1.18.1] - 2026-06-27
 
 ### Fixed
