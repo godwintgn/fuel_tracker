@@ -45,7 +45,8 @@ fuel_tracker/                          # Git repo root
 ├── README.md                          # Public GitHub readme (features, build, CI)
 ├── AGENT_CONTEXT.md                   # This file
 ├── fueltrack-pro-cursor-prompt.md     # Original build spec & order
-├── .github/workflows/build-apk.yml    # CI: analyze + test + APK + GitHub Release + sync website to wealth-journal
+├── .github/workflows/build-apk.yml    # CI: fueltrack_pro/** only — analyze + test + APK + Release + sync release.json
+├── .github/workflows/sync-website.yml # CI: website/** only — sync to wealth-journal (no APK build)
 ├── website/                           # FuelTrack marketing site source (synced to godwintgn/wealth-journal)
 ├── screenshots/                       # README + website screenshots (01–04)
 ├── .cursor/rules/
@@ -481,4 +482,4 @@ Or attach:
 
 ---
 
-*Last updated: Shared website (/fueltrack/ on wealth-journal site), GitHub Releases on master push, Obtainium link, product README with screenshots, CI sync to wealth-journal. Version `1.16.0+26`.*
+*Last updated: CI path filters — build-apk.yml runs only on fueltrack_pro/** changes; sync-website.yml for website/** only. Version `1.16.0+26`.*

@@ -1,0 +1,39 @@
+name: Sync Website
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "website/**"
+      - ".github/workflows/sync-website.yml"
+  workflow_dispatch:
+
+jobs:
+  sync-website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fuel_tracker
+        uses: actions/checkout@v4
+
+      - name: Sync to wealth-journal website
+        env:
+          WEBSITE_REPO_TOKEN: ${{ secrets.WEBSITE_REPO_TOKEN }}
+        run: |
+          if [ -z "$WEBSITE_REPO_TOKEN" ]; then
+            echo "WEBSITE_REPO_TOKEN not set — skipping website sync"
+            exit 0
+          fi
+          git clone --depth 1 "https://x-access-token:${WEBSITE_REPO_TOKEN}@github.com/godwintgn/wealth-journal.git" /tmp/wealth-journal
+          rsync -av --delete website/public/fueltrack/ /tmp/wealth-journal/website/public/fueltrack/
+          rsync -av --delete website/public/assets/screenshots/fueltrack/ /tmp/wealth-journal/website/public/assets/screenshots/fueltrack/
+          cp website/public/assets/fueltrack-download.js /tmp/wealth-journal/website/public/assets/fueltrack-download.js
+          cd /tmp/wealth-journal
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/public/fueltrack website/public/assets/fueltrack-download.js website/public/assets/screenshots/fueltrack
+          if git diff --staged --quiet; then
+            echo "No website changes to sync"
+            exit 0
+          fi
+          git commit -m "chore(site): sync FuelTrack Pro website content"
+          git push origin main

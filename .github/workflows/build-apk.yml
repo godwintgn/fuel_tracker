@@ -2,9 +2,14 @@ name: Build APK
 
 on:
   push:
-    branches: ["**"]
+    branches: [master]
+    paths:
+      - "fueltrack_pro/**"
+      - ".github/workflows/build-apk.yml"
   pull_request:
-    branches: ["**"]
+    paths:
+      - "fueltrack_pro/**"
+      - ".github/workflows/build-apk.yml"
   workflow_dispatch:
 
 jobs:
@@ -154,6 +159,7 @@ jobs:
       - name: Sync to wealth-journal website
         env:
           WEBSITE_REPO_TOKEN: ${{ secrets.WEBSITE_REPO_TOKEN }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
           if [ -z "$WEBSITE_REPO_TOKEN" ]; then
             echo "WEBSITE_REPO_TOKEN not set — skipping website sync"
@@ -171,6 +177,5 @@ jobs:
             echo "No website changes to sync"
             exit 0
           fi
-          git commit --trailer "Co-authored-by: Cursor <cursoragent@cursor.com>" -m "chore(site): sync FuelTrack Pro ${VERSION} release metadata"
+          git commit -m "chore(site): sync FuelTrack Pro ${VERSION} release metadata"
           git push origin main
-
