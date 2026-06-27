@@ -66,7 +66,7 @@ flutter build apk --release
 
 Output: `fueltrack_pro/build/app/outputs/flutter-apk/app-release.apk`
 
-Every push to `master` runs CI: analyze, test, signed APK build, [GitHub Release](https://github.com/godwintgn/fuel_tracker/releases), and sync of `/fueltrack/` pages to the shared [Wealth Journal website](https://github.com/godwintgn/wealth-journal).
+Pushes that change **`fueltrack_pro/`** on `master` run CI: analyze, test, signed APK build, [GitHub Release](https://github.com/godwintgn/fuel_tracker/releases), and sync of `/fueltrack/` pages (with updated `release.json`) to the shared [Wealth Journal website](https://github.com/godwintgn/wealth-journal). Pushes that change only **`website/`** run a lighter sync workflow without building an APK. Use **Actions → Build APK → Run workflow** for a manual build anytime.
 
 Version lives in `fueltrack_pro/pubspec.yaml` (`version: <name>+<build>`). The `+build` number is the Android `versionCode` and must increase for every published update.
 
