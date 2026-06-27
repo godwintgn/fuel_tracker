@@ -381,7 +381,7 @@ After substantive code changes:
 | *(pending)* | feat: Analytics enhancement — Best/Worst fill, cost-per-fill chart, station comparison, multi-vehicle overlay, tappable charts, next-refuel prediction (v1.15.0+25) |
 | `e3f79e3` | chore: scope APK CI to fueltrack_pro changes, add website-only sync workflow |
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
-| *(pending)* | feat: PDF report polish, share, README GPL, CHANGELOG release notes (v1.18.0+29) |
+| `98419c1` | feat: rich PDF reports, share, README GPL, CHANGELOG releases (v1.18.0+29) |
 
 ---
 
