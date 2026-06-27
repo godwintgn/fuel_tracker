@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -131,6 +132,8 @@ class BackupService {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['json'],
+        allowMultiple: false,
+        dialogTitle: 'Select FuelTrack Pro backup (.json)',
         withData: true,
       );
       if (result == null || result.files.isEmpty) {
@@ -138,15 +141,21 @@ class BackupService {
       }
 
       final file = result.files.single;
-      final bytes = file.bytes;
-      if (bytes == null) {
+      if (!_isJsonBackupFile(file)) {
+        return const BackupImportOutcome(
+          BackupImportStatus.failed,
+          'Please select a .json backup file',
+        );
+      }
+
+      final jsonText = await _readPickedFileText(file);
+      if (jsonText == null) {
         return const BackupImportOutcome(
           BackupImportStatus.failed,
           'Could not read file',
         );
       }
 
-      final jsonText = utf8.decode(bytes);
       final ok = await importPlainBackupFromJsonString(jsonText);
       if (!ok) {
         return const BackupImportOutcome(
@@ -158,6 +167,24 @@ class BackupService {
     } catch (e) {
       return BackupImportOutcome(BackupImportStatus.failed, e.toString());
     }
+  }
+
+  static bool _isJsonBackupFile(PlatformFile file) {
+    final name = file.name.trim().toLowerCase();
+    if (name.endsWith('.json')) return true;
+    final ext = file.extension?.toLowerCase();
+    return ext == 'json';
+  }
+
+  static Future<String?> _readPickedFileText(PlatformFile file) async {
+    if (file.bytes != null) {
+      return utf8.decode(file.bytes!);
+    }
+    final path = file.path;
+    if (path != null) {
+      return File(path).readAsString();
+    }
+    return null;
   }
 
   Future<void> _restoreData(Map<String, dynamic> data) async {

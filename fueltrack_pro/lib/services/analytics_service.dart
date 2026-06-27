@@ -187,6 +187,16 @@ class MonthlySpendPoint {
 // ── AnalyticsService ───────────────────────────────────────────────────────────
 
 abstract final class AnalyticsService {
+  /// Public helpers for PDF reports and other exports.
+  static List<StationStat> stationStatsForEntries(List<RefuelEntry> entries) =>
+      _stationStats(entries);
+
+  static RefuelEntry? cheapestFill(List<RefuelEntry> entries) =>
+      _bestFill(entries);
+
+  static RefuelEntry? costliestFill(List<RefuelEntry> entries) =>
+      _worstFill(entries);
+
   static AnalyticsStats build({
     required List<RefuelEntry> allEntries,
     required List<Vehicle> vehicles,
