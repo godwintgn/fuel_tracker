@@ -10,7 +10,8 @@ AuthorName: godwintgn
 SourceCode: https://github.com/godwintgn/fuel_tracker
 IssueTracker: https://github.com/godwintgn/fuel_tracker/issues
 Changelog: https://github.com/godwintgn/fuel_tracker/blob/master/CHANGELOG.md
-WebSite: https://github.com/godwintgn/wealth-journal/tree/main/website/public/fueltrack
+WebSite: https://melmidalamapps.fyi/fueltrack/
+PrivacyPolicy: https://melmidalamapps.fyi/fueltrack/privacy/
 
 AutoName: FuelTrack Pro
 Summary: Track fuel, efficiency, and vehicle expenses locally

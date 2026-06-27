@@ -23,7 +23,7 @@ Track refuels, measure efficiency, compare stations, and manage a multi-vehicle 
 
 <sub>Obtainium · GitHub Releases · [F-Droid submission guide](FDROID.md)</sub>
 
-[All releases](https://github.com/godwintgn/fuel_tracker/releases) · [Website](https://github.com/godwintgn/wealth-journal/tree/main/website/public/fueltrack) · [Privacy](https://github.com/godwintgn/wealth-journal/tree/main/website/public/fueltrack/privacy)
+[All releases](https://github.com/godwintgn/fuel_tracker/releases) · [Website](https://melmidalamapps.fyi/fueltrack/) · [Privacy](https://melmidalamapps.fyi/fueltrack/privacy/)
 
 </div>
 

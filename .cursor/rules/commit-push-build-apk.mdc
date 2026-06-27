@@ -18,6 +18,7 @@ After **implementing or modifying** project code (not for drive-by typo-only edi
 
 4. **Commit** — One logical commit per coherent change. Conventional Commits:
    - `feat:`, `fix:`, `refactor:`, `perf:`, `chore:`, `docs:` + short imperative summary.
+   - **Author:** commits must be authored **only** by the repo owner (`Godwin <godwintgn@protonmail.com>`). **Never** add `Co-authored-by`, `Signed-off-by`, or any other trailer naming Cursor, bots, or AI agents.
 
 5. **Push** — `git push origin` (current branch). Resolve conflicts before pushing.
 

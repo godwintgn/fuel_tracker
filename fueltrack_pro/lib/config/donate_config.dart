@@ -15,7 +15,15 @@ class DonateConfig {
   static const String solanaAddress =
       'Ebr9tSd4bTKgUZEDNHUycVEkwdfxmpGLvqjy6zLXmfkq';
 
+  static const String websiteUrl = 'https://melmidalamapps.fyi/fueltrack/';
+
+  static const String privacyUrl = 'https://melmidalamapps.fyi/fueltrack/privacy/';
+
   static const String termsUrl = 'https://melmidalamapps.fyi/terms/';
+
+  static Uri get websiteUri => Uri.parse(websiteUrl);
+
+  static Uri get privacyUri => Uri.parse(privacyUrl);
 
   static Uri get termsUri => Uri.parse(termsUrl);
 

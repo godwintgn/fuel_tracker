@@ -19,6 +19,8 @@
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
 | Current version | `1.19.0+31` (see `fueltrack_pro/pubspec.yaml`) |
+| Public website | https://melmidalamapps.fyi/fueltrack/ |
+| Privacy policy | https://melmidalamapps.fyi/fueltrack/privacy/ |
 
 ---
 
@@ -52,7 +54,7 @@ fuel_tracker/                          # Git repo root
 ├── LICENSE
 ├── .github/workflows/build-apk.yml    # CI: fueltrack_pro/** only — analyze + test + APK + Release + sync release.json
 ├── .github/workflows/sync-website.yml # CI: website/** only — sync to wealth-journal (no APK build)
-├── website/                           # FuelTrack marketing site source (synced to godwintgn/wealth-journal)
+├── website/                           # FuelTrack marketing site source (live: melmidalamapps.fyi/fueltrack; synced to wealth-journal repo)
 ├── screenshots/                       # README + website screenshots (01–04)
 ├── .cursor/rules/
 │   ├── commit-push-build-apk.mdc      # Auto rule: commit → push → clean APK
@@ -534,4 +536,4 @@ Or attach:
 
 ---
 
-*Last updated: F-Droid prep — bundled fonts, fastlane, fdroid metadata. Version `1.19.0+31`.*
+*Last updated: Owner-only commits (Cursor co-author removed from history); melmidalamapps.fyi URLs. Version `1.19.0+31`.*

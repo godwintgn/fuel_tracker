@@ -2,6 +2,8 @@
 
 Package: `com.fuel.tracker`  
 Source: [github.com/godwintgn/fuel_tracker](https://github.com/godwintgn/fuel_tracker)  
+Website: [melmidalamapps.fyi/fueltrack](https://melmidalamapps.fyi/fueltrack/)  
+Privacy: [melmidalamapps.fyi/fueltrack/privacy](https://melmidalamapps.fyi/fueltrack/privacy/)  
 Flutter app path: `fueltrack_pro/`
 
 ## Prerequisites (done in this repo)
