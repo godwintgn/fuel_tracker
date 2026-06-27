@@ -378,7 +378,8 @@ After substantive code changes:
 | `f0a89d7` | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
 | *(pending)* | feat: Feature Batch 3 — fuel entry 3-way calc, Fuel Cards, Service Reminders, stable vehicle colors, country/currency separation (v1.14.0+24) |
 | *(pending)* | feat: Analytics enhancement — Best/Worst fill, cost-per-fill chart, station comparison, multi-vehicle overlay, tappable charts, next-refuel prediction (v1.15.0+25) |
-| *(pending)* | feat: shared website /fueltrack/, GitHub Releases, Obtainium, README screenshots (v1.16.0+26) |
+| `e3f79e3` | chore: scope APK CI to fueltrack_pro changes, add website-only sync workflow |
+| `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
 
 ---
 
