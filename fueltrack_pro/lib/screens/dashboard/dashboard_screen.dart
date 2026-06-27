@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
+import '../../models/vehicle.dart';
 import '../../models/dashboard_stats.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../providers/service_records_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/fuel_calculations.dart';
 import '../../services/fuel_type_metrics.dart';
@@ -14,6 +16,7 @@ import '../../theme/app_spacing.dart';
 import '../../theme/fuel_chart_style.dart';
 import '../../theme/theme_x.dart';
 import '../refuel/refuel_detail_screen.dart';
+import '../vehicles/service_records_screen.dart';
 import '../../widgets/common/active_vehicle_bar.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/empty_state.dart';
@@ -29,6 +32,7 @@ class DashboardScreen extends ConsumerWidget {
     final dashboardAsync = ref.watch(dashboardProvider);
     final settingsAsync = ref.watch(settingsProvider);
     final currency = settingsAsync.valueOrNull?.currencySymbol ?? 'OMR';
+    final serviceRecordsAsync = ref.watch(activeServiceRecordsProvider);
 
     return dashboardAsync.when(
       loading: () => const _DashboardSkeleton(),
@@ -44,6 +48,10 @@ class DashboardScreen extends ConsumerWidget {
 
         final stats = data.stats;
         final vehicle = data.vehicle!;
+        final overdueRecords = serviceRecordsAsync.valueOrNull
+                ?.where((r) => r.isOverdue)
+                .toList() ??
+            [];
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(dashboardProvider),
@@ -58,6 +66,14 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
+                    // ── Service warning banner ──────────────────────────────
+                    if (overdueRecords.isNotEmpty)
+                      _ServiceWarningBanner(
+                        overdueCount: overdueRecords.length,
+                        vehicle: vehicle,
+                      ),
+                    if (overdueRecords.isNotEmpty)
+                      const SizedBox(height: AppSpacing.stackMd),
                     // ── Header card ──────────────────────────────────────────
                     SummaryHeaderCard(
                       icon: Icons.speed_outlined,
@@ -673,6 +689,53 @@ class _DashboardSkeleton extends StatelessWidget {
         SizedBox(height: AppSpacing.gutter),
         _SkeletonBox(height: 240),
       ],
+    );
+  }
+}
+
+class _ServiceWarningBanner extends StatelessWidget {
+  const _ServiceWarningBanner({
+    required this.overdueCount,
+    required this.vehicle,
+  });
+
+  final int overdueCount;
+  final Vehicle vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    return Material(
+      color: cs.errorContainer,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        onTap: () => ServiceRecordsScreen.open(context, vehicle: vehicle),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.gutter,
+            vertical: 10,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_outlined,
+                  color: cs.onErrorContainer, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '$overdueCount overdue service${overdueCount > 1 ? 's' : ''} — tap to view',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onErrorContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: cs.onErrorContainer, size: 18),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

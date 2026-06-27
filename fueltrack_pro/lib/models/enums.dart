@@ -74,3 +74,55 @@ enum ThemeModePreference {
     };
   }
 }
+
+// ── Fuel Card enums ────────────────────────────────────────────────────────────
+
+enum FuelCardScope {
+  fleet('Fleet (all vehicles)'),
+  vehicle('Specific vehicle');
+
+  const FuelCardScope(this.label);
+  final String label;
+
+  static FuelCardScope fromString(String v) =>
+      FuelCardScope.values.firstWhere((e) => e.name == v, orElse: () => FuelCardScope.fleet);
+}
+
+enum FuelCardLimitType {
+  none('No limit'),
+  price('Price limit'),
+  quantity('Quantity limit');
+
+  const FuelCardLimitType(this.label);
+  final String label;
+
+  static FuelCardLimitType fromString(String v) =>
+      FuelCardLimitType.values.firstWhere((e) => e.name == v, orElse: () => FuelCardLimitType.none);
+}
+
+enum FuelCardResetPeriod {
+  none('No reset'),
+  weekly('Weekly'),
+  monthly('Monthly'),
+  yearly('Yearly');
+
+  const FuelCardResetPeriod(this.label);
+  final String label;
+
+  static FuelCardResetPeriod fromString(String v) =>
+      FuelCardResetPeriod.values.firstWhere((e) => e.name == v, orElse: () => FuelCardResetPeriod.none);
+}
+
+// ── Service Record enums ───────────────────────────────────────────────────────
+
+enum ServiceTriggerType {
+  date('By date'),
+  odometer('By odometer'),
+  both('Date or odometer');
+
+  const ServiceTriggerType(this.label);
+  final String label;
+
+  static ServiceTriggerType fromString(String v) =>
+      ServiceTriggerType.values.firstWhere((e) => e.name == v, orElse: () => ServiceTriggerType.date);
+}

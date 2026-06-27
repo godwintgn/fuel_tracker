@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../models/enums.dart';
 import '../../models/refuel_entry.dart';
+import '../../models/service_record.dart';
 import '../../models/vehicle.dart';
 import '../../providers/refuels_provider.dart';
 import '../../providers/selected_vehicle_provider.dart';
+import '../../providers/service_records_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../services/fuel_calculations.dart';
@@ -16,9 +18,11 @@ import '../../theme/theme_x.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/detail_row.dart';
 import '../../widgets/vehicles/vehicle_photo_view.dart';
+import '../fuel_cards/fuel_card_list_screen.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../refuel/refuel_detail_screen.dart';
 import 'add_edit_vehicle_screen.dart';
+import 'service_records_screen.dart';
 
 /// Read-only vehicle profile with quick stats and recent activity.
 class VehicleDetailScreen extends ConsumerWidget {
@@ -52,6 +56,15 @@ class VehicleDetailScreen extends ConsumerWidget {
         ? ref.watch(vehicleRefuelsProvider(resolved.id!))
         : const AsyncValue<List<RefuelEntry>>.data([]);
     final refuels = refuelsAsync.valueOrNull ?? const <RefuelEntry>[];
+
+    final serviceRecords = resolved.id != null
+        ? ref
+            .watch(vehicleServiceRecordsProvider(resolved.id!))
+            .valueOrNull
+            ?.where((r) => !r.isCompleted)
+            .toList() ??
+            []
+        : <ServiceRecord>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -145,6 +158,14 @@ class VehicleDetailScreen extends ConsumerWidget {
             currency: currency,
             distanceUnit: distanceUnit,
           ),
+          if (resolved.id != null) ...[
+            const SizedBox(height: AppSpacing.stackLg),
+            _UpcomingService(
+              records: serviceRecords,
+              vehicleId: resolved.id!,
+              vehicle: resolved,
+            ),
+          ],
           const SizedBox(height: AppSpacing.stackLg),
           _RecentRefuels(
             entries: refuels,
@@ -153,6 +174,25 @@ class VehicleDetailScreen extends ConsumerWidget {
             distanceUnit: distanceUnit,
             loading: refuelsAsync.isLoading,
           ),
+          if (resolved.id != null) ...[
+            const SizedBox(height: AppSpacing.stackLg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => FuelCardListScreen.open(context, vehicle: resolved),
+                  icon: const Icon(Icons.credit_card_outlined, size: 18),
+                  label: const Text('Fuel cards'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => ServiceRecordsScreen.open(context, vehicle: resolved),
+                  icon: const Icon(Icons.build_outlined, size: 18),
+                  label: const Text('All services'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -291,6 +331,133 @@ class _StatTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _UpcomingService extends StatelessWidget {
+  const _UpcomingService({
+    required this.records,
+    required this.vehicleId,
+    required this.vehicle,
+  });
+
+  final List<ServiceRecord> records;
+  final int vehicleId;
+  final Vehicle vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = context.tt;
+    final cs = context.cs;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Upcoming Service',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => ServiceRecordsScreen.open(context, vehicle: vehicle),
+              child: const Text('Manage'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.stackSm),
+        if (records.isEmpty)
+          AppCard(
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: cs.primary, size: 20),
+                const SizedBox(width: AppSpacing.stackMd),
+                Text(
+                  'No upcoming services',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          )
+        else
+          AppCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.gutter,
+              vertical: 4,
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < records.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          records[i].isOverdue
+                              ? Icons.warning_outlined
+                              : Icons.build_outlined,
+                          size: 18,
+                          color: records[i].isOverdue ? cs.error : cs.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                records[i].title,
+                                style: tt.labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              if (records[i].dueDate != null)
+                                Text(
+                                  DateFormat.yMMMd()
+                                      .format(records[i].dueDate!),
+                                  style: tt.labelSmall?.copyWith(
+                                    color: records[i].isOverdue
+                                        ? cs.error
+                                        : cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              if (records[i].dueOdometer != null)
+                                Text(
+                                  '${records[i].dueOdometer!.toStringAsFixed(0)} km',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (records[i].isOverdue)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.errorContainer,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: Text(
+                              'Overdue',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onErrorContainer,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

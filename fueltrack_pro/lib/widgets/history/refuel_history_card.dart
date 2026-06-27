@@ -6,6 +6,7 @@ import '../../models/vehicle.dart';
 import '../../services/fuel_type_metrics.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
+import '../../utils/vehicle_color.dart';
 
 class RefuelHistoryCard extends StatelessWidget {
   const RefuelHistoryCard({
@@ -14,7 +15,6 @@ class RefuelHistoryCard extends StatelessWidget {
     required this.vehicle,
     required this.currency,
     required this.distanceUnit,
-    this.alternateAccent = false,
     this.onTap,
   });
 
@@ -22,7 +22,6 @@ class RefuelHistoryCard extends StatelessWidget {
   final Vehicle? vehicle;
   final String currency;
   final String distanceUnit;
-  final bool alternateAccent;
   final VoidCallback? onTap;
 
   @override
@@ -34,10 +33,12 @@ class RefuelHistoryCard extends StatelessWidget {
         ? entry.stationName!
         : vehicle?.displayName ?? 'Refuel';
     final subtitle = dateFormat.format(entry.refuelDate);
-    final iconBg =
-        alternateAccent ? cs.secondaryContainer : cs.primaryContainer;
-    final iconFg =
-        alternateAccent ? cs.onSecondaryContainer : cs.onPrimaryContainer;
+    // Stable color per vehicle — never changes regardless of list position
+    final accent = vehicle?.id != null
+        ? vehicleAccentColor(vehicle!.id!, cs)
+        : cs.primary;
+    final iconBg = accent.withValues(alpha: 0.15);
+    final iconFg = accent;
     final qtyUnit = FuelTypeMetrics.quantityUnit(
       vehicle?.fuelType ?? entry.fuelType,
     );

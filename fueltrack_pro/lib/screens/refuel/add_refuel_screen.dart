@@ -355,18 +355,22 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         RefuelCalculation.parseValue(_totalPriceController.text);
     final odometer = RefuelCalculation.parseValue(_odometerController.text);
 
-    if (quantity == null ||
-        quantity <= 0 ||
-        totalPrice == null ||
-        totalPrice <= 0 ||
-        pricePerLiter == null ||
-        pricePerLiter <= 0 ||
-        odometer == null ||
-        odometer <= 0) {
+    // Require quantity + totalPrice; pricePerLiter is optional (auto-derived or omitted).
+    if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter quantity, price, and total (or two to auto-calc)'),
-        ),
+        const SnackBar(content: Text('Enter quantity or enter price + total to auto-calculate it')),
+      );
+      return;
+    }
+    if (totalPrice == null || totalPrice <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter total price or enter quantity + price/L to auto-calculate it')),
+      );
+      return;
+    }
+    if (odometer == null || odometer <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid odometer reading')),
       );
       return;
     }

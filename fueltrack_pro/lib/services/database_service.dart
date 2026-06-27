@@ -3,7 +3,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/app_settings.dart';
+import '../models/fuel_card.dart';
 import '../models/refuel_entry.dart';
+import '../models/service_record.dart';
 import '../models/vehicle.dart';
 
 class DatabaseService {
@@ -23,7 +25,7 @@ class DatabaseService {
 
     return openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -33,8 +35,12 @@ class DatabaseService {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    await _createAllTables(db);
+  }
+
+  Future<void> _createAllTables(Database db) async {
     await db.execute('''
-      CREATE TABLE vehicles (
+      CREATE TABLE IF NOT EXISTS vehicles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         make TEXT,
@@ -54,7 +60,7 @@ class DatabaseService {
     ''');
 
     await db.execute('''
-      CREATE TABLE refuel_entries (
+      CREATE TABLE IF NOT EXISTS refuel_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vehicle_id INTEGER NOT NULL,
         refuel_date INTEGER NOT NULL,
@@ -72,10 +78,11 @@ class DatabaseService {
     ''');
 
     await db.execute('''
-      CREATE TABLE settings (
+      CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY CHECK (id = 1),
-        currency_code TEXT NOT NULL DEFAULT 'USD',
-        currency_symbol TEXT NOT NULL DEFAULT '\$',
+        currency_code TEXT NOT NULL DEFAULT 'OMR',
+        currency_symbol TEXT NOT NULL DEFAULT 'OMR',
+        country_code TEXT NOT NULL DEFAULT 'OM',
         distance_unit TEXT NOT NULL DEFAULT 'km',
         fuel_unit TEXT NOT NULL DEFAULT 'liters',
         theme_mode TEXT NOT NULL DEFAULT 'system',
@@ -88,8 +95,9 @@ class DatabaseService {
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.insert('settings', {
       'id': 1,
-      'currency_code': 'USD',
-      'currency_symbol': r'$',
+      'currency_code': 'OMR',
+      'currency_symbol': 'OMR',
+      'country_code': 'OM',
       'distance_unit': 'km',
       'fuel_unit': 'liters',
       'theme_mode': 'system',
@@ -97,6 +105,48 @@ class DatabaseService {
       'selected_vehicle_id': null,
       'updated_at': now,
     });
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS fuel_cards (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        company_name TEXT,
+        card_number TEXT,
+        scope TEXT NOT NULL DEFAULT 'fleet',
+        vehicle_id INTEGER,
+        limit_type TEXT NOT NULL DEFAULT 'none',
+        limit_value REAL,
+        reset_period TEXT NOT NULL DEFAULT 'none',
+        reset_day INTEGER,
+        expiry_date INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS service_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        notes TEXT,
+        trigger_type TEXT NOT NULL DEFAULT 'date',
+        due_date INTEGER,
+        due_odometer REAL,
+        notify_before_days INTEGER NOT NULL DEFAULT 7,
+        notify_before_km REAL,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        completed_date INTEGER,
+        next_due_date INTEGER,
+        next_due_odometer REAL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -105,9 +155,54 @@ class DatabaseService {
       await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_left REAL');
       await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_top REAL');
       await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_width REAL');
-      await db.execute(
-        'ALTER TABLE vehicles ADD COLUMN photo_crop_height REAL',
-      );
+      await db.execute('ALTER TABLE vehicles ADD COLUMN photo_crop_height REAL');
+    }
+    if (oldVersion < 3) {
+      // Add country_code to settings
+      try {
+        await db.execute("ALTER TABLE settings ADD COLUMN country_code TEXT NOT NULL DEFAULT 'OM'");
+      } catch (_) {}
+      // Create new tables
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS fuel_cards (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          company_name TEXT,
+          card_number TEXT,
+          scope TEXT NOT NULL DEFAULT 'fleet',
+          vehicle_id INTEGER,
+          limit_type TEXT NOT NULL DEFAULT 'none',
+          limit_value REAL,
+          reset_period TEXT NOT NULL DEFAULT 'none',
+          reset_day INTEGER,
+          expiry_date INTEGER,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS service_records (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          vehicle_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          notes TEXT,
+          trigger_type TEXT NOT NULL DEFAULT 'date',
+          due_date INTEGER,
+          due_odometer REAL,
+          notify_before_days INTEGER NOT NULL DEFAULT 7,
+          notify_before_km REAL,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          completed_date INTEGER,
+          next_due_date INTEGER,
+          next_due_odometer REAL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+        )
+      ''');
     }
   }
 
@@ -206,6 +301,75 @@ class DatabaseService {
   Future<void> deleteRefuelEntry(int id) async {
     final db = await database;
     await db.delete('refuel_entries', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ── Fuel cards ─────────────────────────────────────────────────────────────
+
+  Future<List<FuelCard>> getFuelCards({int? vehicleId}) async {
+    final db = await database;
+    final rows = vehicleId != null
+        ? await db.query(
+            'fuel_cards',
+            where: 'scope = ? OR vehicle_id = ?',
+            whereArgs: ['fleet', vehicleId],
+            orderBy: 'name ASC',
+          )
+        : await db.query('fuel_cards', orderBy: 'name ASC');
+    return rows.map(FuelCard.fromMap).toList();
+  }
+
+  Future<int> insertFuelCard(FuelCard card) async {
+    final db = await database;
+    return db.insert('fuel_cards', card.toMap());
+  }
+
+  Future<void> updateFuelCard(FuelCard card) async {
+    final db = await database;
+    await db.update('fuel_cards', card.toMap(), where: 'id = ?', whereArgs: [card.id]);
+  }
+
+  Future<void> deleteFuelCard(int id) async {
+    final db = await database;
+    await db.delete('fuel_cards', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ── Service records ─────────────────────────────────────────────────────────
+
+  Future<List<ServiceRecord>> getServiceRecords({int? vehicleId, bool activeOnly = false}) async {
+    final db = await database;
+    String? where;
+    List<Object?> whereArgs = [];
+    if (vehicleId != null && activeOnly) {
+      where = 'vehicle_id = ? AND is_completed = 0';
+      whereArgs = [vehicleId];
+    } else if (vehicleId != null) {
+      where = 'vehicle_id = ?';
+      whereArgs = [vehicleId];
+    } else if (activeOnly) {
+      where = 'is_completed = 0';
+    }
+    final rows = await db.query(
+      'service_records',
+      where: where,
+      whereArgs: whereArgs.isEmpty ? null : whereArgs,
+      orderBy: 'due_date ASC',
+    );
+    return rows.map(ServiceRecord.fromMap).toList();
+  }
+
+  Future<int> insertServiceRecord(ServiceRecord record) async {
+    final db = await database;
+    return db.insert('service_records', record.toMap());
+  }
+
+  Future<void> updateServiceRecord(ServiceRecord record) async {
+    final db = await database;
+    await db.update('service_records', record.toMap(), where: 'id = ?', whereArgs: [record.id]);
+  }
+
+  Future<void> deleteServiceRecord(int id) async {
+    final db = await database;
+    await db.delete('service_records', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> close() async {

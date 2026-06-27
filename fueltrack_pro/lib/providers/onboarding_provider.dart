@@ -25,6 +25,9 @@ class OnboardingDraftNotifier extends Notifier<OnboardingDraft> {
     String? licensePlate,
     FuelType? fuelType,
     String? regionCode,
+    String? countryCode,
+    String? currencyCode,
+    String? currencySymbol,
     bool? useKm,
     bool? useLiters,
   }) {
@@ -36,6 +39,9 @@ class OnboardingDraftNotifier extends Notifier<OnboardingDraft> {
       licensePlate: licensePlate,
       fuelType: fuelType,
       regionCode: regionCode,
+      countryCode: countryCode,
+      currencyCode: currencyCode,
+      currencySymbol: currencySymbol,
       useKm: useKm,
       useLiters: useLiters,
     );
@@ -53,7 +59,6 @@ class OnboardingService {
 
   Future<void> completeOnboarding({required bool saveVehicle}) async {
     final draft = _ref.read(onboardingDraftProvider);
-    final region = draft.region;
     final now = DateTime.now();
 
     int? vehicleId;
@@ -75,8 +80,9 @@ class OnboardingService {
     final currentSettings = await _ref.read(settingsProvider.future);
     await _ref.read(settingsProvider.notifier).updateSettings(
           currentSettings.copyWith(
-            currencyCode: region.currencyCode,
-            currencySymbol: region.currencySymbol,
+            currencyCode: draft.currencyCode,
+            currencySymbol: draft.currencySymbol,
+            countryCode: draft.countryCode,
             distanceUnit: draft.useKm ? DistanceUnit.km : DistanceUnit.miles,
             fuelUnit: draft.useLiters ? FuelUnit.liters : FuelUnit.gallons,
             onboardingCompleted: true,

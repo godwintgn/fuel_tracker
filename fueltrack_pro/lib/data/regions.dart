@@ -98,6 +98,9 @@ class OnboardingDraft {
     this.licensePlate = '',
     this.fuelType = FuelType.diesel,
     this.regionCode = 'OM',
+    this.countryCode = 'OM',
+    this.currencyCode = 'OMR',
+    this.currencySymbol = 'OMR',
     this.useKm = true,
     this.useLiters = true,
   });
@@ -109,6 +112,9 @@ class OnboardingDraft {
   final String licensePlate;
   final FuelType fuelType;
   final String regionCode;
+  final String countryCode;
+  final String currencyCode;
+  final String currencySymbol;
   final bool useKm;
   final bool useLiters;
 
@@ -133,6 +139,9 @@ class OnboardingDraft {
     String? licensePlate,
     FuelType? fuelType,
     String? regionCode,
+    String? countryCode,
+    String? currencyCode,
+    String? currencySymbol,
     bool? useKm,
     bool? useLiters,
   }) {
@@ -144,6 +153,9 @@ class OnboardingDraft {
       licensePlate: licensePlate ?? this.licensePlate,
       fuelType: fuelType ?? this.fuelType,
       regionCode: regionCode ?? this.regionCode,
+      countryCode: countryCode ?? this.countryCode,
+      currencyCode: currencyCode ?? this.currencyCode,
+      currencySymbol: currencySymbol ?? this.currencySymbol,
       useKm: useKm ?? this.useKm,
       useLiters: useLiters ?? this.useLiters,
     );

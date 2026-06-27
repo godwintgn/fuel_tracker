@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../data/regions.dart';
+import '../../data/countries.dart';
+import '../../data/currencies.dart';
 import '../../models/app_settings.dart';
 import '../../models/enums.dart';
 import '../../providers/backup_provider.dart';
@@ -12,6 +13,7 @@ import '../../services/backup_service.dart';
 import '../../features/donate/donate_screen.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
+import '../fuel_cards/fuel_card_list_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -359,6 +361,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _SettingsCard(
                     children: [
                       ListTile(
+                        title: const Text('Country'),
+                        subtitle: Text(
+                          () {
+                            final c = Countries.findByCode(settings.countryCode);
+                            return c != null ? '${c.flag}  ${c.name}' : settings.countryCode;
+                          }(),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _pickCountry(settings),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         title: const Text('Currency'),
                         subtitle: Text(
                           '${settings.currencyCode} (${settings.currencySymbol})',
@@ -401,6 +415,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             builder: (_) => const VehicleListScreen(),
                           ),
                         ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.credit_card_outlined),
+                        title: const Text('Fuel cards'),
+                        subtitle: const Text('Manage fleet and vehicle fuel cards'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => FuelCardListScreen.open(context),
                       ),
                     ],
                   ),
@@ -511,7 +533,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
                   Text(
-                    'FuelTrack Pro v1.12.1',
+                    'FuelTrack Pro v1.14.0',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -545,33 +567,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickCurrency(AppSettings settings) async {
-    final picked = await showModalBottomSheet<RegionOption>(
+  Future<void> _pickCountry(AppSettings settings) async {
+    final search = TextEditingController();
+    final picked = await showModalBottomSheet<CountryOption>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.gutter),
-              child: Text('Currency', style: Theme.of(context).textTheme.titleMedium),
-            ),
-            ...Regions.all.map(
-              (region) => ListTile(
-                title: Text(region.name),
-                subtitle: Text('${region.currencyCode} — ${region.currencyName}'),
-                onTap: () => Navigator.pop(context, region),
-              ),
-            ),
-          ],
-        ),
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => _SearchPickerSheet<CountryOption>(
+        title: 'Country',
+        items: Countries.all,
+        searchController: search,
+        labelFor: (c) => c.displayName,
+        searchMatch: (c, q) =>
+            c.name.toLowerCase().contains(q) || c.code.toLowerCase().contains(q),
+        isSelected: (c) => c.code == settings.countryCode,
       ),
     );
+    search.dispose();
+    if (picked == null) return;
+    await _saveSettings(settings.copyWith(countryCode: picked.code));
+  }
+
+  Future<void> _pickCurrency(AppSettings settings) async {
+    final search = TextEditingController();
+    final picked = await showModalBottomSheet<CurrencyOption>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => _SearchPickerSheet<CurrencyOption>(
+        title: 'Currency',
+        items: Currencies.all,
+        searchController: search,
+        labelFor: (c) => c.displayLabel,
+        searchMatch: (c, q) =>
+            c.name.toLowerCase().contains(q) ||
+            c.code.toLowerCase().contains(q) ||
+            c.symbol.toLowerCase().contains(q),
+        isSelected: (c) => c.code == settings.currencyCode,
+      ),
+    );
+    search.dispose();
     if (picked == null) return;
     await _saveSettings(
       settings.copyWith(
-        currencyCode: picked.currencyCode,
-        currencySymbol: picked.currencySymbol,
+        currencyCode: picked.code,
+        currencySymbol: picked.symbol,
       ),
     );
   }
@@ -655,6 +695,122 @@ class _SettingsCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(children: children),
+    );
+  }
+}
+
+class _SearchPickerSheet<T> extends StatefulWidget {
+  const _SearchPickerSheet({
+    required this.title,
+    required this.items,
+    required this.searchController,
+    required this.labelFor,
+    required this.searchMatch,
+    required this.isSelected,
+  });
+
+  final String title;
+  final List<T> items;
+  final TextEditingController searchController;
+  final String Function(T) labelFor;
+  final bool Function(T, String) searchMatch;
+  final bool Function(T) isSelected;
+
+  @override
+  State<_SearchPickerSheet<T>> createState() => _SearchPickerSheetState<T>();
+}
+
+class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
+  List<T> _filtered = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filtered = widget.items;
+    widget.searchController.addListener(_onSearch);
+  }
+
+  void _onSearch() {
+    final q = widget.searchController.text.toLowerCase().trim();
+    setState(() {
+      _filtered = q.isEmpty
+          ? widget.items
+          : widget.items.where((i) => widget.searchMatch(i, q)).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.searchController.removeListener(_onSearch);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        Container(
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: cs.outlineVariant,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+          child: Text(
+            widget.title,
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+          child: TextField(
+            controller: widget.searchController,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'Search…',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              filled: true,
+              fillColor: cs.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _filtered.length,
+            itemBuilder: (_, i) {
+              final item = _filtered[i];
+              final selected = widget.isSelected(item);
+              return ListTile(
+                dense: true,
+                title: Text(
+                  widget.labelFor(item),
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : null,
+                  ),
+                ),
+                trailing: selected
+                    ? Icon(Icons.check, color: cs.primary, size: 18)
+                    : null,
+                onTap: () => Navigator.of(context).pop(item),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
