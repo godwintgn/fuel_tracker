@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.17.0+27` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.18.0+29` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -34,6 +34,7 @@
 | Fonts | `google_fonts` — **Manrope** (headings) + **Inter** (body), aligned with Wealth Journal |
 | Intl | `intl` |
 | PDF reports | `pdf` |
+| Share | `share_plus` |
 
 **Not chosen / deferred:** drift, Provider-only, mandatory backend.
 
@@ -237,7 +238,7 @@ Bottom nav (4 tabs):
 - Currency, distance/fuel units, theme mode  
 - Manage vehicles shortcut  
 - **Reports** → `ReportsScreen` (PDF export by period + vehicle)  
-- **Local backup & restore**: save/restore plain JSON (same schema as Drive sync)  
+- **Local backup & restore**: save/restore plain JSON (same schema as Drive sync); restore picker filters `.json` and rejects other file types  
 - Google Drive: sign in, **Sync to Drive** / **Restore from Drive** (plain JSON in app data folder — no passphrase)  
 - **Donate** screen (`lib/features/donate/`) — UPI, PayPal, crypto (Wealth Journal pattern, shared `DonateConfig`)  
 - OAuth: `--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=...` + release SHA-1  
@@ -248,7 +249,7 @@ Bottom nav (4 tabs):
 - Period chips: 7d, 30d, 3M, 6M, 1Y, All time, Custom (date range picker)  
 - Vehicles: all, or multi-select individual vehicles  
 - Live preview: period label, fill count, total spent  
-- **Export PDF** via `FuelReportService` — summary stats, per-vehicle breakdown, monthly spending table, refuel history table  
+- **Export PDF** / **Share** via `FuelReportService` — unique report ID; registration plates; monthly spend chart; station comparison; best/worst fill; landscape refuel table with notes  
 - Opened from Settings → Fuel reports  
 
 ### 5.11 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
@@ -380,6 +381,7 @@ After substantive code changes:
 | *(pending)* | feat: Analytics enhancement — Best/Worst fill, cost-per-fill chart, station comparison, multi-vehicle overlay, tappable charts, next-refuel prediction (v1.15.0+25) |
 | `e3f79e3` | chore: scope APK CI to fueltrack_pro changes, add website-only sync workflow |
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
+| *(pending)* | feat: PDF report polish, share, README GPL, CHANGELOG release notes (v1.18.0+29) |
 
 ---
 
@@ -493,4 +495,4 @@ Or attach:
 
 ---
 
-*Last updated: PDF Reports + local JSON backup/restore (CSV removed). Version `1.17.0+27`.*
+*Last updated: PDF report charts/share/landscape, README GPL, CHANGELOG release notes. Version `1.18.0+29`.*

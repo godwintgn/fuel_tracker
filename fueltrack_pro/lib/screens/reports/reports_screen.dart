@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../models/report_filters.dart';
 import '../../providers/refuels_provider.dart';
@@ -59,22 +62,40 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     });
   }
 
-  Future<void> _exportPdf() async {
-    final refuelsAsync = ref.read(refuelsProvider);
-    final vehiclesAsync = ref.read(vehiclesProvider);
+  Future<({FuelReportData data, Uint8List bytes, String fileName})?>
+      _buildReportBundle() async {
     final settings = ref.read(settingsProvider).valueOrNull;
-
-    final refuels = refuelsAsync.valueOrNull;
-    final vehicles = vehiclesAsync.valueOrNull;
+    final refuels = ref.read(refuelsProvider).valueOrNull;
+    final vehicles = ref.read(vehiclesProvider).valueOrNull;
 
     if (settings == null || refuels == null || vehicles == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Loading data — try again in a moment')),
-      );
-      return;
+      return null;
     }
 
+    final reportData = FuelReportService.build(
+      filters: _filters,
+      allEntries: refuels,
+      allVehicles: vehicles,
+    );
+    if (reportData.entries.isEmpty) {
+      return null;
+    }
+
+    final reportId = FuelReportService.generateReportId();
+    final bytes = await FuelReportService.buildPdfBytes(
+      data: reportData,
+      settings: settings,
+      reportId: reportId,
+    );
+    final fileName = FuelReportService.suggestedFileName(
+      reportData,
+      reportId: reportId,
+    );
+
+    return (data: reportData, bytes: bytes, fileName: fileName);
+  }
+
+  Future<void> _exportPdf() async {
     if (!_allVehicles && _selectedVehicleIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Select at least one vehicle')),
@@ -84,44 +105,86 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     setState(() => _exporting = true);
     try {
-      final reportData = FuelReportService.build(
-        filters: _filters,
-        allEntries: refuels,
-        allVehicles: vehicles,
+      final bundle = await _buildReportBundle();
+      if (!mounted) return;
+      if (bundle == null) {
+        final loading = ref.read(settingsProvider).valueOrNull == null ||
+            ref.read(refuelsProvider).valueOrNull == null ||
+            ref.read(vehiclesProvider).valueOrNull == null;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              loading
+                  ? 'Loading data — try again in a moment'
+                  : 'No refuels match the selected filters',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export fuel report (PDF)',
+        fileName: bundle.fileName,
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+        bytes: bundle.bytes,
       );
 
-      if (reportData.entries.isEmpty) {
-        if (!mounted) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            outputPath == null
+                ? 'Export cancelled'
+                : 'PDF report exported successfully',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _sharePdf() async {
+    if (!_allVehicles && _selectedVehicleIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select at least one vehicle')),
+      );
+      return;
+    }
+
+    setState(() => _exporting = true);
+    try {
+      final bundle = await _buildReportBundle();
+      if (!mounted) return;
+      if (bundle == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No refuels match the selected filters')),
         );
         return;
       }
 
-      final bytes = await FuelReportService.buildPdfBytes(
-        data: reportData,
-        settings: settings,
-      );
-
-      final outputPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export fuel report (PDF)',
-        fileName: FuelReportService.suggestedFileName(reportData),
-        type: FileType.custom,
-        allowedExtensions: const ['pdf'],
-        bytes: bytes,
-      );
-
-      if (!mounted) return;
-      final message = outputPath == null
-          ? 'Export cancelled'
-          : 'PDF report exported successfully';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      await Share.shareXFiles(
+        [
+          XFile.fromData(
+            bundle.bytes,
+            name: bundle.fileName,
+            mimeType: 'application/pdf',
+          ),
+        ],
+        subject: 'FuelTrack Pro fuel report',
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
+          SnackBar(content: Text('Share failed: $e')),
         );
       }
     } finally {
@@ -276,23 +339,41 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.stackLg),
-          FilledButton.icon(
-            onPressed: _exporting ||
-                    refuelsAsync.isLoading ||
-                    vehiclesAsync.isLoading
-                ? null
-                : _exportPdf,
-            icon: _exporting
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: cs.onPrimary,
-                    ),
-                  )
-                : const Icon(Icons.picture_as_pdf_outlined),
-            label: Text(_exporting ? 'Exporting…' : 'Export PDF report'),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _exporting ||
+                          refuelsAsync.isLoading ||
+                          vehiclesAsync.isLoading
+                      ? null
+                      : _exportPdf,
+                  icon: _exporting
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: cs.onPrimary,
+                          ),
+                        )
+                      : const Icon(Icons.picture_as_pdf_outlined),
+                  label: Text(_exporting ? 'Working…' : 'Export PDF'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _exporting ||
+                          refuelsAsync.isLoading ||
+                          vehiclesAsync.isLoading
+                      ? null
+                      : _sharePdf,
+                  icon: const Icon(Icons.share_outlined),
+                  label: const Text('Share'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

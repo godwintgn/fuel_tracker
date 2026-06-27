@@ -111,13 +111,22 @@ jobs:
         run: |
           cp app-release.apk FuelTrack-Pro.apk
           cp app-release.apk "FuelTrack-Pro-v${VERSION}.apk"
+          CHANGELOG_BODY=$(awk -v ver="${VERSION_NAME%%+*}" '
+            /^## \[/ {
+              if ($0 ~ "^## \\[" ver "\\]") { found=1; next }
+              if (found) exit
+            }
+            found { print }
+          ' CHANGELOG.md)
+          if [ -z "$CHANGELOG_BODY" ]; then
+            CHANGELOG_BODY="See CHANGELOG.md in the repository."
+          fi
           NOTES="FuelTrack Pro ${VERSION}
 
-          - Signed release APK for Android
-          - Install via Obtainium: https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/godwintgn/fuel_tracker
-          - Direct download: https://github.com/godwintgn/fuel_tracker/releases/download/${TAG}/FuelTrack-Pro.apk"
+          ${CHANGELOG_BODY}"
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release upload "$TAG" --repo "${{ github.repository }}" FuelTrack-Pro.apk "FuelTrack-Pro-v${VERSION}.apk" --clobber
+            gh release edit "$TAG" --repo "${{ github.repository }}" --notes "$NOTES"
           else
             gh release create "$TAG" --repo "${{ github.repository }}" \
               --title "FuelTrack Pro v${VERSION_NAME}" \
