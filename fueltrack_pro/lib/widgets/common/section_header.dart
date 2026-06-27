@@ -29,7 +29,7 @@ class SectionHeader extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: context.tt.titleLarge?.copyWith(
+                style: context.tt.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -37,7 +37,7 @@ class SectionHeader extends StatelessWidget {
                 const SizedBox(height: AppSpacing.stackSm),
                 Text(
                   subtitle!,
-                  style: context.tt.bodyMedium?.copyWith(
+                  style: context.tt.bodySmall?.copyWith(
                     color: context.cs.onSurfaceVariant,
                   ),
                 ),
