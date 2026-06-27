@@ -9,6 +9,7 @@ import '../../providers/backup_provider.dart';
 import '../../providers/data_refresh.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/backup_service.dart';
+import '../../features/donate/donate_screen.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 import '../vehicles/vehicle_list_screen.dart';
@@ -114,38 +115,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         BackupExportStatus.saved => 'CSV exported successfully',
         BackupExportStatus.cancelled => 'Export cancelled',
         BackupExportStatus.failed => outcome.message ?? 'Export failed',
-      };
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _status = '';
-        });
-      }
-    }
-  }
-
-  Future<void> _localBackup() async {
-    final passphrase = await _promptPassphrase(
-      title: 'Encrypt local backup',
-      confirm: true,
-    );
-    if (passphrase == null || !mounted) return;
-
-    setState(() {
-      _busy = true;
-      _status = 'Creating backup…';
-    });
-    try {
-      final outcome = await ref
-          .read(backupServiceProvider)
-          .exportEncryptedBackup(passphrase);
-      if (!mounted) return;
-      final message = switch (outcome.status) {
-        BackupExportStatus.saved => 'Backup saved',
-        BackupExportStatus.cancelled => 'Backup cancelled',
-        BackupExportStatus.failed => outcome.message ?? 'Backup failed',
       };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
@@ -448,16 +417,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.save_outlined),
-                        title: const Text('Save encrypted backup'),
-                        subtitle: const Text('.ftbak file on device'),
-                        onTap: _busy ? null : _localBackup,
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
                         leading: const Icon(Icons.restore_outlined),
                         title: const Text('Restore from file'),
+                        subtitle: const Text('.ftbak encrypted backup'),
                         onTap: _busy ? null : _localRestore,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.stackLg),
+                  Text('Support', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.stackMd),
+                  _SettingsCard(
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          Icons.volunteer_activism_outlined,
+                          color: theme.colorScheme.error,
+                        ),
+                        title: const Text('Donate'),
+                        subtitle: const Text(
+                          'UPI, PayPal, and crypto — support development',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => DonateScreen.open(context),
                       ),
                     ],
                   ),
@@ -529,7 +511,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
                   Text(
-                    'FuelTrack Pro v1.12.0',
+                    'FuelTrack Pro v1.12.1',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
