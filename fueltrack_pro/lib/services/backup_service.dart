@@ -1,19 +1,26 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'backup_crypto.dart';
 import 'database_service.dart';
 
-const int kBackupSchemaVersion = 1;
+const int kBackupSchemaVersion = 2;
 
 typedef BackupProgressCallback = void Function(String message);
 
 enum BackupExportStatus { saved, cancelled, failed }
+
+enum BackupImportStatus { restored, cancelled, failed }
+
+class BackupImportOutcome {
+  const BackupImportOutcome(this.status, [this.message]);
+
+  final BackupImportStatus status;
+  final String? message;
+}
 
 class BackupExportOutcome {
   const BackupExportOutcome(this.status, [this.message]);
@@ -43,16 +50,10 @@ class BackupService {
 
   static Uint8List _utf8Bytes(String s) => Uint8List.fromList(utf8.encode(s));
 
-  static String encryptedBackupSuggestedFileName([DateTime? when]) {
+  static String backupSuggestedFileName([DateTime? when]) {
     final n = when ?? DateTime.now();
     final stamp = DateFormat('yyyyMMdd_HHmmss').format(n);
-    return 'fueltrack_pro_backup_$stamp.ftbak';
-  }
-
-  static String refuelCsvSuggestedFileName([DateTime? when]) {
-    final n = when ?? DateTime.now();
-    final stamp = DateFormat('yyyyMMdd_HHmmss').format(n);
-    return 'fueltrack_pro_refuels_$stamp.csv';
+    return 'fueltrack_pro_backup_$stamp.json';
   }
 
   Future<Map<String, dynamic>> buildBackupPayload() async {
@@ -63,28 +64,44 @@ class BackupService {
       'exportedAt': DateTime.now().toIso8601String(),
       'vehicles': await db.query('vehicles'),
       'refuel_entries': await db.query('refuel_entries'),
+      'fuel_cards': await db.query('fuel_cards'),
+      'service_records': await db.query('service_records'),
       'settings': await db.query('settings'),
     };
   }
 
-  Future<BackupBytesOutcome> buildEncryptedBackupBytes(
-    String passphrase, {
+  Future<BackupBytesOutcome> buildPlainBackupBytes({
     BackupProgressCallback? onProgress,
   }) async {
     try {
       onProgress?.call('Gathering data…');
       final jsonData = jsonEncode(await buildBackupPayload());
-      onProgress?.call('Encrypting…');
-      final sealed = await BackupCrypto.sealUtf8Payload(jsonData, passphrase);
-      return BackupBytesOutcome.success(_utf8Bytes(sealed));
+      return BackupBytesOutcome.success(_utf8Bytes(jsonData));
     } catch (e) {
       return BackupBytesOutcome.failure(e.toString());
     }
   }
 
-  Future<BackupExportOutcome> exportEncryptedBackup(String passphrase) async {
+  Future<bool> importPlainBackupFromJsonString(
+    String jsonText, {
+    BackupProgressCallback? onProgress,
+  }) async {
     try {
-      final built = await buildEncryptedBackupBytes(passphrase);
+      onProgress?.call('Reading backup…');
+      final data = jsonDecode(jsonText) as Map<String, dynamic>;
+      _ensurePayloadImportable(data);
+      onProgress?.call('Restoring data…');
+      await _restoreData(data);
+      onProgress?.call('Done');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<BackupExportOutcome> exportPlainBackupToFile() async {
+    try {
+      final built = await buildPlainBackupBytes();
       if (!built.ok || built.bytes == null) {
         return BackupExportOutcome(
           BackupExportStatus.failed,
@@ -93,10 +110,10 @@ class BackupService {
       }
 
       final outputPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save FuelTrack Pro backup',
-        fileName: encryptedBackupSuggestedFileName(),
+        dialogTitle: 'Save local backup',
+        fileName: backupSuggestedFileName(),
         type: FileType.custom,
-        allowedExtensions: const ['ftbak'],
+        allowedExtensions: const ['json'],
         bytes: built.bytes,
       );
 
@@ -109,110 +126,37 @@ class BackupService {
     }
   }
 
-  Future<BackupExportOutcome> exportRefuelsCsv() async {
+  Future<BackupImportOutcome> importPlainBackupFromFile() async {
     try {
-      final db = await _db.database;
-      final vehicles = await db.query('vehicles');
-      final vehicleNames = {
-        for (final row in vehicles)
-          row['id'] as int: row['name'] as String? ?? 'Vehicle',
-      };
-      final refuels = await db.query('refuel_entries', orderBy: 'refuel_date ASC');
-      final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
-
-      final csv = StringBuffer()
-        ..writeln(
-          'date,vehicle,odometer,quantity,price_per_liter,total_price,fuel_type,station,notes',
-        );
-
-      for (final row in refuels) {
-        final date = DateTime.fromMillisecondsSinceEpoch(row['refuel_date'] as int);
-        final vehicle = vehicleNames[row['vehicle_id'] as int] ?? 'Vehicle';
-        csv.writeln([
-          dateFmt.format(date),
-          _csvEscape(vehicle),
-          row['odometer'],
-          row['quantity'],
-          row['price_per_liter'],
-          row['total_price'],
-          row['fuel_type'],
-          _csvEscape(row['station_name']?.toString() ?? ''),
-          _csvEscape(row['notes']?.toString() ?? ''),
-        ].join(','));
-      }
-
-      final bytes = _utf8Bytes(csv.toString());
-      final outputPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export refuel history CSV',
-        fileName: refuelCsvSuggestedFileName(),
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['csv'],
-        bytes: bytes,
+        allowedExtensions: const ['json'],
+        withData: true,
       );
-
-      if (outputPath == null) {
-        return const BackupExportOutcome(BackupExportStatus.cancelled);
+      if (result == null || result.files.isEmpty) {
+        return const BackupImportOutcome(BackupImportStatus.cancelled);
       }
-      return const BackupExportOutcome(BackupExportStatus.saved);
+
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null) {
+        return const BackupImportOutcome(
+          BackupImportStatus.failed,
+          'Could not read file',
+        );
+      }
+
+      final jsonText = utf8.decode(bytes);
+      final ok = await importPlainBackupFromJsonString(jsonText);
+      if (!ok) {
+        return const BackupImportOutcome(
+          BackupImportStatus.failed,
+          'Invalid or corrupt backup file',
+        );
+      }
+      return const BackupImportOutcome(BackupImportStatus.restored);
     } catch (e) {
-      return BackupExportOutcome(BackupExportStatus.failed, e.toString());
-    }
-  }
-
-  Future<bool> importEncryptedBackupFromFile(String passphrase) async {
-    final result = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Select FuelTrack Pro backup',
-      type: FileType.custom,
-      allowedExtensions: const ['ftbak'],
-    );
-    if (result == null || result.files.isEmpty) {
-      return false;
-    }
-
-    final file = result.files.single;
-    final String contents;
-    if (file.bytes != null) {
-      contents = utf8.decode(file.bytes!);
-    } else if (file.path != null) {
-      contents = await File(file.path!).readAsString();
-    } else {
-      return false;
-    }
-    return importEncryptedBackupFromSealedContents(contents, passphrase);
-  }
-
-  Future<bool> importEncryptedBackupFromSealedContents(
-    String sealedUtf8Contents,
-    String passphrase, {
-    BackupProgressCallback? onProgress,
-  }) async {
-    try {
-      onProgress?.call('Unlocking backup…');
-      final jsonText = await BackupCrypto.openUtf8Payload(
-        sealedUtf8Contents,
-        passphrase,
-      );
-      final data = jsonDecode(jsonText) as Map<String, dynamic>;
-      _ensurePayloadImportable(data);
-      onProgress?.call('Restoring data…');
-      await _restoreData(data);
-      onProgress?.call('Done');
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  void _ensurePayloadImportable(Map<String, dynamic> data) {
-    final app = data['app'] as String?;
-    if (app != null && app != 'fueltrack_pro') {
-      throw const FormatException('Not a FuelTrack Pro backup');
-    }
-    final version = (data['dbSchemaVersion'] as num?)?.toInt() ?? 1;
-    if (version > kBackupSchemaVersion) {
-      throw FormatException(
-        'Backup needs a newer app (schema $version > $kBackupSchemaVersion).',
-      );
+      return BackupImportOutcome(BackupImportStatus.failed, e.toString());
     }
   }
 
@@ -220,10 +164,11 @@ class BackupService {
     final db = await _db.database;
     await db.transaction((txn) async {
       await txn.delete('refuel_entries');
+      await txn.delete('service_records');
+      await txn.delete('fuel_cards');
       await txn.delete('vehicles');
 
-      final vehicles = data['vehicles'] as List? ?? [];
-      for (final row in vehicles) {
+      for (final row in data['vehicles'] as List? ?? []) {
         await txn.insert(
           'vehicles',
           Map<String, dynamic>.from(row as Map),
@@ -231,10 +176,25 @@ class BackupService {
         );
       }
 
-      final refuels = data['refuel_entries'] as List? ?? [];
-      for (final row in refuels) {
+      for (final row in data['fuel_cards'] as List? ?? []) {
+        await txn.insert(
+          'fuel_cards',
+          Map<String, dynamic>.from(row as Map),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      for (final row in data['refuel_entries'] as List? ?? []) {
         await txn.insert(
           'refuel_entries',
+          Map<String, dynamic>.from(row as Map),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      for (final row in data['service_records'] as List? ?? []) {
+        await txn.insert(
+          'service_records',
           Map<String, dynamic>.from(row as Map),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -251,10 +211,16 @@ class BackupService {
     });
   }
 
-  static String _csvEscape(String value) {
-    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-      return '"${value.replaceAll('"', '""')}"';
+  void _ensurePayloadImportable(Map<String, dynamic> data) {
+    final app = data['app'] as String?;
+    if (app != null && app != 'fueltrack_pro') {
+      throw const FormatException('Not a FuelTrack Pro backup');
     }
-    return value;
+    final version = (data['dbSchemaVersion'] as num?)?.toInt() ?? 1;
+    if (version > kBackupSchemaVersion) {
+      throw FormatException(
+        'Backup needs a newer app (schema $version > $kBackupSchemaVersion).',
+      );
+    }
   }
 }

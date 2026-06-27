@@ -10,7 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../config/google_oauth_config.dart';
 import 'drive_backup_prefs.dart';
 
-const String kDriveCanonicalBackupName = 'fueltrack_pro_current.ftbak';
+const String kDriveCanonicalBackupName = 'fueltrack_pro_current.json';
 
 int? _driveTimeToMs(DateTime? time) => time?.toUtc().millisecondsSinceEpoch;
 
@@ -62,7 +62,7 @@ class DriveBackupService {
     return files.first;
   }
 
-  Future<DriveUploadResult> uploadEncryptedBackup({
+  Future<DriveUploadResult> uploadBackup({
     required Uint8List bytes,
     required DriveBackupPrefs prefs,
   }) async {
@@ -100,7 +100,7 @@ class DriveBackupService {
     );
   }
 
-  Future<String> downloadCanonicalSealedUtf8() async {
+  Future<String> downloadCanonicalJson() async {
     final api = await _api();
     final meta = await findCanonicalFile(api);
     final fileId = meta?.id;

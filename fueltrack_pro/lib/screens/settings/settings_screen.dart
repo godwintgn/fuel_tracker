@@ -14,6 +14,7 @@ import '../../features/donate/donate_screen.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/theme_x.dart';
 import '../fuel_cards/fuel_card_list_screen.dart';
+import '../reports/reports_screen.dart';
 import '../vehicles/vehicle_list_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -33,90 +34,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _busy = false;
   var _status = '';
 
-  Future<String?> _promptPassphrase({
-    required String title,
-    bool confirm = false,
-  }) async {
-    final controller = TextEditingController();
-    final confirmController = TextEditingController();
-
-    return showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Passphrase',
-                  hintText: 'At least 8 characters',
-                ),
-              ),
-              if (confirm) ...[
-                const SizedBox(height: 12),
-                TextField(
-                  controller: confirmController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm passphrase',
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final pass = controller.text.trim();
-                if (pass.length < 8) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Passphrase must be at least 8 characters'),
-                    ),
-                  );
-                  return;
-                }
-                if (confirm && pass != confirmController.text.trim()) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Passphrases do not match')),
-                  );
-                  return;
-                }
-                Navigator.pop(context, pass);
-              },
-              child: const Text('Continue'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _saveSettings(AppSettings settings) async {
     await ref.read(settingsProvider.notifier).updateSettings(settings);
   }
 
-  Future<void> _exportCsv() async {
+  Future<void> _saveLocalBackup() async {
     setState(() {
       _busy = true;
-      _status = 'Exporting CSV…';
+      _status = 'Saving backup…';
     });
     try {
       final outcome =
-          await ref.read(backupServiceProvider).exportRefuelsCsv();
+          await ref.read(backupServiceProvider).exportPlainBackupToFile();
       if (!mounted) return;
       final message = switch (outcome.status) {
-        BackupExportStatus.saved => 'CSV exported successfully',
-        BackupExportStatus.cancelled => 'Export cancelled',
-        BackupExportStatus.failed => outcome.message ?? 'Export failed',
+        BackupExportStatus.saved => 'Backup saved successfully',
+        BackupExportStatus.cancelled => 'Backup cancelled',
+        BackupExportStatus.failed => outcome.message ?? 'Backup failed',
       };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
@@ -129,13 +63,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _localRestore() async {
+  Future<void> _restoreLocalBackup() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restore from file?'),
+        title: const Text('Restore local backup?'),
         content: const Text(
-          'This replaces all vehicles, refuels, and settings on this device.',
+          'This replaces all local fuel data with the selected JSON backup file.',
         ),
         actions: [
           TextButton(
@@ -144,36 +78,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Continue'),
+            child: const Text('Restore'),
           ),
         ],
       ),
     );
     if (confirmed != true || !mounted) return;
 
-    final passphrase = await _promptPassphrase(title: 'Unlock backup');
-    if (passphrase == null || !mounted) return;
-
     setState(() {
       _busy = true;
-      _status = 'Restoring…';
+      _status = 'Restoring backup…';
     });
     try {
-      final ok = await ref
-          .read(backupServiceProvider)
-          .importEncryptedBackupFromFile(passphrase);
+      final outcome =
+          await ref.read(backupServiceProvider).importPlainBackupFromFile();
       if (!mounted) return;
-      if (ok) {
+      if (outcome.status == BackupImportStatus.restored) {
         invalidateAllDataProviders(ref);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup restored')),
+          const SnackBar(content: Text('Restored from local backup')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Restore failed — wrong passphrase or invalid file'),
-          ),
-        );
+        final message = switch (outcome.status) {
+          BackupImportStatus.cancelled => 'Restore cancelled',
+          BackupImportStatus.failed =>
+            outcome.message ?? 'Restore failed',
+          BackupImportStatus.restored => 'Restored from local backup',
+        };
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) {
@@ -206,42 +138,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _driveBackup() async {
+  Future<void> _driveSyncUp() async {
     final drive = ref.read(driveBackupServiceProvider);
     if (drive.currentUser == null) {
       await _toggleGoogleAccount();
       if (drive.currentUser == null) return;
     }
 
-    final passphrase = await _promptPassphrase(
-      title: 'Encrypt cloud backup',
-      confirm: true,
-    );
-    if (passphrase == null || !mounted) return;
-
     setState(() {
       _busy = true;
-      _status = 'Uploading to Google Drive…';
+      _status = 'Syncing to Google Drive…';
     });
     try {
       final backup = ref.read(backupServiceProvider);
       final prefs = ref.read(driveBackupPrefsProvider);
-      final built = await backup.buildEncryptedBackupBytes(passphrase);
+      final built = await backup.buildPlainBackupBytes();
       if (!built.ok || built.bytes == null) {
-        throw StateError(built.message ?? 'Backup build failed');
+        throw StateError(built.message ?? 'Sync failed');
       }
-      await drive.uploadEncryptedBackup(bytes: built.bytes!, prefs: prefs);
+      await drive.uploadBackup(bytes: built.bytes!, prefs: prefs);
       await prefs.setDriveBackupEnabled(true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backed up to Google Drive')),
+          const SnackBar(content: Text('Synced to Google Drive')),
         );
       }
     } catch (e) {
       await ref.read(driveBackupPrefsProvider).setLastError(e.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Drive backup failed: $e')),
+          SnackBar(content: Text('Google sync failed: $e')),
         );
       }
     } finally {
@@ -254,7 +180,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _driveRestore() async {
+  Future<void> _driveSyncDown() async {
     final drive = ref.read(driveBackupServiceProvider);
     if (drive.currentUser == null) {
       await _toggleGoogleAccount();
@@ -266,7 +192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Restore from Google Drive?'),
         content: const Text(
-          'This replaces all local fuel data with your cloud backup.',
+          'This replaces all local fuel data with your Google Drive copy.',
         ),
         actions: [
           TextButton(
@@ -282,17 +208,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final passphrase = await _promptPassphrase(title: 'Unlock cloud backup');
-    if (passphrase == null || !mounted) return;
-
     setState(() {
       _busy = true;
       _status = 'Downloading from Drive…';
     });
     try {
-      final sealed = await drive.downloadCanonicalSealedUtf8();
-      final ok = await ref.read(backupServiceProvider)
-          .importEncryptedBackupFromSealedContents(sealed, passphrase);
+      final json = await drive.downloadCanonicalJson();
+      final ok = await ref
+          .read(backupServiceProvider)
+          .importPlainBackupFromJsonString(json);
       if (!mounted) return;
       if (ok) {
         invalidateAllDataProviders(ref);
@@ -306,13 +230,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Wrong passphrase or corrupt backup')),
+          const SnackBar(content: Text('Invalid or corrupt backup file')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Drive restore failed: $e')),
+          SnackBar(content: Text('Google sync failed: $e')),
         );
       }
     } finally {
@@ -427,22 +351,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
-                  Text('Data & export', style: theme.textTheme.titleLarge),
+                  Text('Reports', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.stackMd),
                   _SettingsCard(
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.table_chart_outlined),
-                        title: const Text('Export refuel history (CSV)'),
-                        subtitle: const Text('Unencrypted spreadsheet export'),
-                        onTap: _busy ? null : _exportCsv,
+                        leading: const Icon(Icons.picture_as_pdf_outlined),
+                        title: const Text('Fuel reports'),
+                        subtitle: const Text(
+                          'PDF export by period and vehicle',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _busy ? null : () => ReportsScreen.open(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.stackLg),
+                  Text('Backup & restore', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.stackSm),
+                  Text(
+                    'Local backups use plain JSON — the same format as Google Drive sync. JSON is more compatible than ZIP for fuel data (readable, cross-platform, no extra tools).',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.stackMd),
+                  _SettingsCard(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.save_alt_outlined),
+                        title: const Text('Save local backup'),
+                        subtitle: const Text('Export all data as JSON'),
+                        onTap: _busy ? null : _saveLocalBackup,
                       ),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.restore_outlined),
-                        title: const Text('Restore from file'),
-                        subtitle: const Text('.ftbak encrypted backup'),
-                        onTap: _busy ? null : _localRestore,
+                        title: const Text('Restore local backup'),
+                        subtitle: const Text('Import from a JSON backup file'),
+                        onTap: _busy ? null : _restoreLocalBackup,
                       ),
                     ],
                   ),
@@ -469,7 +416,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text('Google Drive', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.stackSm),
                   Text(
-                    'Optional encrypted backup in your Google account app data folder (not visible in Drive).',
+                    'Sync your fuel data to Google Drive (app data folder — not visible in Drive). No passphrase required.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -484,8 +431,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         subtitle: Text(
                           prefs.driveBackupEnabled
-                              ? 'Cloud backup enabled'
-                              : 'Sign in to back up',
+                              ? 'Google sync enabled'
+                              : 'Sign in to sync',
                         ),
                         trailing: TextButton(
                           onPressed: _busy ? null : _toggleGoogleAccount,
@@ -497,7 +444,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       if (prefs.lastSuccessfulUploadMs > 0) ...[
                         const Divider(height: 1),
                         ListTile(
-                          title: const Text('Last cloud backup'),
+                          title: const Text('Last sync'),
                           subtitle: Text(
                             DateFormat.yMMMd().add_jm().format(
                               DateTime.fromMillisecondsSinceEpoch(
@@ -520,14 +467,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.cloud_upload_outlined),
-                        title: const Text('Back up now'),
-                        onTap: _busy ? null : _driveBackup,
+                        title: const Text('Sync to Drive'),
+                        onTap: _busy ? null : _driveSyncUp,
                       ),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.cloud_download_outlined),
                         title: const Text('Restore from Drive'),
-                        onTap: _busy ? null : _driveRestore,
+                        onTap: _busy ? null : _driveSyncDown,
                       ),
                     ],
                   ),
