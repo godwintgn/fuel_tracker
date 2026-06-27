@@ -53,10 +53,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.44.2'
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Analyze
         run: flutter analyze
@@ -81,7 +82,7 @@ jobs:
       - name: Build release APK
         run: |
           set -euo pipefail
-          ARGS=(build apk --release)
+          ARGS=(build apk --release --split-per-abi --target-platform=android-arm64)
           if [ -n "${GOOGLE_OAUTH_SERVER_CLIENT_ID:-}" ]; then
             ARGS+=(--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID="${GOOGLE_OAUTH_SERVER_CLIENT_ID}")
             echo "Google Drive OAuth client ID configured for release build."
@@ -94,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fueltrack-pro-release-apk
-          path: fueltrack_pro/build/app/outputs/flutter-apk/app-release.apk
+          path: fueltrack_pro/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           if-no-files-found: error
 
   release:
@@ -119,8 +120,8 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
           VERSION_NAME: ${{ needs.build.outputs.version_name }}
         run: |
-          cp app-release.apk FuelTrack-Pro.apk
-          cp app-release.apk "FuelTrack-Pro-v${VERSION}.apk"
+          cp app-arm64-v8a-release.apk FuelTrack-Pro.apk
+          cp app-arm64-v8a-release.apk "FuelTrack-Pro-v${VERSION}.apk"
           CHANGELOG_BODY=$(awk -v ver="${VERSION_NAME%%+*}" '
             /^## \[/ {
               if ($0 ~ "^## \\[" ver "\\]") { found=1; next }
