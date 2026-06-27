@@ -10,7 +10,7 @@
 
 ## 1. What this app is
 
-**FuelTrack Pro** is a local-first Flutter Android app for tracking vehicle fuel consumption, expenses, and efficiency analytics. No mandatory backend. Optional Google Drive backup is planned (Wealth Journal pattern) but **not implemented yet**.
+**FuelTrack Pro** is a local-first Flutter Android app for tracking vehicle fuel consumption, expenses, and efficiency analytics. No mandatory backend. Optional Google Drive sync (plain JSON backup) is implemented.
 
 | Item | Value |
 |------|--------|
@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.16.0+26` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.17.0+27` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -33,6 +33,7 @@
 | Charts | `fl_chart` |
 | Fonts | `google_fonts` — **Manrope** (headings) + **Inter** (body), aligned with Wealth Journal |
 | Intl | `intl` |
+| PDF reports | `pdf` |
 
 **Not chosen / deferred:** drift, Provider-only, mandatory backend.
 
@@ -58,10 +59,10 @@ fuel_tracker/                          # Git repo root
     │   ├── app.dart                   # Root widget + onboarding vs home routing
     │   ├── main.dart
     │   ├── data/                      # regions, onboarding draft types
-    │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, DashboardStats
+    │   ├── models/                    # Vehicle, RefuelEntry, AppSettings, ReportFilters, …
     │   ├── providers/                 # Riverpod
-    │   ├── screens/                   # … settings, analytics, vehicles
-    │   ├── services/                  # db, backup, drive, analytics, calculations
+    │   ├── screens/                   # … settings, analytics, reports, vehicles
+    │   ├── services/                  # db, backup, drive, analytics, fuel_report, calculations
     │   ├── config/                    # google_oauth_config.dart
     │   ├── theme/                     # WJ-aligned theme (app_theme, app_palette, fuel_chart_style, theme_x)
     │   ├── widgets/common/            # AppCard, SectionHeader, EmptyState, SummaryHeaderCard, SummaryStat
@@ -235,14 +236,22 @@ Bottom nav (4 tabs):
 
 - Currency, distance/fuel units, theme mode  
 - Manage vehicles shortcut  
-- Export refuel history CSV (unencrypted)  
-- Restore from `.ftbak` file (local encrypted backup import only — save-to-device removed)  
-- Google Drive: sign in, manual backup/restore to app data folder  
+- **Reports** → `ReportsScreen` (PDF export by period + vehicle)  
+- **Local backup & restore**: save/restore plain JSON (same schema as Drive sync)  
+- Google Drive: sign in, **Sync to Drive** / **Restore from Drive** (plain JSON in app data folder — no passphrase)  
 - **Donate** screen (`lib/features/donate/`) — UPI, PayPal, crypto (Wealth Journal pattern, shared `DonateConfig`)  
 - OAuth: `--dart-define=GOOGLE_OAUTH_SERVER_CLIENT_ID=...` + release SHA-1  
 - Opened from Dashboard / Vehicles gear icons  
 
-### 5.10 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
+### 5.10 Reports (`lib/screens/reports/reports_screen.dart`)
+
+- Period chips: 7d, 30d, 3M, 6M, 1Y, All time, Custom (date range picker)  
+- Vehicles: all, or multi-select individual vehicles  
+- Live preview: period label, fill count, total spent  
+- **Export PDF** via `FuelReportService` — summary stats, per-vehicle breakdown, monthly spending table, refuel history table  
+- Opened from Settings → Fuel reports  
+
+### 5.11 Fuel efficiency logic (`lib/services/fuel_calculations.dart`)
 
 - **km/L** = distance between consecutive refuels (odometer delta) ÷ liters at later refuel  
 - **L/100km** = (liters ÷ km) × 100  
@@ -386,7 +395,7 @@ After substantive code changes:
 | `dashboardProvider` | Seed if empty + stats for selected vehicle |
 | `analyticsProvider` | Fleet analytics for period (weekly/monthly/yearly) |
 | `analyticsPeriodProvider` | Selected analytics timeframe |
-| `backupServiceProvider` | Encrypted backup + CSV export |
+| `backupServiceProvider` | Plain JSON backup/restore (local file + Drive payload builder) |
 | `driveBackupServiceProvider` | Google Sign-In + Drive app-data upload/download |
 | `driveBackupPrefsProvider` | Drive backup metadata (initialized in `main.dart`) |
 
@@ -410,7 +419,8 @@ Add vehicle: pushed route from Vehicles `+` FAB or onboarding.
 Vehicle **Details** → `VehicleDetailScreen`; **Edit** from detail app bar.  
 Add refuel: `AddRefuelScreen` from FAB or vehicle **Fuel Log** (locks vehicle).  
 View refuel: tap card in History → `RefuelDetailScreen`; edit from app bar or swipe right.  
-Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.
+Settings: gear icon on Dashboard / Vehicles → `SettingsScreen`.  
+Reports: Settings → Fuel reports → `ReportsScreen`.
 
 ---
 
@@ -482,4 +492,4 @@ Or attach:
 
 ---
 
-*Last updated: CI path filters — build-apk.yml runs only on fueltrack_pro/** changes; sync-website.yml for website/** only. Version `1.16.0+26`.*
+*Last updated: PDF Reports + local JSON backup/restore (CSV removed). Version `1.17.0+27`.*
