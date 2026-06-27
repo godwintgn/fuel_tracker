@@ -419,7 +419,7 @@ After substantive code changes:
 | `c436e40` | feat: PDF reports, local JSON backup, plain Drive sync (v1.17.0+27) |
 | `98419c1` | feat: rich PDF reports, share, README GPL, CHANGELOG releases (v1.18.0+29) |
 | `f09cc5c` | fix: CI embeds Google Drive OAuth client ID from GitHub secret (v1.18.1+30) |
-| `1f1bfb0` | feat: bundled fonts, Fastlane + F-Droid metadata (v1.19.0+31) |
+| `46564e9` | feat: bundled fonts, Fastlane + F-Droid metadata (v1.19.0+31) |
 
 ---
 
