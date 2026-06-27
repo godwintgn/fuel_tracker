@@ -17,6 +17,6 @@ fueltrack_pro/android/app/*.jks
 fueltrack_pro/android/**/*.keystore
 fueltrack_pro/android/**/*.p12
 fueltrack_pro/android/**/GeneratedPluginRegistrant.java
-/AGENT_CONTEXT.md
-/FDROID.md
-/fueltrack-pro-cursor-prompt.md
+AGENT_CONTEXT.md
+FDROID.md
+fueltrack-pro-cursor-prompt.md
