@@ -56,6 +56,7 @@ fuel_tracker/                          # Git repo root
 ├── .github/workflows/sync-website.yml # CI: website/** only — sync to wealth-journal (no APK build)
 ├── website/                           # FuelTrack marketing site source (live: melmidalamapps.fyi/fueltrack; synced to wealth-journal repo)
 ├── screenshots/                       # README + website screenshots (01–04)
+├── .githooks/                         # commit-msg hook — strips Cursor co-author (set core.hooksPath)
 ├── .cursor/rules/
 │   ├── commit-push-build-apk.mdc      # Auto rule: commit → push → clean APK
 │   └── update-agent-context.mdc       # Auto rule: keep this file updated every change
@@ -536,4 +537,4 @@ Or attach:
 
 ---
 
-*Last updated: Owner-only commits (Cursor co-author removed from history); melmidalamapps.fyi URLs. Version `1.19.0+31`.*
+*Last updated: Owner-only git history; melmidalamapps.fyi URLs; `.githooks/commit-msg`. Version `1.19.0+31`.*
