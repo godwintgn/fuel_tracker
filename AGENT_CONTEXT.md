@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.14.0+24` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.15.0+25` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -215,15 +215,18 @@ Bottom nav (4 tabs):
 
 ### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
 
-- **`SummaryHeaderCard`** hero: avg efficiency headline, spend + fill count + change% `SummaryStat` pills; `ActiveVehicleBar` as trailing
-- Period selector chips below header card
-- Efficiency trend line chart: **220px** height, left Y-axis `labelSmall` ticks (reserved 40px), peak badge retained
-- `_EfficiencyInsightCard` / `_CostInsightCard`: **no fixed height**, 44×44 rounded-14 icon wells (was 72×72/132px fixed), `titleSmall` w700 values
-- Monthly spending bar chart: **220px**, left Y-axis ticks
-- `_MetricRow`: `labelMedium` for label (was `bodySmall`), `labelLarge` w700 for value
-- `_VehicleProfileCard` icon well: **44×44**, radius 14 (was 72×72)
-- Vehicle Profiles section header uses `SectionHeader` (`titleMedium` w800)
-- `AnalyticsService` + `analyticsProvider`; empty states when no refuels  
+- **`SummaryHeaderCard`** hero: avg efficiency headline, spend + fill count + change% + **avg/fill prediction** `SummaryStat` pills; `ActiveVehicleBar` as trailing
+- **Period selector chips**: 7d / 30d / 3M / 1Y / All (all-time uses no date filter)
+- **Best / Worst Fill row**: two tappable tiles (cheapest + most expensive price/L) → open `RefuelDetailScreen`
+- Efficiency trend line chart: **220px**, tappable points → `RefuelDetailScreen`; **multi-vehicle overlay** (one color-coded line per vehicle using `vehicleAccentColor`) with legend
+- **Cost per Fill-up bar chart** (`_FillCostTrendCard`): tap bar → `RefuelDetailScreen`; highlight on hover
+- `_EfficiencyInsightCard` / `_CostInsightCard`: 44×44 rounded-14 icon wells, `titleSmall` w700 values
+- Monthly spending bar chart: shows last 3–6 months depending on selected period; currency label in subtitle
+- **Station Comparison card** (`_StationComparisonCard`): ranked list (cheapest avg price/L first), progress bar scaling, visit count — only shown when station names are logged
+- `_MetricRow`: `labelMedium` label, `labelLarge` w700 value
+- `_VehicleProfileCard`: now uses `vehicleAccentColor(vehicleId)` for stable color; shows total liters used in trailing column
+- Vehicle Profiles section header uses `SectionHeader`
+- `AnalyticsService`: new data models `StationStat`, `FillCostPoint`, `VehicleEfficiencyData`; new computed fields `bestFill`, `worstFill`, `stationStats`, `fillCostTrend`, `vehicleEfficiencyData`, `nextRefuelPredictionKm`
 
 ### 5.9 Settings (`lib/screens/settings/settings_screen.dart`)
 
@@ -361,6 +364,8 @@ After substantive code changes:
 | `8c4427b` | feat: Donate screen, remove local save encrypted backup (v1.12.1+21) |
 | `ad9b1f6` | feat: Dashboard & Analytics UI rewrite — compact typography, SummaryHeaderCard, Y-axis charts (v1.13.0+22) |
 | `f0a89d7` | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
+| *(pending)* | feat: Feature Batch 3 — fuel entry 3-way calc, Fuel Cards, Service Reminders, stable vehicle colors, country/currency separation (v1.14.0+24) |
+| *(pending)* | feat: Analytics enhancement — Best/Worst fill, cost-per-fill chart, station comparison, multi-vehicle overlay, tappable charts, next-refuel prediction (v1.15.0+25) |
 
 ---
 
@@ -473,4 +478,4 @@ Or attach:
 
 ---
 
-*Last updated: Feature Batch 3 — fuel entry 3-way calc fix, Fuel Cards (fleet+vehicle), Service Reminders + notifications, stable vehicle colors in History, Countries/Currencies world lists, independent Country+Currency pickers in onboarding & settings. DB v3. Version `1.14.0+24`.*
+*Last updated: Analytics Enhancement — Best/Worst fill tiles, Cost-per-fill chart, Station Comparison, multi-vehicle efficiency overlay, tappable chart points → RefuelDetail, next-refuel prediction stat, 5-period selector (7d/30d/3M/1Y/All). Version `1.15.0+25`.*
