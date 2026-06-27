@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.13.1+23` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.14.0+24` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -96,9 +96,12 @@ Incremental build per original prompt. **Do not generate everything at once.**
 
 ### 5.1 Database (`lib/services/database_service.dart`)
 
-- **vehicles** — name, make, model, year, fuel_type, license_plate, notes, timestamps  
-- **refuel_entries** — vehicle_id FK, date, odometer, quantity, price_per_liter, total_price, fuel_type, station_name, notes  
-- **settings** — single row (id=1): currency, units, theme_mode, onboarding_completed, selected_vehicle_id  
+- **DB version 3**
+- **vehicles** — name, make, model, year, fuel_type, license_plate, notes, photo_path, timestamps  
+- **refuel_entries** — vehicle_id FK, date, odometer, quantity, price_per_liter (nullable), total_price, fuel_type, station_name, notes  
+- **settings** — single row (id=1): currency_code, currency_symbol, **country_code** (new v3), units, theme_mode, onboarding_completed, selected_vehicle_id  
+- **fuel_cards** (new v3) — name, provider, company_name, card_number, scope (fleet|vehicle), vehicle_id FK nullable, limit_type, limit_value, reset_period, reset_day, expiry_date, is_active  
+- **service_records** (new v3) — vehicle_id FK, title, notes, trigger_type (date|odometer|both), due_date, due_odometer, notify_before_days, notify_before_km, is_completed, completed_date, next_due_date, next_due_odometer  
 
 ### 5.2 Onboarding (`lib/screens/onboarding/`)
 
@@ -169,9 +172,45 @@ Bottom nav (4 tabs):
 - Search bar (stations, fuel type, vehicle name, notes)  
 - Filter bottom sheet: vehicle, fuel type, date range (7d / 30d / 3mo / custom)  
 - Summary chip: entry count + total spend for active filters  
-- `RefuelHistoryCard`: station title `labelLarge` w600 (was `titleMedium`); cost `titleSmall` w700 (was `titleLarge`); qty `.toStringAsFixed(1)` (was 2); icon well 40×40 radius-12; odometer/price row `labelMedium` (was `bodyMedium`)
+- `RefuelHistoryCard`: icon well uses **stable `vehicleAccentColor(vehicleId)`** (palette of 6) — replaces old `alternateAccent: isOdd` index-based colouring; station title `labelLarge` w600; cost `titleSmall` w700; qty 1dp; icon well 40×40 radius-12
 - Swipe right → edit (`AddRefuelScreen` edit mode); swipe left → delete with confirm  
 - Tap card → `RefuelDetailScreen` (view); empty states for no data / no matches  
+
+### 5.8 Fuel Cards (`lib/screens/fuel_cards/`, `lib/widgets/fuel_cards/`, `lib/models/fuel_card.dart`)
+
+- **FuelCardScope**: fleet (all vehicles) | vehicle (specific)
+- **FuelCardLimitType**: none | price | quantity  
+- **FuelCardResetPeriod**: none | weekly | monthly | yearly  
+- `FuelCardListScreen` — grouped list (Fleet / Vehicle-specific); accessible from Settings → Vehicles → Fuel Cards, and from VehicleDetailScreen
+- `AddEditFuelCardScreen` — name, provider, company, scope toggle, vehicle picker, limit, reset period, expiry date, active toggle
+- `FuelCardWidget` — compact card with scope/limit/reset/expiry chips, toggle, edit, delete actions
+- Provider: `fuelCardsProvider` (all cards CRUD) + `vehicleFuelCardsProvider(vehicleId)` (fleet + vehicle-specific)
+
+### 5.9 Service Reminders (`lib/screens/vehicles/service_records_screen.dart`, `add_edit_service_record_screen.dart`)
+
+- `ServiceRecord` model: trigger_type (date | odometer | both), due_date, due_odometer, notify_before_days, notify_before_km, is_completed, next_due fields
+- `VehicleDetailScreen` now shows **Upcoming Service** section (overdue badge, date/odo due) above Recent Refuels; + "All services" + "Fuel cards" action buttons
+- `ServiceRecordsScreen` — grouped Upcoming / Completed list per vehicle; mark-complete dialog schedules next service
+- `AddEditServiceRecordScreen` — title, notes, trigger type, due date picker, due odometer, notify-before settings
+- **Dashboard warning banner** — shown when active vehicle has overdue service records; taps through to `ServiceRecordsScreen`
+- Provider: `vehicleServiceRecordsProvider(vehicleId)` (FamilyAsyncNotifier with `add`, `save`, `remove`, `complete`) + `activeServiceRecordsProvider` (all active)
+
+### 5.10 Notifications (`lib/services/notification_service.dart`)
+
+- `flutter_local_notifications ^18.0.1` + `timezone ^0.9.4` added to `pubspec.yaml`
+- `NotificationService.instance.initialize()` called from `main.dart`
+- `scheduleServiceReminder(record, vehicle)` — schedules OS notification for date-based services
+- `cancelServiceReminder(serviceId)` — cancels scheduled notification
+- Odometer-based reminders: checked in-app via Dashboard provider on each load (banner shown)
+
+### 5.11 Country & Currency
+
+- **`lib/data/countries.dart`** — 180 `CountryOption(code, name, flag)` entries; `defaultCurrencyFor(countryCode)` mapping
+- **`lib/data/currencies.dart`** — 150 ISO 4217 `CurrencyOption(code, symbol, name)` entries  
+- `AppSettings.countryCode` added (DB v3 migration); defaults to `'OM'`
+- **Onboarding** `OnboardingRegionCurrencyScreen` refactored: independent Country + Currency pickers (searchable bottom sheets); selecting a country pre-fills currency but allows independent override
+- **Settings** has separate Country + Currency rows, both using searchable picker sheets (`_SearchPickerSheet`)
+- `OnboardingDraft` in `regions.dart` extended: `countryCode`, `currencyCode`, `currencySymbol` fields  
 - FAB **New Refuel** on History tab  
 
 ### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
@@ -321,7 +360,7 @@ After substantive code changes:
 | `2c0eb39` | feat: refuel edit/delete bar, active chip fuel+number, station autocomplete, mandatory vehicle fields (v1.12.0+20) |
 | `8c4427b` | feat: Donate screen, remove local save encrypted backup (v1.12.1+21) |
 | `ad9b1f6` | feat: Dashboard & Analytics UI rewrite — compact typography, SummaryHeaderCard, Y-axis charts (v1.13.0+22) |
-| TBD | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
+| `f0a89d7` | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
 
 ---
 
@@ -434,4 +473,4 @@ Or attach:
 
 ---
 
-*Last updated: History & Vehicles UI optimisation — SummaryHeaderCard headers, compact card typography, tighter icon wells across History, VehicleList, VehicleCard, VehicleDetail. Version `1.13.1+23`.*
+*Last updated: Feature Batch 3 — fuel entry 3-way calc fix, Fuel Cards (fleet+vehicle), Service Reminders + notifications, stable vehicle colors in History, Countries/Currencies world lists, independent Country+Currency pickers in onboarding & settings. DB v3. Version `1.14.0+24`.*

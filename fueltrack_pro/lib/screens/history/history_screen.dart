@@ -338,7 +338,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             vehicle: vehicle,
                             currency: currency,
                             distanceUnit: distanceUnit,
-                            alternateAccent: index.isOdd,
                             onTap: () => _viewEntry(entry, vehicle),
                           ),
                         );
