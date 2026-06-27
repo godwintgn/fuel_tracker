@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    (function () {
+      try {
+        var k = "wj-theme";
+        var t = (localStorage.getItem(k) || "").trim();
+        var dark =
+          t === "dark" ||
+          (t !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute(
+          "data-theme",
+          dark ? "dark" : "light"
+        );
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
+  <meta name="theme-color" content="#fff7ed" />
+  <meta name="description" content="Privacy Policy for FuelTrack Pro — local-first fuel and vehicle tracking for Android." />
+  <title>Privacy Policy — FuelTrack Pro</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="legal page--fueltrack">
+  <header class="site-nav" id="siteNav">
+    <div class="site-nav__inner">
+      <a class="brand" href="/fueltrack/">
+        <span class="brand__mark" style="display:inline-grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:0.4rem;background:linear-gradient(145deg,#fb923c,#ea580c);color:#fff;font-size:0.75rem;font-weight:700" aria-hidden="true">FT</span>
+        FuelTrack Pro
+      </a>
+      <nav class="site-nav__links" aria-label="Primary">
+        <a href="/fueltrack/#features">Features</a>
+        <a href="/fueltrack/#gallery">Screens</a>
+        <a href="/fueltrack/privacy/">Privacy</a>
+        <a href="/">Wealth Journal</a>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="themeToggle"
+          aria-pressed="false"
+          aria-label="Switch theme"
+          title="Theme"
+        >
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <header class="legal-header">
+      <h1>Privacy Policy</h1>
+      <p class="meta"><strong>FuelTrack Pro</strong><br />
+      Effective date: June 27, 2026<br />
+      Contact: <a href="mailto:wealth-journal@proton.me">wealth-journal@proton.me</a></p>
+    </header>
+
+    <h2>1. Introduction</h2>
+    <p>This Privacy Policy describes how the developer (&quot;I&quot;, &quot;me&quot;, or &quot;the developer&quot;) handles information in connection with the <strong>FuelTrack Pro</strong> mobile application (&quot;the App&quot;). By using the App, you agree to the practices described in this policy.</p>
+    <p>FuelTrack Pro is a <strong>local-first</strong> fuel and vehicle expense tracker. Your refuels, vehicles, fuel cards, service reminders, and related settings are stored <strong>on your device</strong> and are <strong>not</strong> sent to a FuelTrack server, because no such server exists. Data may leave your device only in the ways described below (for example <strong>optional</strong> cloud backup or <strong>exports you explicitly start</strong>).</p>
+
+    <h2>2. Information stored on your device</h2>
+    <h3>2.1 Data you enter</h3>
+    <p>Information you add in the App — vehicles, refuel entries, odometer readings, fuel card assignments, service schedules, preferences, and similar records — is stored in a <strong>SQLite database on your device</strong>. It does not leave your device except when you use optional backup or export features, or when the operating system backs up app data according to your device settings.</p>
+    <h3>2.2 No FuelTrack account</h3>
+    <p>The App does not require you to create a FuelTrack account or register an email with me. There is no backend operated by me that stores your fuel or vehicle data. If you use <strong>optional Google Drive backup</strong>, sign-in is with <strong>Google</strong> under Google&apos;s terms — not a separate FuelTrack login.</p>
+    <h3>2.3 Optional Google Drive backup</h3>
+    <p>If you enable encrypted backup to Google Drive, the App may use Google Sign-In and the Google Drive API to store <strong>passphrase-encrypted</strong> backup files in a Google-managed app-specific area tied to the Google account you choose. I do not receive your Google password, your passphrase, or readable copies of your fuel data. Google processes authentication and storage under <a href="https://policies.google.com/privacy">Google&apos;s Privacy Policy</a>. You can turn this off in the App&apos;s backup settings.</p>
+
+    <h2>3. Exports</h2>
+    <p>You may generate <strong>CSV exports</strong> and other reports from within the App. These files are created on demand and saved or shared only where you direct. CSV and similar exports are <strong>not</strong> encrypted like backup archives — treat them as sensitive if they contain your data. I never receive a copy of your exports.</p>
+
+    <h2>4. Data I do not collect (developer-side)</h2>
+    <p>I do not operate analytics, advertising, or a FuelTrack user database. I do not collect or have access to:</p>
+    <ul>
+      <li>Your refuel history, vehicle details, or spending data in the clear</li>
+      <li>A separate FuelTrack login or email list from the App</li>
+      <li>First-party crash reporting or behavioural analytics sent to me</li>
+      <li>Advertising IDs or ad SDK data from the App</li>
+    </ul>
+    <p>The App contains <strong>no advertising SDKs</strong> and shows <strong>no advertisements</strong> from the developer.</p>
+
+    <h2>5. Internet access</h2>
+    <p>Network access is used only when a feature needs it — for example optional Google sign-in and Drive backup when you enable it, or opening links you choose (such as this policy or support email). The App does not upload your SQLite database to a developer server.</p>
+
+    <h2>6. Device permissions</h2>
+    <p>Depending on your device and settings, the App may request permissions such as <strong>Internet</strong> (for optional backup and links), <strong>notifications</strong> (for local service reminders if you enable them), and storage or file access to save backups and exports via system file pickers. Permissions are used for the stated features only.</p>
+
+    <h2>7. Security</h2>
+    <p>You may protect backups with a passphrase. Optional app lock or device security features, where available, are processed on your device. No security measure is perfect — you are responsible for your device, passphrases, and any files or cloud accounts you use.</p>
+
+    <h2>8. Children&apos;s privacy</h2>
+    <p>The App is not directed at children under 13. If you believe a minor has used the App without appropriate consent, contact me at <a href="mailto:wealth-journal@proton.me">wealth-journal@proton.me</a>.</p>
+
+    <h2>9. Changes</h2>
+    <p>I may update this Privacy Policy from time to time. I will update the effective date at the top when I do. Continued use of the App after an update constitutes acceptance of the revised policy.</p>
+
+    <h2>10. Contact</h2>
+    <p>Questions about this policy:</p>
+    <p><strong>Email:</strong> <a href="mailto:wealth-journal@proton.me">wealth-journal@proton.me</a></p>
+    <p class="note"><strong>Note:</strong> This policy is provided for informational purposes and does not constitute legal advice.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p class="site-footer__copy">FuelTrack Pro — fuel tracking that stays on your device.</p>
+      <nav aria-label="Footer">
+        <a href="/fueltrack/">Home</a>
+        <a href="https://github.com/godwintgn/fuel_tracker" rel="noopener noreferrer">GitHub</a>
+        <a href="/">Wealth Journal</a>
+        <a href="mailto:wealth-journal@proton.me">wealth-journal@proton.me</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/assets/theme.js" defer></script>
+</body>
+</html>

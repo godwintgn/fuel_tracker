@@ -1,0 +1,11 @@
+{
+  "appName": "FuelTrack Pro",
+  "version": "1.16.0+26",
+  "versionName": "1.16.0",
+  "versionCode": 26,
+  "releasedAt": "2026-06-27T00:00:00Z",
+  "apkUrl": "https://github.com/godwintgn/fuel_tracker/releases/latest/download/FuelTrack-Pro.apk",
+  "releasePageUrl": "https://github.com/godwintgn/fuel_tracker/releases/latest",
+  "obtainiumUrl": "https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/godwintgn/fuel_tracker",
+  "packageId": "com.fuel.tracker"
+}

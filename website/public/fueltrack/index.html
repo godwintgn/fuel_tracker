@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    (function () {
+      try {
+        var k = "wj-theme";
+        var t = (localStorage.getItem(k) || "").trim();
+        var dark =
+          t === "dark" ||
+          (t !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.setAttribute(
+          "data-theme",
+          dark ? "dark" : "light"
+        );
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
+  <meta name="description" content="FuelTrack Pro — local-first fuel and vehicle expense tracking for Android. Multi-vehicle refuel logs, efficiency analytics, fuel cards, service reminders, and optional encrypted Google Drive backup." />
+  <meta name="theme-color" content="#fff7ed" />
+  <meta property="og:title" content="FuelTrack Pro — Local-first fuel tracking" />
+  <meta property="og:description" content="Track fuel. Know your costs. Your refuel history stays in SQLite on your phone — no account, no ads." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/assets/screenshots/fueltrack/01-dashboard.png" />
+  <title>FuelTrack Pro — Local-first fuel tracking</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body.page--fueltrack {
+      --accent: #ea580c;
+      --accent-hover: #c2410c;
+      --accent-soft: rgba(234, 88, 12, 0.14);
+      --focus-ring: rgba(234, 88, 12, 0.35);
+      --btn-primary-hover-bg: var(--accent);
+    }
+    body.page--fueltrack .brand__mark--ft {
+      display: inline-grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.4rem;
+      background: linear-gradient(145deg, #fb923c, #ea580c);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .features-grid {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+      margin-top: 2rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.35rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .feature-card h3 {
+      margin: 0.35rem 0 0.5rem;
+      font-size: 1.05rem;
+      color: var(--text-strong);
+    }
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+<body class="page--fueltrack">
+  <header class="site-nav" id="siteNav">
+    <div class="site-nav__inner">
+      <a class="brand" href="/fueltrack/">
+        <span class="brand__mark brand__mark--ft" aria-hidden="true">FT</span>
+        FuelTrack Pro
+      </a>
+      <nav class="site-nav__links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#gallery">Screens</a>
+        <a href="/fueltrack/privacy/">Privacy</a>
+        <a href="/">Wealth Journal</a>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="themeToggle"
+          aria-pressed="false"
+          aria-label="Switch theme"
+          title="Theme"
+        >
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <span class="eyebrow">FuelTrack Pro · <span data-ft-version>v1.16.0</span></span>
+        <h1 id="hero-title">Track fuel.<br /><span class="accent">Know your costs.</span></h1>
+        <p class="hero__lead">
+          A local-first Android app for refuels, mileage, and vehicle spend. Log every fill-up, validate odometer timelines,
+          and see efficiency on a dashboard — all stored in SQLite on your phone. No FuelTrack account, no ads.
+          Optional encrypted backup to your Google Drive when you turn it on.
+        </p>
+        <div class="hero__cta">
+          <a
+            class="btn btn--primary btn--lg"
+            id="ftApkDownload"
+            href="https://github.com/godwintgn/fuel_tracker/releases/latest/download/FuelTrack-Pro.apk"
+            rel="noopener noreferrer"
+          >Download APK</a>
+          <a
+            class="btn btn--ghost btn--lg"
+            id="ftObtainium"
+            href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/godwintgn/fuel_tracker"
+            rel="noopener noreferrer"
+          >Get updates via Obtainium</a>
+        </div>
+        <p class="hero__meta">
+          <a id="ftReleasePage" href="https://github.com/godwintgn/fuel_tracker/releases/latest" rel="noopener noreferrer">All releases</a>
+          · Android · Sideload or Obtainium
+        </p>
+      </div>
+      <div class="hero__visual">
+        <div class="phone phone--lg" aria-hidden="true">
+          <div class="phone__screen">
+            <img src="/assets/screenshots/fueltrack/01-dashboard.png" width="320" height="650" alt="" loading="eager" decoding="async" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust">
+      <div class="wrap trust__grid">
+        <div class="trust__item">
+          <strong>Local-first</strong>
+          <span>Refuels, vehicles, and settings live in SQLite on your device — not on our servers.</span>
+        </div>
+        <div class="trust__item">
+          <strong>No ads</strong>
+          <span>No advertising SDKs and no behavioural tracking in the app.</span>
+        </div>
+        <div class="trust__item">
+          <strong>Encrypted backup optional</strong>
+          <span>Passphrase-encrypted snapshots locally or to your Google Drive — only when you enable it.</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">What you get</span>
+          <h2 id="features-title">Built for real refuel habits.</h2>
+          <p>From quick pump-side entry to long-term cost trends — without handing your data to a cloud account.</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card">
+            <span class="eyebrow">Garage</span>
+            <h3>Multi-vehicle</h3>
+            <p>Track cars, bikes, or fleet units separately with per-vehicle currency, units, and odometer rules.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Refuel</span>
+            <h3>Smart refuel calc</h3>
+            <p>Enter volume, price, or total — the app fills in the rest and computes cost per distance automatically.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Integrity</span>
+            <h3>Timeline validation</h3>
+            <p>Odometer and date checks catch gaps and overlaps so your efficiency numbers stay trustworthy.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Insights</span>
+            <h3>Dashboard &amp; analytics</h3>
+            <p>See spend, consumption, and trends at a glance with charts tuned for fuel economy and cost.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Cards</span>
+            <h3>Fuel cards</h3>
+            <p>Link corporate or prepaid fuel cards to refuels for reconciliation and card-level reporting.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Maintenance</span>
+            <h3>Service reminders</h3>
+            <p>Schedule service intervals by date or mileage so upkeep stays ahead of breakdowns.</p>
+          </article>
+          <article class="feature-card">
+            <span class="eyebrow">Your data</span>
+            <h3>Backups &amp; export</h3>
+            <p>Encrypted backup files, optional Google Drive copy, and CSV export — you choose what leaves the phone.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" id="gallery" aria-labelledby="gallery-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Screens</span>
+          <h2 id="gallery-title">Inside the app.</h2>
+          <p>Real screens from the latest FuelTrack Pro build.</p>
+        </div>
+        <div class="gallery__grid">
+          <figure class="gallery__item">
+            <div class="phone"><div class="phone__screen"><img src="/assets/screenshots/fueltrack/01-dashboard.png" width="220" height="446" alt="Dashboard with fuel stats and quick actions." loading="lazy" decoding="async" /></div></div>
+            <figcaption class="gallery__caption">Dashboard</figcaption>
+          </figure>
+          <figure class="gallery__item">
+            <div class="phone"><div class="phone__screen"><img src="/assets/screenshots/fueltrack/02-history.png" width="220" height="446" alt="Refuel history list with filters." loading="lazy" decoding="async" /></div></div>
+            <figcaption class="gallery__caption">History</figcaption>
+          </figure>
+          <figure class="gallery__item">
+            <div class="phone"><div class="phone__screen"><img src="/assets/screenshots/fueltrack/03-analytics.png" width="220" height="446" alt="Analytics charts for consumption and cost." loading="lazy" decoding="async" /></div></div>
+            <figcaption class="gallery__caption">Analytics</figcaption>
+          </figure>
+          <figure class="gallery__item">
+            <div class="phone"><div class="phone__screen"><img src="/assets/screenshots/fueltrack/04-vehicle-details.png" width="220" height="446" alt="Vehicle details and settings." loading="lazy" decoding="async" /></div></div>
+            <figcaption class="gallery__caption">Vehicle details</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band" aria-labelledby="cta-title">
+      <h2 id="cta-title">Ready to log your next fill-up?</h2>
+      <p>Download the APK or add the GitHub repo to Obtainium for update notifications. Data stays on your phone unless you export or back up.</p>
+      <div class="hero__cta" style="justify-content:center">
+        <a
+          class="btn btn--primary btn--lg"
+          href="https://github.com/godwintgn/fuel_tracker/releases/latest/download/FuelTrack-Pro.apk"
+          rel="noopener noreferrer"
+          data-ft-apk-cta
+        >Download APK</a>
+        <a class="btn btn--ghost btn--lg" href="/fueltrack/privacy/">Privacy policy</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p class="site-footer__copy">FuelTrack Pro — local-first fuel tracking by the Wealth Journal developer.</p>
+      <nav aria-label="Footer">
+        <a href="/fueltrack/privacy/">Privacy policy</a>
+        <a href="https://github.com/godwintgn/fuel_tracker" rel="noopener noreferrer">GitHub</a>
+        <a href="/">Wealth Journal</a>
+        <a href="mailto:wealth-journal@proton.me">wealth-journal@proton.me</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/assets/theme.js" defer></script>
+  <script src="/assets/fueltrack-download.js" defer></script>
+  <script>
+    (function () {
+      var apk = document.getElementById("ftApkDownload");
+      var cta = document.querySelector("[data-ft-apk-cta]");
+      if (apk && cta) {
+        apk.addEventListener("click", function () { cta.href = apk.href; });
+        document.addEventListener("DOMContentLoaded", function () { cta.href = apk.href; });
+      }
+    })();
+  </script>
+</body>
+</html>

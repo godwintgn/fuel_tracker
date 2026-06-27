@@ -533,7 +533,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackLg),
                   Text(
-                    'FuelTrack Pro v1.14.0',
+                    'FuelTrack Pro v1.16.0',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -814,3 +814,4 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
     );
   }
 }
+
