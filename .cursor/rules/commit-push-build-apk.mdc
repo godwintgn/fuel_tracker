@@ -19,6 +19,7 @@ After **implementing or modifying** project code (not for drive-by typo-only edi
 4. **Commit** — One logical commit per coherent change. Conventional Commits:
    - `feat:`, `fix:`, `refactor:`, `perf:`, `chore:`, `docs:` + short imperative summary.
    - **Author:** commits must be authored **only** by the repo owner (`Godwin <godwintgn@protonmail.com>`). **Never** add `Co-authored-by`, `Signed-off-by`, or any other trailer naming Cursor, bots, or AI agents.
+   - **Cursor attribution:** turn off **Cursor Settings → Agents → Attribution → Commit Attribution** (and PR Attribution). Run `git config core.hooksPath .githooks` once per clone so `.githooks/commit-msg` strips any Cursor trailer the IDE still injects.
 
 5. **Push** — `git push origin` (current branch). Resolve conflicts before pushing.
 
