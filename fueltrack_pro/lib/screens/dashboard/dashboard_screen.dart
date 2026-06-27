@@ -18,6 +18,8 @@ import '../../widgets/common/active_vehicle_bar.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/section_header.dart';
+import '../../widgets/common/summary_header_card.dart';
+import '../../widgets/common/summary_stat.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -47,31 +49,6 @@ class DashboardScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(dashboardProvider),
           child: CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.marginMobile,
-                        AppSpacing.stackSm,
-                        AppSpacing.marginMobile,
-                        0,
-                      ),
-                      child: Text(
-                        'Dashboard',
-                        style: context.tt.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    ActiveVehicleBar(
-                      vehicles: data.allVehicles,
-                      embedded: true,
-                    ),
-                  ],
-                ),
-              ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.marginMobile,
@@ -81,18 +58,65 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _HeroCards(stats: stats, fuelType: vehicle.fuelType),
+                    // ── Header card ──────────────────────────────────────────
+                    SummaryHeaderCard(
+                      icon: Icons.speed_outlined,
+                      title: 'Dashboard',
+                      headlineValue: stats.currentOdometer != null
+                          ? NumberFormat('#,###')
+                              .format(stats.currentOdometer!.round())
+                          : '—',
+                      headlineUnit: 'km',
+                      subtitle: 'Current odometer',
+                      trailing: SizedBox(
+                        width: 200,
+                        child: ActiveVehicleBar(
+                          vehicles: data.allVehicles,
+                          embedded: true,
+                        ),
+                      ),
+                      stats: [
+                        SummaryStat(
+                          label: 'Avg',
+                          value: FuelTypeMetrics.formatEfficiency(
+                            stats.avgKmPerLiter,
+                            vehicle.fuelType,
+                          ),
+                          color: context.palette.efficiency,
+                        ),
+                        SummaryStat(
+                          label: '30d',
+                          value:
+                              '$currency ${stats.totalSpent30Days.toStringAsFixed(2)}',
+                          color: context.palette.spend,
+                        ),
+                        if (stats.efficiencyTrendPercent != null)
+                          SummaryStat(
+                            label: 'Trend',
+                            value:
+                                '${(stats.efficiencyTrendPercent! >= 0 ? '+' : '')}${stats.efficiencyTrendPercent!.toStringAsFixed(0)}%',
+                            color: (stats.efficiencyTrendPercent! >= 0)
+                                ? context.palette.gain
+                                : context.palette.loss,
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: AppSpacing.stackLg),
+
+                    // ── Quick Overview ───────────────────────────────────────
                     _QuickOverview(
                       stats: stats,
                       currency: currency,
                       fuelType: vehicle.fuelType,
                     ),
                     const SizedBox(height: AppSpacing.stackLg),
+
+                    // ── Last Refuel ──────────────────────────────────────────
                     if (stats.lastRefuel != null)
                       _LastRefuelCard(
                         entry: stats.lastRefuel!,
                         currency: currency,
+                        fuelType: vehicle.fuelType,
                         onDetails: () => RefuelDetailScreen.open(
                           context,
                           entry: stats.lastRefuel!,
@@ -100,6 +124,8 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: AppSpacing.stackLg),
+
+                    // ── Charts ───────────────────────────────────────────────
                     _MonthlySpendChart(
                       monthly: stats.monthlySpending,
                       currency: currency,
@@ -120,110 +146,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _HeroCards extends StatelessWidget {
-  const _HeroCards({required this.stats, required this.fuelType});
-
-  final DashboardStats stats;
-  final FuelType fuelType;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.cs;
-    final tt = context.tt;
-    final pal = context.palette;
-    final odometer = stats.currentOdometer;
-    final avg = stats.avgKmPerLiter;
-    final trend = stats.efficiencyTrendPercent;
-    final trendUp = (trend ?? 0) >= 0;
-    final trendColor = trendUp ? pal.gain : pal.loss;
-
-    return Row(
-      children: [
-        Expanded(
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Current odometer',
-                  style: tt.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  odometer != null
-                      ? NumberFormat('#,###').format(odometer.round())
-                      : '—',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                Text(
-                  'km',
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: AppCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Avg efficiency',
-                  style: tt.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  FuelTypeMetrics.formatEfficiency(avg, fuelType),
-                  style: tt.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: pal.efficiency,
-                  ),
-                ),
-                if (trend != null)
-                  Container(
-                    margin: const EdgeInsets.only(top: 6),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: trendColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          trendUp ? Icons.trending_up : Icons.trending_down,
-                          size: 14,
-                          color: trendColor,
-                        ),
-                        Text(
-                          '${trend.abs().toStringAsFixed(0)}%',
-                          style: tt.labelSmall?.copyWith(
-                            color: trendColor,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+// ── Quick Overview ─────────────────────────────────────────────────────────────
 
 class _QuickOverview extends StatelessWidget {
   const _QuickOverview({
@@ -254,55 +177,48 @@ class _QuickOverview extends StatelessWidget {
             Expanded(
               child: _StatTile(
                 label: 'Total Spent',
-                value: '$currency ${stats.totalSpent30Days.toStringAsFixed(3)}',
-                subtitle: 'Last 30 days',
+                value: '$currency ${stats.totalSpent30Days.toStringAsFixed(2)}',
+                sub: 'Last 30 days',
                 valueColor: context.palette.spend,
               ),
             ),
-            const SizedBox(width: AppSpacing.gutter),
+            const SizedBox(width: 10),
             Expanded(
               child: _StatTile(
                 label: 'Total ${FuelTypeMetrics.quantityUnit(fuelType)}',
                 value:
                     '${stats.totalLiters30Days.toStringAsFixed(0)} ${FuelTypeMetrics.quantityUnit(fuelType)}',
-                subtitle: '${stats.fillUps30Days} fill-ups',
+                sub: '${stats.fillUps30Days} fill-ups',
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.gutter),
+        const SizedBox(height: 10),
         AppCard(
-          onTap: null,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.gutter,
+            vertical: 12,
+          ),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: context.palette.fuel.withValues(alpha: 0.15),
-                child: Icon(
-                  Icons.payments_outlined,
-                  color: context.palette.fuel,
-                ),
+              Icon(
+                Icons.payments_outlined,
+                size: 20,
+                color: context.palette.fuel,
               ),
               const SizedBox(width: AppSpacing.stackMd),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Cost per km',
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      stats.costPerKm30Days != null
-                          ? '${stats.costPerKm30Days!.toStringAsFixed(3)} $currency'
-                          : '—',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ],
+                child: Text(
+                  'Cost per km',
+                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ),
-              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+              Text(
+                stats.costPerKm30Days != null
+                    ? '${stats.costPerKm30Days!.toStringAsFixed(3)} $currency'
+                    : '—',
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),
@@ -315,13 +231,13 @@ class _StatTile extends StatelessWidget {
   const _StatTile({
     required this.label,
     required this.value,
-    required this.subtitle,
+    required this.sub,
     this.valueColor,
   });
 
   final String label;
   final String value;
-  final String subtitle;
+  final String sub;
   final Color? valueColor;
 
   @override
@@ -330,53 +246,48 @@ class _StatTile extends StatelessWidget {
     final tt = context.tt;
 
     return AppCard(
-      padding: const EdgeInsets.all(14),
-      child: SizedBox(
-        height: 100,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.gutter,
+        vertical: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: tt.titleSmall?.copyWith(
+              color: valueColor,
+              fontWeight: FontWeight.w700,
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: tt.titleMedium?.copyWith(
-                    color: valueColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+          Text(
+            sub,
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }
 }
 
+// ── Last Refuel ────────────────────────────────────────────────────────────────
+
 class _LastRefuelCard extends StatelessWidget {
   const _LastRefuelCard({
     required this.entry,
     required this.currency,
+    required this.fuelType,
     required this.onDetails,
   });
 
   final RefuelEntry entry;
   final String currency;
+  final FuelType fuelType;
   final VoidCallback onDetails;
 
   @override
@@ -389,6 +300,7 @@ class _LastRefuelCard extends StatelessWidget {
         : daysAgo == 1
             ? 'Yesterday'
             : '$daysAgo days ago';
+    final qtyUnit = FuelTypeMetrics.quantityUnit(fuelType);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,71 +310,79 @@ class _LastRefuelCard extends StatelessWidget {
           actionLabel: 'Details',
           onActionTap: onDetails,
         ),
+        const SizedBox(height: AppSpacing.stackSm),
         AppCard(
           onTap: onDetails,
           padding: EdgeInsets.zero,
           child: Row(
-              children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: cs.secondary.withValues(alpha: 0.14),
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(AppSpacing.radiusXl),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.local_gas_station,
-                    size: 40,
-                    color: cs.secondary,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: cs.secondary.withValues(alpha: 0.14),
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(AppSpacing.radiusXl),
                   ),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.gutter),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.stationName ?? 'Fuel stop',
-                                style: tt.titleMedium,
-                              ),
-                              Text(
-                                agoLabel,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                child: Icon(
+                  Icons.local_gas_station,
+                  size: 24,
+                  color: cs.secondary,
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.gutter,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '$currency ${entry.totalPrice.toStringAsFixed(3)}',
-                              style: tt.titleMedium?.copyWith(
-                                color: context.palette.spend,
-                                fontWeight: FontWeight.bold,
+                              entry.stationName ?? 'Fuel stop',
+                              style: tt.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '${entry.quantity.toStringAsFixed(0)}L • ${entry.pricePerLiter?.toStringAsFixed(3) ?? '—'}/L',
+                              agoLabel,
                               style: tt.labelSmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$currency ${entry.totalPrice.toStringAsFixed(2)}',
+                            style: tt.titleSmall?.copyWith(
+                              color: context.palette.spend,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${entry.quantity.toStringAsFixed(0)} $qtyUnit',
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            ],
           ),
         ),
       ],
@@ -470,11 +390,10 @@ class _LastRefuelCard extends StatelessWidget {
   }
 }
 
+// ── Charts ─────────────────────────────────────────────────────────────────────
+
 class _MonthlySpendChart extends StatelessWidget {
-  const _MonthlySpendChart({
-    required this.monthly,
-    required this.currency,
-  });
+  const _MonthlySpendChart({required this.monthly, required this.currency});
 
   final List<MonthlySpend> monthly;
   final String currency;
@@ -502,7 +421,7 @@ class _MonthlySpendChart extends StatelessWidget {
       title: 'Monthly Spend',
       subtitle: 'Fuel spending by month',
       child: SizedBox(
-        height: 168,
+        height: 200,
         child: BarChart(
           BarChartData(
             alignment: BarChartAlignment.spaceBetween,
@@ -512,7 +431,25 @@ class _MonthlySpendChart extends StatelessWidget {
             titlesData: FlTitlesData(
               topTitles: const AxisTitles(),
               rightTitles: const AxisTitles(),
-              leftTitles: const AxisTitles(),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    if (value == 0 || value == meta.max) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 9,
+                      ),
+                      textAlign: TextAlign.right,
+                    );
+                  },
+                ),
+              ),
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -528,9 +465,11 @@ class _MonthlySpendChart extends StatelessWidget {
                       child: Text(
                         monthly[index].label,
                         style: tt.labelSmall?.copyWith(
-                          color: isLast ? cs.onSurface : cs.onSurfaceVariant,
+                          color:
+                              isLast ? cs.onSurface : cs.onSurfaceVariant,
                           fontWeight:
                               isLast ? FontWeight.w700 : FontWeight.normal,
+                          fontSize: 9,
                         ),
                       ),
                     );
@@ -572,6 +511,7 @@ class _EfficiencyTrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final tt = context.tt;
     final pal = context.palette;
     final unit = FuelTypeMetrics.efficiencyUnit(fuelType);
 
@@ -599,18 +539,36 @@ class _EfficiencyTrendChart extends StatelessWidget {
       title: 'Efficiency Trend',
       subtitle: '$unit over recent fill-ups',
       child: SizedBox(
-        height: 168,
+        height: 200,
         child: LineChart(
           LineChartData(
             minY: (minY * 0.9).floorToDouble(),
             maxY: (maxY * 1.1).ceilToDouble(),
             gridData: FuelChartStyle.horizontalGrid(cs),
             borderData: FlBorderData(show: false),
-            titlesData: const FlTitlesData(
-              topTitles: AxisTitles(),
-              rightTitles: AxisTitles(),
-              leftTitles: AxisTitles(),
-              bottomTitles: AxisTitles(),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(),
+              rightTitles: const AxisTitles(),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    if (value == meta.min || value == meta.max) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      value.toStringAsFixed(1),
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 9,
+                      ),
+                      textAlign: TextAlign.right,
+                    );
+                  },
+                ),
+              ),
+              bottomTitles: const AxisTitles(),
             ),
             lineBarsData: [
               FuelChartStyle.primarySeries(
@@ -662,22 +620,24 @@ class _ChartEmpty extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.cs;
     return SizedBox(
-      height: 120,
+      height: 100,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: cs.onSurfaceVariant),
+          Icon(icon, size: 28, color: cs.onSurfaceVariant),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: context.tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            style: context.tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Skeleton ───────────────────────────────────────────────────────────────────
 
 class _DashboardSkeleton extends StatelessWidget {
   const _DashboardSkeleton();
@@ -693,29 +653,25 @@ class _DashboardSkeleton extends StatelessWidget {
       ),
       physics: const NeverScrollableScrollPhysics(),
       children: const [
-        Row(
-          children: [
-            Expanded(child: _SkeletonBox(height: 92)),
-            SizedBox(width: 10),
-            Expanded(child: _SkeletonBox(height: 92)),
-          ],
-        ),
+        _SkeletonBox(height: 108),
         SizedBox(height: AppSpacing.stackLg),
-        _SkeletonBox(height: 24, width: 160),
+        _SkeletonBox(height: 20, width: 140),
         SizedBox(height: AppSpacing.stackMd),
         Row(
           children: [
-            Expanded(child: _SkeletonBox(height: 100)),
-            SizedBox(width: AppSpacing.gutter),
-            Expanded(child: _SkeletonBox(height: 100)),
+            Expanded(child: _SkeletonBox(height: 72)),
+            SizedBox(width: 10),
+            Expanded(child: _SkeletonBox(height: 72)),
           ],
         ),
-        SizedBox(height: AppSpacing.gutter),
-        _SkeletonBox(height: 72),
+        SizedBox(height: 10),
+        _SkeletonBox(height: 48),
         SizedBox(height: AppSpacing.stackLg),
-        _SkeletonBox(height: 220),
+        _SkeletonBox(height: 52),
+        SizedBox(height: AppSpacing.stackLg),
+        _SkeletonBox(height: 240),
         SizedBox(height: AppSpacing.gutter),
-        _SkeletonBox(height: 220),
+        _SkeletonBox(height: 240),
       ],
     );
   }

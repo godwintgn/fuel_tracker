@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.12.1+21` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.13.0+22` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -61,7 +61,7 @@ fuel_tracker/                          # Git repo root
     │   ├── services/                  # db, backup, drive, analytics, calculations
     │   ├── config/                    # google_oauth_config.dart
     │   ├── theme/                     # WJ-aligned theme (app_theme, app_palette, fuel_chart_style, theme_x)
-    │   ├── widgets/common/            # AppCard, SectionHeader, EmptyState
+    │   ├── widgets/common/            # AppCard, SectionHeader, EmptyState, SummaryHeaderCard, SummaryStat
     └── android/
         ├── app/build.gradle.kts
         ├── key.properties             # GITIGNORED
@@ -122,13 +122,15 @@ Bottom nav (4 tabs):
 
 ### 5.4 Dashboard (`lib/screens/dashboard/dashboard_screen.dart`)
 
-- Vehicle selector in header  
-- Hero metric tiles (`AppCard`), quick overview, cost/km row  
-- Last refuel card — tap **Details** or card → edit refuel  
-- Monthly spend bar chart (`FuelChartStyle.horizontalGrid`, thin `spaceBetween` bars, `pal.spend`)  
-- Efficiency trend line chart (`FuelChartStyle.primarySeries`, `pal.efficiency`)  
-- Friendly icon+text chart empty states; skeleton placeholder while loading (no full-screen spinner)  
-- Data via `dashboardProvider` → `DashboardStats` + `FuelCalculations`
+- **`SummaryHeaderCard`** hero at top (speed icon, current odometer headline, avg efficiency + 30d spend + trend `SummaryStat` pills; `ActiveVehicleBar` inlined as trailing)
+- Compact stat tiles (`_StatTile` — no fixed height, `titleSmall` w700 values, `labelSmall` labels, 12px vertical padding)
+- Cost-per-km row: plain 20px icon + `labelMedium` label + `titleSmall` w700 value (replaces CircleAvatar)
+- **`_LastRefuelCard`** icon block shrunk to 52×52; station label in `labelLarge`, time/qty in `labelSmall`
+- Monthly spend bar chart: **200px** height, left Y-axis `labelSmall` ticks, reserved 40px
+- Efficiency trend line chart: **200px**, left Y-axis ticks
+- `_ChartEmpty` uses `bodySmall` text (was `bodyMedium`); 100px height container
+- Skeleton updated to match new layout proportions
+- Section headers via `SectionHeader` (now `titleMedium` w800)
 
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
 
@@ -170,12 +172,14 @@ Bottom nav (4 tabs):
 
 ### 5.8 Analytics (`lib/screens/analytics/analytics_screen.dart`)
 
-- Period selector: weekly / monthly / yearly  
-- Efficiency line chart (`FuelChartStyle.primarySeries`, peak km/L badge)  
-- Insight cards (`AppCard` + `pal.gain`/`pal.loss`/`pal.spend`)  
-- Monthly spending bar chart (WJ thin bars, `pal.spend`)  
-- Vehicle fuel-share pie chart (`AppPalette` semantic slice colours) + period summary  
-- Per-vehicle profile cards (`AppCard` + `pal.fuel` icon tile)  
+- **`SummaryHeaderCard`** hero: avg efficiency headline, spend + fill count + change% `SummaryStat` pills; `ActiveVehicleBar` as trailing
+- Period selector chips below header card
+- Efficiency trend line chart: **220px** height, left Y-axis `labelSmall` ticks (reserved 40px), peak badge retained
+- `_EfficiencyInsightCard` / `_CostInsightCard`: **no fixed height**, 44×44 rounded-14 icon wells (was 72×72/132px fixed), `titleSmall` w700 values
+- Monthly spending bar chart: **220px**, left Y-axis ticks
+- `_MetricRow`: `labelMedium` for label (was `bodySmall`), `labelLarge` w700 for value
+- `_VehicleProfileCard` icon well: **44×44**, radius 14 (was 72×72)
+- Vehicle Profiles section header uses `SectionHeader` (`titleMedium` w800)
 - `AnalyticsService` + `analyticsProvider`; empty states when no refuels  
 
 ### 5.9 Settings (`lib/screens/settings/settings_screen.dart`)
@@ -213,7 +217,9 @@ Visual language aligned with **Wealth Journal** (`Assets/wealth_journal/`). Stit
 - **Semantic palette:** `lib/theme/app_palette.dart` — `gain`/`loss`/`efficiency`/`spend`/`fuel`/`neutral`; access via `context.palette`  
 - **Charts:** `lib/theme/fuel_chart_style.dart` — curved lines, gradient area fill, line glow, horizontal grid (mirrors WJ `PortfolioLineChartStyle`)  
 - **Cards:** `lib/widgets/common/app_card.dart` — 20px radius, blended border, dark primary glow shadow  
-- **Section titles:** `lib/widgets/common/section_header.dart` — w800 Manrope  
+- **Section titles:** `lib/widgets/common/section_header.dart` — `titleMedium` w800 Manrope (was `titleLarge`); subtitle `bodySmall`
+- **Header card:** `lib/widgets/common/summary_header_card.dart` — 40px icon well, `titleMedium` w700 title, `headlineSmall` w800 metric, `SummaryStat` pill row
+- **Stat chip:** `lib/widgets/common/summary_stat.dart` — `surfaceContainerHigh` pill, `labelSmall` accent label + `titleSmall` w700 value  
 - **Spacing:** `app_spacing.dart` — `cardRadius = 20`, `cardPadding = 20`  
 - **Extensions:** `theme_x.dart` — `context.cs`, `context.tt`, `context.isDark`, `context.palette`  
 - **Legacy:** `app_colors.dart` retained but unused in UI; all screens use `ColorScheme` + `AppPalette`
@@ -310,6 +316,7 @@ After substantive code changes:
 | `89bd5bd` | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
 | `2c0eb39` | feat: refuel edit/delete bar, active chip fuel+number, station autocomplete, mandatory vehicle fields (v1.12.0+20) |
 | `8c4427b` | feat: Donate screen, remove local save encrypted backup (v1.12.1+21) |
+| TBD | feat: Dashboard & Analytics UI rewrite — compact typography, SummaryHeaderCard, Y-axis charts (v1.13.0+22) |
 
 ---
 
@@ -422,4 +429,4 @@ Or attach:
 
 ---
 
-*Last updated: Removed local save encrypted backup; added Donate screen (WJ pattern). Version `1.12.1+21`.*
+*Last updated: Dashboard & Analytics UI rewrite — SummaryHeaderCard hero, compact stat tiles, Y-axis charts, smaller icon wells, `SectionHeader` title downscaled. Version `1.13.0+22`.*
