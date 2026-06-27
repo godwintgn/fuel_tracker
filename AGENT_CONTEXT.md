@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.15.0+25` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.16.0+26` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -45,7 +45,9 @@ fuel_tracker/                          # Git repo root
 ├── README.md                          # Public GitHub readme (features, build, CI)
 ├── AGENT_CONTEXT.md                   # This file
 ├── fueltrack-pro-cursor-prompt.md     # Original build spec & order
-├── .github/workflows/build-apk.yml    # CI: analyze + test + release APK artifact on push
+├── .github/workflows/build-apk.yml    # CI: analyze + test + APK + GitHub Release + sync website to wealth-journal
+├── website/                           # FuelTrack marketing site source (synced to godwintgn/wealth-journal)
+├── screenshots/                       # README + website screenshots (01–04)
 ├── .cursor/rules/
 │   ├── commit-push-build-apk.mdc      # Auto rule: commit → push → clean APK
 │   └── update-agent-context.mdc       # Auto rule: keep this file updated every change
@@ -366,6 +368,7 @@ After substantive code changes:
 | `f0a89d7` | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
 | *(pending)* | feat: Feature Batch 3 — fuel entry 3-way calc, Fuel Cards, Service Reminders, stable vehicle colors, country/currency separation (v1.14.0+24) |
 | *(pending)* | feat: Analytics enhancement — Best/Worst fill, cost-per-fill chart, station comparison, multi-vehicle overlay, tappable charts, next-refuel prediction (v1.15.0+25) |
+| *(pending)* | feat: shared website /fueltrack/, GitHub Releases, Obtainium, README screenshots (v1.16.0+26) |
 
 ---
 
@@ -478,4 +481,4 @@ Or attach:
 
 ---
 
-*Last updated: Analytics Enhancement — Best/Worst fill tiles, Cost-per-fill chart, Station Comparison, multi-vehicle efficiency overlay, tappable chart points → RefuelDetail, next-refuel prediction stat, 5-period selector (7d/30d/3M/1Y/All). Version `1.15.0+25`.*
+*Last updated: Shared website (/fueltrack/ on wealth-journal site), GitHub Releases on master push, Obtainium link, product README with screenshots, CI sync to wealth-journal. Version `1.16.0+26`.*
