@@ -1,18 +1,21 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../models/enums.dart';
+import '../../models/refuel_entry.dart';
+import '../../models/vehicle.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/refuels_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/analytics_service.dart';
-import '../../services/fuel_calculations.dart';
-import '../../providers/vehicles_provider.dart';
 import '../../services/fuel_type_metrics.dart';
+import '../../providers/vehicles_provider.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/fuel_chart_style.dart';
 import '../../theme/theme_x.dart';
+import '../../utils/vehicle_color.dart';
 import '../../widgets/common/active_vehicle_bar.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/empty_state.dart';
@@ -21,6 +24,7 @@ import '../../widgets/common/summary_header_card.dart';
 import '../../widgets/common/summary_stat.dart';
 import '../../widgets/onboarding/onboarding_widgets.dart';
 import '../refuel/add_refuel_screen.dart';
+import '../refuel/refuel_detail_screen.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -33,6 +37,11 @@ class AnalyticsScreen extends ConsumerWidget {
     final currency = settings?.currencyCode ?? 'OMR';
     final period = ref.watch(analyticsPeriodProvider);
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
+
+    final vehiclesById = {
+      for (final v in vehicles)
+        if (v.id != null) v.id!: v,
+    };
 
     return refuelsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -56,11 +65,10 @@ class AnalyticsScreen extends ConsumerWidget {
             if (stats.entries.isEmpty) {
               return Column(
                 children: [
-                  _AnalyticsHeader(
-                    period: period,
-                    onPeriodChanged: (p) {
-                      ref.read(analyticsPeriodProvider.notifier).state = p;
-                    },
+                  _PeriodSelectorBar(
+                    selected: period,
+                    onChanged: (p) =>
+                        ref.read(analyticsPeriodProvider.notifier).state = p,
                   ),
                   Expanded(
                     child: EmptyState(
@@ -73,6 +81,8 @@ class AnalyticsScreen extends ConsumerWidget {
                 ],
               );
             }
+
+            final hasMultiVehicle = stats.vehicleEfficiencyData.length > 1;
 
             return RefreshIndicator(
               onRefresh: () async => ref.invalidate(analyticsProvider),
@@ -87,7 +97,7 @@ class AnalyticsScreen extends ConsumerWidget {
                     ),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        // ── Header card ────────────────────────────────────
+                        // ── Header card ──────────────────────────────────────
                         SummaryHeaderCard(
                           icon: Icons.insights_outlined,
                           title: 'Analytics',
@@ -123,29 +133,55 @@ class AnalyticsScreen extends ConsumerWidget {
                                     ? context.palette.gain
                                     : context.palette.loss,
                               ),
+                            if (stats.nextRefuelPredictionKm != null)
+                              SummaryStat(
+                                label: 'Avg/fill',
+                                value:
+                                    '~${stats.nextRefuelPredictionKm!.toStringAsFixed(0)} km',
+                              ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.stackMd),
 
-                        // ── Period selector ────────────────────────────────
-                        _PeriodSelector(
+                        // ── Period selector ──────────────────────────────────
+                        _PeriodSelectorBar(
                           selected: period,
-                          onChanged: (p) {
-                            ref.read(analyticsPeriodProvider.notifier).state =
-                                p;
-                          },
+                          onChanged: (p) =>
+                              ref.read(analyticsPeriodProvider.notifier).state =
+                                  p,
                         ),
                         const SizedBox(height: AppSpacing.stackLg),
 
-                        // ── Efficiency trend chart ─────────────────────────
+                        // ── Best / Worst fill ────────────────────────────────
+                        if (stats.bestFill != null || stats.worstFill != null) ...[
+                          _BestWorstFillRow(
+                            bestFill: stats.bestFill,
+                            worstFill: stats.worstFill,
+                            vehiclesById: vehiclesById,
+                            currency: currency,
+                          ),
+                          const SizedBox(height: AppSpacing.gutter),
+                        ],
+
+                        // ── Efficiency trend chart ───────────────────────────
                         _EfficiencyTrendCard(
-                          trips: stats.trips,
-                          peakKmPerLiter: stats.peakKmPerLiter,
-                          fuelType: stats.fuelType,
+                          stats: stats,
+                          vehiclesById: vehiclesById,
+                          hasMultiVehicle: hasMultiVehicle,
                         ),
                         const SizedBox(height: AppSpacing.gutter),
 
-                        // ── Insight row ────────────────────────────────────
+                        // ── Fill cost trend chart ────────────────────────────
+                        if (stats.fillCostTrend.length >= 2) ...[
+                          _FillCostTrendCard(
+                            trend: stats.fillCostTrend,
+                            currency: currency,
+                            vehiclesById: vehiclesById,
+                          ),
+                          const SizedBox(height: AppSpacing.gutter),
+                        ],
+
+                        // ── Insight row ──────────────────────────────────────
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -167,14 +203,24 @@ class AnalyticsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.gutter),
 
-                        // ── Monthly spending chart ─────────────────────────
+                        // ── Monthly spending chart ───────────────────────────
                         _MonthlySpendingCard(
                           monthly: stats.monthlySpending,
                           currency: currency,
                         ),
+
+                        // ── Station comparison ───────────────────────────────
+                        if (stats.stationStats.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.gutter),
+                          _StationComparisonCard(
+                            stations: stats.stationStats,
+                            currency: currency,
+                          ),
+                        ],
+
                         const SizedBox(height: AppSpacing.gutter),
 
-                        // ── Pie + metrics ──────────────────────────────────
+                        // ── Pie + metrics ────────────────────────────────────
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -199,7 +245,7 @@ class AnalyticsScreen extends ConsumerWidget {
                           ],
                         ),
 
-                        // ── Vehicle profiles ───────────────────────────────
+                        // ── Vehicle profiles ─────────────────────────────────
                         if (stats.vehicleProfiles.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.stackLg),
                           const SectionHeader(title: 'Vehicle Profiles'),
@@ -226,28 +272,10 @@ class AnalyticsScreen extends ConsumerWidget {
   }
 }
 
-// ── Period selector ────────────────────────────────────────────────────────────
+// ── Period selector bar ────────────────────────────────────────────────────────
 
-class _AnalyticsHeader extends StatelessWidget {
-  const _AnalyticsHeader({
-    required this.period,
-    required this.onPeriodChanged,
-  });
-
-  final AnalyticsPeriod period;
-  final ValueChanged<AnalyticsPeriod> onPeriodChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.marginMobile),
-      child: _PeriodSelector(selected: period, onChanged: onPeriodChanged),
-    );
-  }
-}
-
-class _PeriodSelector extends StatelessWidget {
-  const _PeriodSelector({
+class _PeriodSelectorBar extends StatelessWidget {
+  const _PeriodSelectorBar({
     required this.selected,
     required this.onChanged,
   });
@@ -272,7 +300,7 @@ class _PeriodSelector extends StatelessWidget {
   }
 }
 
-// ── Card shells ────────────────────────────────────────────────────────────────
+// ── Card shell ─────────────────────────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   const _SectionCard({required this.child, this.title, this.subtitle});
@@ -298,53 +326,210 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ── Efficiency trend chart ─────────────────────────────────────────────────────
+// ── Best / Worst fill row ──────────────────────────────────────────────────────
 
-class _EfficiencyTrendCard extends StatelessWidget {
-  const _EfficiencyTrendCard({
-    required this.trips,
-    required this.peakKmPerLiter,
-    required this.fuelType,
+class _BestWorstFillRow extends StatelessWidget {
+  const _BestWorstFillRow({
+    required this.bestFill,
+    required this.worstFill,
+    required this.vehiclesById,
+    required this.currency,
   });
 
-  final List<TripEfficiency> trips;
-  final double? peakKmPerLiter;
-  final FuelType fuelType;
+  final RefuelEntry? bestFill;
+  final RefuelEntry? worstFill;
+  final Map<int, Vehicle> vehiclesById;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        if (bestFill != null)
+          Expanded(
+            child: _FillHighlightCard(
+              entry: bestFill!,
+              vehicle: vehiclesById[bestFill!.vehicleId],
+              label: 'Best Fill',
+              icon: Icons.thumb_up_outlined,
+              isGood: true,
+              currency: currency,
+            ),
+          ),
+        if (bestFill != null && worstFill != null)
+          const SizedBox(width: AppSpacing.gutter),
+        if (worstFill != null)
+          Expanded(
+            child: _FillHighlightCard(
+              entry: worstFill!,
+              vehicle: vehiclesById[worstFill!.vehicleId],
+              label: 'Costly Fill',
+              icon: Icons.thumb_down_outlined,
+              isGood: false,
+              currency: currency,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FillHighlightCard extends StatelessWidget {
+  const _FillHighlightCard({
+    required this.entry,
+    required this.vehicle,
+    required this.label,
+    required this.icon,
+    required this.isGood,
+    required this.currency,
+  });
+
+  final RefuelEntry entry;
+  final Vehicle? vehicle;
+  final String label;
+  final IconData icon;
+  final bool isGood;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
     final pal = context.palette;
-    final lineColor = pal.efficiency;
+    final color = isGood ? pal.gain : pal.loss;
+    final dateStr = DateFormat('d MMM').format(entry.refuelDate);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => RefuelDetailScreen.open(
+        context,
+        entry: entry,
+        vehicle: vehicle,
+      ),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.gutter),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 16),
+                ),
+                const Spacer(),
+                Text(
+                  dateStr,
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              entry.pricePerLiter != null
+                  ? '$currency ${entry.pricePerLiter!.toStringAsFixed(3)}/L'
+                  : '$currency ${entry.totalPrice.toStringAsFixed(2)}',
+              style: tt.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (vehicle != null)
+              Text(
+                vehicle!.displayName,
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Efficiency trend chart ─────────────────────────────────────────────────────
+
+class _EfficiencyTrendCard extends StatelessWidget {
+  const _EfficiencyTrendCard({
+    required this.stats,
+    required this.vehiclesById,
+    required this.hasMultiVehicle,
+  });
+
+  final AnalyticsStats stats;
+  final Map<int, Vehicle> vehiclesById;
+  final bool hasMultiVehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    final pal = context.palette;
+    final fuelType = stats.fuelType;
     final unit = FuelTypeMetrics.efficiencyUnit(fuelType);
+    final vehicleData = stats.vehicleEfficiencyData;
+
+    // Build line series — one per vehicle if multi, else single fallback
+    final seriesList = _buildSeries(context, vehicleData, pal.efficiency);
 
     return _SectionCard(
-      title: 'Consumption Trends',
-      subtitle: 'Historical $unit performance',
+      title: hasMultiVehicle ? 'Efficiency — All Vehicles' : 'Consumption Trends',
+      subtitle: 'Historical $unit performance${hasMultiVehicle ? ' (tap point to view)' : ''}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: lineColor.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                unit,
-                style: tt.labelSmall?.copyWith(
-                  color: lineColor,
-                  fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              // Unit badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: pal.efficiency.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  unit,
+                  style: tt.labelSmall?.copyWith(
+                    color: pal.efficiency,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
+              const Spacer(),
+              // Peak badge (single vehicle)
+              if (!hasMultiVehicle && stats.peakKmPerLiter != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: pal.efficiency,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Peak: ${stats.peakKmPerLiter!.toStringAsFixed(1)} $unit',
+                    style: tt.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: AppSpacing.stackMd),
-          if (trips.isEmpty)
+
+          if (seriesList.isEmpty)
             SizedBox(
               height: 100,
               child: Center(
@@ -357,90 +542,315 @@ class _EfficiencyTrendCard extends StatelessWidget {
           else
             SizedBox(
               height: 220,
-              child: Stack(
-                children: [
-                  LineChart(
-                    LineChartData(
-                      minY: _minY(trips),
-                      maxY: _maxY(trips),
-                      gridData: FuelChartStyle.horizontalGrid(cs),
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(
-                        topTitles: const AxisTitles(),
-                        rightTitles: const AxisTitles(),
-                        bottomTitles: const AxisTitles(),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 40,
-                            getTitlesWidget: (value, meta) {
-                              if (value == meta.min || value == meta.max) {
-                                return const SizedBox.shrink();
-                              }
-                              return Text(
-                                value.toStringAsFixed(1),
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontSize: 9,
-                                ),
-                                textAlign: TextAlign.right,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      lineBarsData: [
-                        FuelChartStyle.primarySeries(
-                          spots: [
-                            for (var i = 0; i < trips.length; i++)
-                              FlSpot(i.toDouble(), trips[i].kmPerLiter),
-                          ],
-                          color: lineColor,
-                          barWidth: FuelChartStyle.barWidthFull,
-                        ),
-                      ],
+              child: LineChart(
+                LineChartData(
+                  minY: _minY(vehicleData),
+                  maxY: _maxY(vehicleData),
+                  gridData: FuelChartStyle.horizontalGrid(cs),
+                  borderData: FlBorderData(show: false),
+                  lineTouchData: LineTouchData(
+                    touchCallback: (event, response) {
+                      if (event is! FlTapUpEvent) return;
+                      final spots = response?.lineBarSpots;
+                      if (spots == null || spots.isEmpty) return;
+                      final spot = spots.first;
+                      final barIdx = spot.barIndex;
+                      final tripIdx = spot.spotIndex;
+                      if (barIdx >= vehicleData.length) return;
+                      final vd = vehicleData[barIdx];
+                      if (tripIdx >= vd.trips.length) return;
+                      final trip = vd.trips[tripIdx];
+                      // Find matching entry by vehicle + date
+                      final entry = stats.entries.cast<RefuelEntry?>().firstWhere(
+                        (e) =>
+                            e!.vehicleId == vd.vehicle.id &&
+                            e.refuelDate.isAtSameMomentAs(trip.refuelDate),
+                        orElse: () => null,
+                      );
+                      if (entry != null && context.mounted) {
+                        RefuelDetailScreen.open(
+                          context,
+                          entry: entry,
+                          vehicle: vd.vehicle,
+                        );
+                      }
+                    },
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipItems: (spots) => spots.map((s) {
+                        final barIdx = s.barIndex;
+                        final vd = barIdx < vehicleData.length
+                            ? vehicleData[barIdx]
+                            : null;
+                        return LineTooltipItem(
+                          '${s.y.toStringAsFixed(1)} $unit',
+                          tt.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ) ??
+                              const TextStyle(color: Colors.white),
+                          children: vd != null && hasMultiVehicle
+                              ? [
+                                  TextSpan(
+                                    text: '\n${vd.vehicle.displayName}',
+                                    style: tt.labelSmall?.copyWith(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ]
+                              : [],
+                        );
+                      }).toList(),
                     ),
                   ),
-                  if (peakKmPerLiter != null)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: lineColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Peak: ${peakKmPerLiter!.toStringAsFixed(1)} $unit',
-                          style: tt.labelSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(),
+                    rightTitles: const AxisTitles(),
+                    bottomTitles: const AxisTitles(),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) {
+                          if (value == meta.min || value == meta.max) {
+                            return const SizedBox.shrink();
+                          }
+                          return Text(
+                            value.toStringAsFixed(1),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 9,
+                            ),
+                            textAlign: TextAlign.right,
+                          );
+                        },
                       ),
                     ),
-                ],
+                  ),
+                  lineBarsData: seriesList,
+                ),
               ),
             ),
+
+          // Multi-vehicle legend
+          if (hasMultiVehicle && vehicleData.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.stackMd),
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              children: vehicleData.map((vd) {
+                final color = vd.vehicle.id != null
+                    ? vehicleAccentColor(vd.vehicle.id!, cs)
+                    : pal.efficiency;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      vd.vehicle.displayName,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  double _minY(List<TripEfficiency> trips) {
-    final min =
-        trips.map((t) => t.kmPerLiter).reduce((a, b) => a < b ? a : b);
+  List<LineChartBarData> _buildSeries(
+    BuildContext context,
+    List<VehicleEfficiencyData> vehicleData,
+    Color defaultColor,
+  ) {
+    final cs = context.cs;
+    if (vehicleData.isEmpty) return [];
+
+    if (vehicleData.length == 1) {
+      final trips = vehicleData.first.trips;
+      if (trips.isEmpty) return [];
+      return [
+        FuelChartStyle.primarySeries(
+          spots: [
+            for (var i = 0; i < trips.length; i++)
+              FlSpot(i.toDouble(), trips[i].kmPerLiter),
+          ],
+          color: defaultColor,
+          barWidth: FuelChartStyle.barWidthFull,
+        ),
+      ];
+    }
+
+    // Multi-vehicle — one line per vehicle
+    return vehicleData.map((vd) {
+      final color = vd.vehicle.id != null
+          ? vehicleAccentColor(vd.vehicle.id!, cs)
+          : defaultColor;
+      return FuelChartStyle.primarySeries(
+        spots: [
+          for (var i = 0; i < vd.trips.length; i++)
+            FlSpot(i.toDouble(), vd.trips[i].kmPerLiter),
+        ],
+        color: color,
+        barWidth: FuelChartStyle.barWidthFull,
+      );
+    }).toList();
+  }
+
+  double _minY(List<VehicleEfficiencyData> vehicleData) {
+    final all = vehicleData.expand((vd) => vd.trips.map((t) => t.kmPerLiter));
+    if (all.isEmpty) return 0;
+    final min = all.reduce((a, b) => a < b ? a : b);
     return (min * 0.85).floorToDouble();
   }
 
-  double _maxY(List<TripEfficiency> trips) {
-    final max =
-        trips.map((t) => t.kmPerLiter).reduce((a, b) => a > b ? a : b);
+  double _maxY(List<VehicleEfficiencyData> vehicleData) {
+    final all = vehicleData.expand((vd) => vd.trips.map((t) => t.kmPerLiter));
+    if (all.isEmpty) return 10;
+    final max = all.reduce((a, b) => a > b ? a : b);
     return (max * 1.15).ceilToDouble();
+  }
+}
+
+// ── Fill cost trend chart ──────────────────────────────────────────────────────
+
+class _FillCostTrendCard extends StatefulWidget {
+  const _FillCostTrendCard({
+    required this.trend,
+    required this.currency,
+    required this.vehiclesById,
+  });
+
+  final List<FillCostPoint> trend;
+  final String currency;
+  final Map<int, Vehicle> vehiclesById;
+
+  @override
+  State<_FillCostTrendCard> createState() => _FillCostTrendCardState();
+}
+
+class _FillCostTrendCardState extends State<_FillCostTrendCard> {
+  int? _touchedIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    final pal = context.palette;
+    final trend = widget.trend;
+    final maxY = trend
+            .map((p) => p.totalPrice)
+            .reduce((a, b) => a > b ? a : b) *
+        1.2;
+
+    return _SectionCard(
+      title: 'Cost per Fill-up',
+      subtitle: 'Tap a bar to view that entry',
+      child: SizedBox(
+        height: 200,
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.start,
+            maxY: maxY,
+            groupsSpace: 4,
+            gridData: FuelChartStyle.horizontalGrid(cs),
+            borderData: FlBorderData(show: false),
+            barTouchData: BarTouchData(
+              touchCallback: (event, response) {
+                if (event is FlTapUpEvent) {
+                  final idx = response?.spot?.touchedBarGroupIndex;
+                  if (idx != null && idx >= 0 && idx < trend.length) {
+                    final point = trend[idx];
+                    final vehicle =
+                        widget.vehiclesById[point.entry.vehicleId];
+                    RefuelDetailScreen.open(
+                      context,
+                      entry: point.entry,
+                      vehicle: vehicle,
+                    );
+                  }
+                }
+                if (event is FlPointerHoverEvent || event is FlTapDownEvent) {
+                  setState(() {
+                    _touchedIndex =
+                        response?.spot?.touchedBarGroupIndex;
+                  });
+                } else {
+                  setState(() => _touchedIndex = null);
+                }
+              },
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                  final p = trend[groupIdx];
+                  final dateStr = DateFormat('d MMM').format(p.date);
+                  return BarTooltipItem(
+                    '$dateStr\n${widget.currency} ${p.totalPrice.toStringAsFixed(2)}',
+                    tt.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ) ??
+                        const TextStyle(color: Colors.white),
+                  );
+                },
+              ),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(),
+              rightTitles: const AxisTitles(),
+              bottomTitles: const AxisTitles(),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    if (value == 0 || value == meta.max) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 9,
+                      ),
+                      textAlign: TextAlign.right,
+                    );
+                  },
+                ),
+              ),
+            ),
+            barGroups: [
+              for (var i = 0; i < trend.length; i++)
+                BarChartGroupData(
+                  x: i,
+                  barRods: [
+                    BarChartRodData(
+                      toY: trend[i].totalPrice,
+                      width: trend.length > 20 ? 4 : 8,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(2),
+                      ),
+                      color: _touchedIndex == i
+                          ? pal.spend
+                          : pal.spend.withValues(alpha: 0.45),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -491,11 +901,7 @@ class _EfficiencyInsightCard extends StatelessWidget {
                   color: trendColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  Icons.bolt,
-                  color: pal.efficiency,
-                  size: 22,
-                ),
+                child: Icon(Icons.bolt, color: pal.efficiency, size: 22),
               ),
               const SizedBox(height: 8),
               Text(
@@ -595,7 +1001,7 @@ class _MonthlySpendingCard extends StatelessWidget {
 
     return _SectionCard(
       title: 'Monthly Spending',
-      subtitle: 'Last 3 months (fuel only)',
+      subtitle: '$currency — fuel cost by month',
       child: monthly.isEmpty
           ? SizedBox(
               height: 100,
@@ -623,7 +1029,7 @@ class _MonthlySpendingCard extends StatelessWidget {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 40,
+                        reservedSize: 44,
                         getTitlesWidget: (value, meta) {
                           if (value == 0 || value == meta.max) {
                             return const SizedBox.shrink();
@@ -689,6 +1095,134 @@ class _MonthlySpendingCard extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+// ── Station comparison ─────────────────────────────────────────────────────────
+
+class _StationComparisonCard extends StatelessWidget {
+  const _StationComparisonCard({
+    required this.stations,
+    required this.currency,
+  });
+
+  final List<StationStat> stations;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    final pal = context.palette;
+    final displayed = stations.take(6).toList();
+
+    // Find max avgPricePerLiter for bar scaling
+    final maxPrice = displayed
+        .where((s) => s.avgPricePerLiter != null)
+        .map((s) => s.avgPricePerLiter!)
+        .fold<double>(0, (a, b) => b > a ? b : a);
+
+    return _SectionCard(
+      title: 'Station Comparison',
+      subtitle: 'Avg price/L · cheapest first',
+      child: Column(
+        children: displayed.asMap().entries.map((e) {
+          final i = e.key;
+          final s = e.value;
+          final fraction = (maxPrice > 0 && s.avgPricePerLiter != null)
+              ? s.avgPricePerLiter! / maxPrice
+              : 0.0;
+          final isCheapest = i == 0 && s.avgPricePerLiter != null;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                // Rank badge
+                SizedBox(
+                  width: 20,
+                  child: Text(
+                    '${i + 1}',
+                    style: tt.labelSmall?.copyWith(
+                      color: isCheapest ? pal.gain : cs.onSurfaceVariant,
+                      fontWeight:
+                          isCheapest ? FontWeight.w700 : FontWeight.normal,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              s.name,
+                              style: tt.labelMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: isCheapest ? cs.onSurface : null,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (s.avgPricePerLiter != null)
+                            Text(
+                              '$currency ${s.avgPricePerLiter!.toStringAsFixed(3)}/L',
+                              style: tt.labelSmall?.copyWith(
+                                color: isCheapest ? pal.gain : cs.onSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            )
+                          else
+                            Text(
+                              '${s.visitCount} fill${s.visitCount != 1 ? 's' : ''}',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(2),
+                              child: LinearProgressIndicator(
+                                value: fraction,
+                                minHeight: 3,
+                                backgroundColor:
+                                    cs.surfaceContainerHighest,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isCheapest
+                                      ? pal.gain
+                                      : pal.spend.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${s.visitCount} visit${s.visitCount != 1 ? 's' : ''}',
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -898,8 +1432,10 @@ class _VehicleProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.cs;
     final tt = context.tt;
-    final pal = context.palette;
     final vehicle = profile.vehicle;
+    final accentColor = vehicle.id != null
+        ? vehicleAccentColor(vehicle.id!, cs)
+        : context.palette.fuel;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -909,12 +1445,12 @@ class _VehicleProfileCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: pal.fuel.withValues(alpha: 0.14),
+              color: accentColor.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.directions_car_filled_outlined,
-              color: pal.fuel,
+              color: accentColor,
               size: 22,
             ),
           ),
@@ -940,7 +1476,7 @@ class _VehicleProfileCard extends StatelessWidget {
                     'Avg. ${FuelTypeMetrics.formatEfficiency(profile.avgKmPerLiter, vehicle.fuelType)}',
                     style: tt.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: pal.efficiency,
+                      color: context.palette.efficiency,
                     ),
                   )
                 else
@@ -952,6 +1488,19 @@ class _VehicleProfileCard extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${profile.totalLiters.toStringAsFixed(0)} L',
+                style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(
+                'used',
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
           ),
         ],
       ),

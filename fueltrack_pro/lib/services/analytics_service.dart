@@ -5,14 +5,19 @@ import 'fuel_calculations.dart';
 import 'fuel_type_metrics.dart';
 
 enum AnalyticsPeriod {
-  weekly('Weekly', 7),
-  monthly('Monthly', 30),
-  yearly('Yearly', 365);
+  weekly('7d', 7),
+  monthly('30d', 30),
+  quarterly('3M', 90),
+  yearly('1Y', 365),
+  allTime('All', 0);
 
   const AnalyticsPeriod(this.label, this.days);
   final String label;
+  /// 0 means no date filter (all time).
   final int days;
 }
+
+// ── Supporting data models ─────────────────────────────────────────────────────
 
 class FuelTypeShare {
   const FuelTypeShare({
@@ -52,6 +57,44 @@ class VehicleAnalytics {
   final double totalSpent;
 }
 
+/// Per-vehicle efficiency trip data used for the multi-vehicle overlay chart.
+class VehicleEfficiencyData {
+  const VehicleEfficiencyData({
+    required this.vehicle,
+    required this.trips,
+  });
+
+  final Vehicle vehicle;
+  final List<TripEfficiency> trips;
+}
+
+/// A single fill-up's cost data, used for the cost-per-fill trend chart.
+class FillCostPoint {
+  const FillCostPoint({required this.entry});
+
+  final RefuelEntry entry;
+  DateTime get date => entry.refuelDate;
+  double get totalPrice => entry.totalPrice;
+  double? get pricePerLiter => entry.pricePerLiter;
+}
+
+/// Aggregated statistics for a single station.
+class StationStat {
+  const StationStat({
+    required this.name,
+    required this.visitCount,
+    required this.totalSpent,
+    this.avgPricePerLiter,
+  });
+
+  final String name;
+  final int visitCount;
+  final double totalSpent;
+  final double? avgPricePerLiter;
+}
+
+// ── AnalyticsStats ─────────────────────────────────────────────────────────────
+
 class AnalyticsStats {
   const AnalyticsStats({
     required this.period,
@@ -68,6 +111,12 @@ class AnalyticsStats {
     required this.vehicleProfiles,
     required this.totalLiters,
     required this.totalSpent,
+    required this.fillCostTrend,
+    required this.stationStats,
+    required this.vehicleEfficiencyData,
+    this.bestFill,
+    this.worstFill,
+    this.nextRefuelPredictionKm,
     this.fuelType = FuelType.petrol,
   });
 
@@ -87,6 +136,24 @@ class AnalyticsStats {
   final double totalSpent;
   final FuelType fuelType;
 
+  /// Fill-up cost over time (sorted chronologically).
+  final List<FillCostPoint> fillCostTrend;
+
+  /// Stations ranked cheapest-first.
+  final List<StationStat> stationStats;
+
+  /// Per-vehicle trip efficiencies for multi-vehicle overlay chart.
+  final List<VehicleEfficiencyData> vehicleEfficiencyData;
+
+  /// Refuel entry with the lowest price/L (best deal).
+  final RefuelEntry? bestFill;
+
+  /// Refuel entry with the highest price/L (most expensive).
+  final RefuelEntry? worstFill;
+
+  /// Estimated km to the next fill based on avg distance per fill.
+  final double? nextRefuelPredictionKm;
+
   static const empty = AnalyticsStats(
     period: AnalyticsPeriod.monthly,
     entries: [],
@@ -102,6 +169,9 @@ class AnalyticsStats {
     vehicleProfiles: [],
     totalLiters: 0,
     totalSpent: 0,
+    fillCostTrend: [],
+    stationStats: [],
+    vehicleEfficiencyData: [],
   );
 }
 
@@ -114,6 +184,8 @@ class MonthlySpendPoint {
   String get label => FuelCalculations.monthLabel(key);
 }
 
+// ── AnalyticsService ───────────────────────────────────────────────────────────
+
 abstract final class AnalyticsService {
   static AnalyticsStats build({
     required List<RefuelEntry> allEntries,
@@ -123,7 +195,12 @@ abstract final class AnalyticsService {
     DateTime? now,
   }) {
     final clock = now ?? DateTime.now();
-    final since = clock.subtract(Duration(days: period.days));
+
+    // allTime period (days == 0) skips the date filter.
+    final since = period.days > 0
+        ? clock.subtract(Duration(days: period.days))
+        : DateTime(2000);
+
     final entries = allEntries
         .where((e) => !e.refuelDate.isBefore(since))
         .toList()
@@ -147,26 +224,39 @@ abstract final class AnalyticsService {
 
     final metricsType = fuelType ?? entries.first.fuelType;
 
+    // Monthly spending — show last 6 months for quarterly/yearly/allTime, 3 for shorter
+    final monthsToShow = (period == AnalyticsPeriod.yearly ||
+            period == AnalyticsPeriod.allTime ||
+            period == AnalyticsPeriod.quarterly)
+        ? 6
+        : 3;
+
     return AnalyticsStats(
       period: period,
       entries: entries,
       trips: trips,
       avgKmPerLiter: avg,
-      litersPer100Km: avg != null
-          ? FuelTypeMetrics.consumptionPer100(avg)
-          : null,
+      litersPer100Km: avg != null ? FuelTypeMetrics.consumptionPer100(avg) : null,
       costPerKm: costPerKm,
       efficiencyChangePercent: _efficiencyChangePercent(trips),
       peakKmPerLiter: peak,
-      monthlySpending: _lastMonthsSpending(allEntries, clock, months: 3),
+      monthlySpending: _lastMonthsSpending(allEntries, clock, months: monthsToShow),
       vehicleShares: _vehicleShares(entries, vehiclesById),
       fuelTypeShares: _fuelTypeShares(entries),
       vehicleProfiles: _vehicleProfiles(allEntries, vehicles),
       totalLiters: entries.fold<double>(0, (s, e) => s + e.quantity),
       totalSpent: entries.fold<double>(0, (s, e) => s + e.totalPrice),
       fuelType: metricsType,
+      fillCostTrend: _fillCostTrend(entries),
+      stationStats: _stationStats(entries),
+      vehicleEfficiencyData: _vehicleEfficiencyData(entries, vehiclesById),
+      bestFill: _bestFill(entries),
+      worstFill: _worstFill(entries),
+      nextRefuelPredictionKm: _nextRefuelPredictionKm(entries),
     );
   }
+
+  // ── Private helpers ──────────────────────────────────────────────────────────
 
   static double? _efficiencyChangePercent(List<TripEfficiency> trips) {
     if (trips.length < 2) return null;
@@ -193,7 +283,8 @@ abstract final class AnalyticsService {
   }) {
     final map = FuelCalculations.monthlySpending(entries);
     final keys = map.keys.toList()..sort();
-    final lastKeys = keys.length > months ? keys.sublist(keys.length - months) : keys;
+    final lastKeys =
+        keys.length > months ? keys.sublist(keys.length - months) : keys;
     return lastKeys
         .map((k) => MonthlySpendPoint(key: k, amount: map[k]!))
         .toList();
@@ -276,7 +367,111 @@ abstract final class AnalyticsService {
     profiles.sort((a, b) => b.totalLiters.compareTo(a.totalLiters));
     return profiles;
   }
+
+  /// All fill-ups sorted chronologically — used for the cost-per-fill chart.
+  static List<FillCostPoint> _fillCostTrend(List<RefuelEntry> entries) {
+    final sorted = [...entries]
+      ..sort((a, b) => a.refuelDate.compareTo(b.refuelDate));
+    return sorted.map((e) => FillCostPoint(entry: e)).toList();
+  }
+
+  /// Stations ranked cheapest avg price-per-liter first.
+  static List<StationStat> _stationStats(List<RefuelEntry> entries) {
+    final map = <String, _StationAccum>{};
+    for (final e in entries) {
+      if (e.stationName == null || e.stationName!.trim().isEmpty) continue;
+      final key = e.stationName!.trim();
+      map.putIfAbsent(key, () => _StationAccum());
+      map[key]!.add(e);
+    }
+    final stats = map.entries.map((kv) => kv.value.toStat(kv.key)).toList();
+    // Sort: cheapest avg price first; unknowns last
+    stats.sort((a, b) {
+      if (a.avgPricePerLiter == null && b.avgPricePerLiter == null) return 0;
+      if (a.avgPricePerLiter == null) return 1;
+      if (b.avgPricePerLiter == null) return -1;
+      return a.avgPricePerLiter!.compareTo(b.avgPricePerLiter!);
+    });
+    return stats;
+  }
+
+  /// Per-vehicle trip efficiency lists for overlay chart.
+  static List<VehicleEfficiencyData> _vehicleEfficiencyData(
+    List<RefuelEntry> entries,
+    Map<int, Vehicle> vehiclesById,
+  ) {
+    final grouped = <int, List<RefuelEntry>>{};
+    for (final e in entries) {
+      grouped.putIfAbsent(e.vehicleId, () => []).add(e);
+    }
+    final result = <VehicleEfficiencyData>[];
+    for (final kv in grouped.entries) {
+      final vehicle = vehiclesById[kv.key];
+      if (vehicle == null) continue;
+      final trips = FuelCalculations.tripEfficiencies(kv.value);
+      if (trips.isEmpty) continue;
+      result.add(VehicleEfficiencyData(vehicle: vehicle, trips: trips));
+    }
+    return result;
+  }
+
+  /// Entry with the lowest price-per-liter within the period.
+  static RefuelEntry? _bestFill(List<RefuelEntry> entries) {
+    final withPrice = entries.where((e) => e.pricePerLiter != null).toList();
+    if (withPrice.isEmpty) return null;
+    return withPrice.reduce(
+      (a, b) => a.pricePerLiter! < b.pricePerLiter! ? a : b,
+    );
+  }
+
+  /// Entry with the highest price-per-liter within the period.
+  static RefuelEntry? _worstFill(List<RefuelEntry> entries) {
+    final withPrice = entries.where((e) => e.pricePerLiter != null).toList();
+    if (withPrice.isEmpty) return null;
+    return withPrice.reduce(
+      (a, b) => a.pricePerLiter! > b.pricePerLiter! ? a : b,
+    );
+  }
+
+  /// Average km per fill-up, used to predict when the next refuel is due.
+  static double? _nextRefuelPredictionKm(List<RefuelEntry> entries) {
+    if (entries.length < 2) return null;
+    final sorted = [...entries]
+      ..sort((a, b) => a.refuelDate.compareTo(b.refuelDate));
+    final totalDistance =
+        sorted.last.odometer - sorted.first.odometer;
+    final fills = sorted.length - 1;
+    if (fills <= 0 || totalDistance <= 0) return null;
+    return totalDistance / fills;
+  }
 }
+
+// ── Internal accumulator ───────────────────────────────────────────────────────
+
+class _StationAccum {
+  int visitCount = 0;
+  double totalSpent = 0;
+  double priceSum = 0;
+  int priceCount = 0;
+
+  void add(RefuelEntry e) {
+    visitCount++;
+    totalSpent += e.totalPrice;
+    if (e.pricePerLiter != null) {
+      priceSum += e.pricePerLiter!;
+      priceCount++;
+    }
+  }
+
+  StationStat toStat(String name) => StationStat(
+        name: name,
+        visitCount: visitCount,
+        totalSpent: totalSpent,
+        avgPricePerLiter: priceCount > 0 ? priceSum / priceCount : null,
+      );
+}
+
+// ── copyWithPeriod extension ───────────────────────────────────────────────────
 
 extension on AnalyticsStats {
   AnalyticsStats copyWithPeriod(AnalyticsPeriod period) {
@@ -296,6 +491,12 @@ extension on AnalyticsStats {
       totalLiters: totalLiters,
       totalSpent: totalSpent,
       fuelType: fuelType,
+      fillCostTrend: fillCostTrend,
+      stationStats: stationStats,
+      vehicleEfficiencyData: vehicleEfficiencyData,
+      bestFill: bestFill,
+      worstFill: worstFill,
+      nextRefuelPredictionKm: nextRefuelPredictionKm,
     );
   }
 }
