@@ -6,7 +6,10 @@ import '../../providers/selected_vehicle_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/theme_x.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/summary_header_card.dart';
+import '../../widgets/common/summary_stat.dart';
 import '../../widgets/vehicles/vehicle_card.dart';
 import '../refuel/add_refuel_screen.dart';
 import 'add_edit_vehicle_screen.dart';
@@ -31,7 +34,6 @@ class VehicleListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final settingsAsync = ref.watch(settingsProvider);
-    final theme = Theme.of(context);
 
     return vehiclesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -55,26 +57,22 @@ class VehicleListScreen extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.marginMobile,
-                AppSpacing.stackSm,
+                AppSpacing.stackMd,
                 AppSpacing.marginMobile,
                 AppSpacing.stackMd,
               ),
               sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Vehicles',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Manage your fleet and track fuel efficiency.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                child: SummaryHeaderCard(
+                  icon: Icons.garage_outlined,
+                  title: 'Vehicles',
+                  headlineValue: '${vehicles.length}',
+                  headlineUnit: vehicles.length == 1 ? 'vehicle' : 'vehicles',
+                  subtitle: 'Fleet overview',
+                  stats: [
+                    SummaryStat(
+                      label: 'Active',
+                      value: selectedId != null ? '1' : '0',
+                      color: context.cs.primary,
                     ),
                   ],
                 ),
@@ -161,14 +159,15 @@ class _EfficiencyOverviewCard extends StatelessWidget {
         children: [
           Text(
             'Efficiency Overview',
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
               color: theme.colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
             'Log refuels to unlock fleet-wide efficiency insights. $count vehicles registered.',
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.85),
             ),
           ),

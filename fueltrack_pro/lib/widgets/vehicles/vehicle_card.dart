@@ -88,10 +88,15 @@ class VehicleCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: tt.titleLarge),
+                          Text(
+                            title,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           Text(
                             subtitle,
-                            style: tt.bodyMedium?.copyWith(
+                            style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
@@ -107,6 +112,7 @@ class VehicleCard extends StatelessWidget {
                       ),
                       child: Icon(
                         _iconForFuelType(vehicle.fuelType),
+                        size: 20,
                         color: cs.primary,
                       ),
                     ),
@@ -188,7 +194,7 @@ class _MetaChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: context.cs.onSurfaceVariant),
         const SizedBox(width: 4),
-        Text(label, style: context.tt.labelLarge),
+        Text(label, style: context.tt.labelSmall),
       ],
     );
   }

@@ -109,12 +109,12 @@ class VehicleDetailScreen extends ConsumerWidget {
                         children: [
                           Text(
                             resolved.displayName,
-                            style: tt.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
+                            style: tt.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           Text(
                             resolved.fuelType.label,
-                            style: tt.bodyMedium
+                            style: tt.labelSmall
                                 ?.copyWith(color: cs.onSurfaceVariant),
                           ),
                         ],
@@ -285,7 +285,7 @@ class _StatTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             value,
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -352,7 +352,7 @@ class _RecentRefuels extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'No refuels logged yet for this vehicle.',
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -384,14 +384,14 @@ class _RecentRefuels extends StatelessWidget {
                               children: [
                                 Text(
                                   dateFmt.format(recent[i].refuelDate),
-                                  style: tt.bodyLarge
+                                  style: tt.labelLarge
                                       ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                                 Text(
                                   recent[i].stationName?.isNotEmpty == true
                                       ? recent[i].stationName!
                                       : '${recent[i].odometer.toStringAsFixed(0)} $distanceUnit',
-                                  style: tt.bodySmall
+                                  style: tt.labelSmall
                                       ?.copyWith(color: cs.onSurfaceVariant),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -402,7 +402,7 @@ class _RecentRefuels extends StatelessWidget {
                           const SizedBox(width: AppSpacing.stackMd),
                           Text(
                             '$currency ${recent[i].totalPrice.toStringAsFixed(2)}',
-                            style: tt.titleMedium
+                            style: tt.labelLarge
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(width: 4),

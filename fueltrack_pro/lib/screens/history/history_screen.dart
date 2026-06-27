@@ -16,6 +16,8 @@ import '../../widgets/history/refuel_history_card.dart';
 import '../refuel/add_refuel_screen.dart';
 import '../refuel/refuel_detail_screen.dart';
 import '../../widgets/common/active_vehicle_bar.dart';
+import '../../widgets/common/summary_header_card.dart';
+import '../../widgets/common/summary_stat.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -156,23 +158,41 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.marginMobile,
-                      AppSpacing.stackSm,
+                      AppSpacing.stackMd,
                       AppSpacing.marginMobile,
                       AppSpacing.stackMd,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'History',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
+                        SummaryHeaderCard(
+                          icon: Icons.history_outlined,
+                          title: 'History',
+                          headlineValue: '${allEntries.length}',
+                          headlineUnit: 'entries',
+                          subtitle: 'All refuel records',
+                          trailing: SizedBox(
+                            width: 200,
+                            child: ActiveVehicleBar(
+                              vehicles: vehicles,
+                              embedded: true,
+                            ),
                           ),
+                          stats: [
+                            SummaryStat(
+                              label: 'Total',
+                              value:
+                                  '$currency ${allEntries.fold<double>(0, (s, e) => s + e.totalPrice).toStringAsFixed(2)}',
+                              color: context.palette.spend,
+                            ),
+                            if (_filters.hasActiveFilters)
+                              SummaryStat(
+                                label: 'Filtered',
+                                value: '${entries.length}',
+                              ),
+                          ],
                         ),
-                        ActiveVehicleBar(
-                          vehicles: vehicles,
-                          embedded: true,
-                        ),
+                        const SizedBox(height: AppSpacing.stackMd),
                         TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
@@ -209,7 +229,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             children: [
                               Text(
                                 'Refuel History',
-                                style: theme.textTheme.titleLarge,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               Text(
                                 '${summary.periodLabel} • ${summary.entryCount} entries',
@@ -222,15 +244,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: 10,
+                            vertical: 5,
                           ),
                           decoration: BoxDecoration(
                             color: context.palette.spend.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'Total: ${summary.totalSpent.toStringAsFixed(3)} $currency',
+                            '$currency ${summary.totalSpent.toStringAsFixed(2)}',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: context.palette.spend,
                               fontWeight: FontWeight.w700,

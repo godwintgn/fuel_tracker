@@ -18,7 +18,7 @@
 | Android `applicationId` | `com.fuel.tracker` |
 | Android namespace | `com.fuel.tracker` |
 | Display name | FuelTrack Pro |
-| Current version | `1.13.0+22` (see `fueltrack_pro/pubspec.yaml`) |
+| Current version | `1.13.1+23` (see `fueltrack_pro/pubspec.yaml`) |
 
 ---
 
@@ -134,10 +134,12 @@ Bottom nav (4 tabs):
 
 ### 5.5 Vehicle management (`lib/screens/vehicles/`)
 
+- **`VehicleListScreen`**: `SummaryHeaderCard` hero (garage icon, vehicle count headline, active count `SummaryStat`); `_EfficiencyOverviewCard` heading `titleMedium` w800 + `bodySmall` text
+- **`VehicleCard`**: title `titleMedium` w700 (was `titleLarge`); subtitle `labelMedium` (was `bodyMedium`); fuel icon 20px; `_MetaChip` label `labelSmall` (was `labelLarge`)
+- **`VehicleDetailScreen`**: vehicle name `titleMedium` w700 (was `titleLarge`); fuel type `labelSmall` (was `bodyMedium`); `_StatTile` value `titleSmall` w700 (was `titleMedium`); recent activity date `labelLarge` w600 (was `bodyLarge`); cost `labelLarge` w700 (was `titleMedium`); empty text `bodySmall`
 - Add/Edit form requires **Manufacturer, Model, Vehicle Number** (mandatory); year optional  
-- List with `VehicleCard` (tap photo → Details; buttons trimmed to Set active + Fuel Log; no duplicate fuel-type chip), empty state, add-another dashed card  
-- **Details** → `VehicleDetailScreen` (read-only profile + photo, Hero transition from card): stats strip (distance tracked, total spend, avg efficiency, last odometer), recent activity list (last 5, tap → `RefuelDetailScreen`), bottom-docked **Log refuel** button; **Edit** in app bar → `AddEditVehicleScreen`  
-- Add/Edit form; delete blocked if refuel history exists  
+- List → `VehicleCard` (tap photo → Details; Set active + Fuel Log buttons; no duplicate fuel-type chip), empty state, add-another dashed card  
+- **Details** → `VehicleDetailScreen` (read-only profile + photo, Hero transition): stats strip (distance tracked, total spend, avg efficiency, last odometer), recent activity list (last 5, tap → `RefuelDetailScreen`), bottom-docked **Log refuel** button; **Edit** in app bar → `AddEditVehicleScreen`  
 - **Fuel Log** opens `AddRefuelScreen` for that vehicle (vehicle + fuel type locked)  
 
 ### 5.6 Refuel entry (`lib/screens/refuel/add_refuel_screen.dart`)
@@ -162,10 +164,12 @@ Bottom nav (4 tabs):
 
 ### 5.7 History (`lib/screens/history/history_screen.dart`)
 
+- **`SummaryHeaderCard`** hero: total entries as headline, total spend + filtered count as `SummaryStat` pills; `ActiveVehicleBar` inlined as trailing
+- "Refuel History" section heading: `titleMedium` w800 (was `titleLarge`); total spend pill uses toStringAsFixed(2)
 - Search bar (stations, fuel type, vehicle name, notes)  
 - Filter bottom sheet: vehicle, fuel type, date range (7d / 30d / 3mo / custom)  
 - Summary chip: entry count + total spend for active filters  
-- `RefuelHistoryCard` list matching mockup layout  
+- `RefuelHistoryCard`: station title `labelLarge` w600 (was `titleMedium`); cost `titleSmall` w700 (was `titleLarge`); qty `.toStringAsFixed(1)` (was 2); icon well 40×40 radius-12; odometer/price row `labelMedium` (was `bodyMedium`)
 - Swipe right → edit (`AddRefuelScreen` edit mode); swipe left → delete with confirm  
 - Tap card → `RefuelDetailScreen` (view); empty states for no data / no matches  
 - FAB **New Refuel** on History tab  
@@ -316,7 +320,8 @@ After substantive code changes:
 | `89bd5bd` | feat: UI polish — vehicle card, refuel cost hero, dashboard skeletons, haptics (v1.11.4+19) |
 | `2c0eb39` | feat: refuel edit/delete bar, active chip fuel+number, station autocomplete, mandatory vehicle fields (v1.12.0+20) |
 | `8c4427b` | feat: Donate screen, remove local save encrypted backup (v1.12.1+21) |
-| TBD | feat: Dashboard & Analytics UI rewrite — compact typography, SummaryHeaderCard, Y-axis charts (v1.13.0+22) |
+| `ad9b1f6` | feat: Dashboard & Analytics UI rewrite — compact typography, SummaryHeaderCard, Y-axis charts (v1.13.0+22) |
+| TBD | feat: History & Vehicles UI optimisation — compact typography, SummaryHeaderCard headers (v1.13.1+23) |
 
 ---
 
@@ -429,4 +434,4 @@ Or attach:
 
 ---
 
-*Last updated: Dashboard & Analytics UI rewrite — SummaryHeaderCard hero, compact stat tiles, Y-axis charts, smaller icon wells, `SectionHeader` title downscaled. Version `1.13.0+22`.*
+*Last updated: History & Vehicles UI optimisation — SummaryHeaderCard headers, compact card typography, tighter icon wells across History, VehicleList, VehicleCard, VehicleDetail. Version `1.13.1+23`.*
